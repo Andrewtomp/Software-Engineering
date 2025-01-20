@@ -10,10 +10,10 @@ Software-Engineering project repo: Name Pending
 - Andrew Tompkins
 
 ## Project Description:
-##Project Idea:
+## Project Idea:
 An inventory and order management software designed for small artists that create limited prints or apparel.
 
-##Possible Features
+## Possible Features
 - Store item information (ID, Quantity, Name, Description, Price, Shipping Cost, etc)
 - Ability to list new items
 - Ability to change quantity of existing items
