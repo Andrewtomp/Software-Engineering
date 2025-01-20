@@ -4,10 +4,22 @@ Software-Engineering project repo: Name Pending
 # Project Name: 
 
 ## Project Members: 
-- Johnathan Bravo
+- Jonathan Bravo
 - Sean Cheema
 - Benjamin Rheault
 - Andrew Tompkins
 
 ## Project Description:
+##Project Idea:
 An inventory and order management software designed for small artists that create limited prints or apparel.
+
+##Possible Features
+- Store item information (ID, Quantity, Name, Description, Price, Shipping Cost, etc)
+- Ability to list new items
+- Ability to change quantity of existing items
+- Place all order information in one screen containing shipping information, order placement time, and update order status from
+- Able to cancel orders from the dashboard and inform the user if order # exceeds inventory.
+- Sync inventory across multiple online storefronts (Personal, Etsy, Amazon)
+- Set up automated messages to customers
+- Add a service feature for custom work (Commissions, personalized apparel, etc)
+- Dashboard with information on where items are selling best and, if possible, which platforms are getting more clicks. (Maybe include profit margins ex if Amazon take 5% and Etsy takes 3%)
