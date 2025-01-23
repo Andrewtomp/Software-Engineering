@@ -6,7 +6,6 @@ Software-Engineering project repo: Name Pending
 ## Project Members: 
 - Jonathan Bravo
 - Sean Cheema
-- Benjamin Rheault
 - Andrew Tompkins
 
 ## Project Description:
