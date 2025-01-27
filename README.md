@@ -3,7 +3,8 @@ Software-Engineering project repo: Name Pending
 
 # Project Name: 
 
-## Project Members: 
+## Project Members:
+- Christian Ball 
 - Jonathan Bravo
 - Sean Cheema
 - Andrew Tompkins
