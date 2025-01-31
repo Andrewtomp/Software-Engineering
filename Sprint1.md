@@ -7,7 +7,7 @@
 3.	As a user, I want to update the quantity of existing items in my inventory so that I can accurately track available stock.
 4.	As a user, I want to see all order information, including shipping details, order placement time, and order status, on a single screen so that I can manage orders efficiently.
 5.	As a user, I want to cancel orders from the dashboard and receive an alert if an order exceeds available inventory so that I avoid overselling.
-6.	As a user, I want my inventory to automatically sync across multiple online storefronts (e.g., Personal, Etsy, Amazon) so that I don’t have to manually update stock levels.
+6.	As a user, I want my inventory to exist across multiple online storefronts (e.g., Personal, Etsy, Amazon) and be visible on one centralized screen.
 7.	As a user, I want to set up automated messages to customers so that I can provide timely updates on order status and shipping details.
 8.	As a user, I want to add a service feature for custom work, such as commissions or personalized apparel, so that I can expand my offerings to meet customer needs.
 9.	As a user, I want to access a dashboard showing which items are selling best and which platforms are receiving the most clicks so that I can focus on optimizing my sales strategies.
