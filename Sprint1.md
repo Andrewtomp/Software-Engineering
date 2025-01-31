@@ -19,5 +19,6 @@
 15.	As a user, I want to track shipping status for each order directly in the software so that I can keep customers informed about their deliveries.
 16.	As a user, I want to set pricing rules (e.g., shipping discounts for bulk orders) so that I can offer competitive pricing to my customers.
 17.	As a user, I want the software to generate detailed sales reports so that I can analyze trends and plan future inventory and marketing strategies.
+18.	As a user, I want to be able to manage my storefronts and product from anywhere.
 
 ## Issues to Tackle
