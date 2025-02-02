@@ -1,0 +1,22 @@
+html, body {
+    background-color: #0b0b0b;
+}
+
+.home {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+}
+
+.home-content {
+    margin-left: 20px;
+}
+
+.home-content h1 {
+    color: white;
+    font-size: 3.5rem;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+
