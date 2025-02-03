@@ -79,18 +79,18 @@ const Home = () => {
                                     </svg>
                                 </div>
                             </div>
-                            <div className="home-ag-theme" style={{ width: "100%", height: "425px"}}>
+                            <div className="home-ag-theme">
                                 <AgGridReact
                                     rowData={rowData}
                                     columnDefs={colDefs}
-                                    domLayout="autoHeight"
                                     defaultColDef={{
-                                        flex: 1, // Ensures columns resize dynamically
+                                        flex: 1,
                                         resizable: true,
                                     }}
-                                    alwaysShowVerticalScroll={true} // Ensures scrollbar appears when needed
+                                    
                                 />
                             </div>
+
                         </div>
                         <div className='small-home-tile storefronts-small-home-tile'>
                             <div className='tile-header'>

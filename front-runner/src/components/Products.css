@@ -106,7 +106,7 @@ html {
 .product-image-preview {
     z-index: 1;
     margin-left: auto;
-    height: 220px; /* Or set the height you prefer */
+    height: 100%;
     width: auto; /* Maintain aspect ratio */
     border-radius: 15px;
     border: 1px white solid;
