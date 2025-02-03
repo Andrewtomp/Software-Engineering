@@ -21,12 +21,12 @@ const Home = () => {
                             <div className='home-product'>
                                 <h3>Product 3</h3>
                             </div>
-                            <div className='home-product'>
+                            {/* <div className='home-product'>
                                 <h3>Product 4</h3>
-                            </div>
-                            <div className='home-product'>
+                            </div> */}
+                            {/* <div className='home-product'>
                                 <h3>Product 5</h3>
-                            </div>
+                            </div> */}
                             <div className='view-all-products' onClick={() => window.location.href='/products'}>
                                 <h3>View all</h3>
                                 <svg width="26" height="24" viewBox="0 0 26 24" fill="none" xmlns="http://www.w3.org/2000/svg" className='arrow-right'>
