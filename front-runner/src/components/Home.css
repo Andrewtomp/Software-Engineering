@@ -10,6 +10,8 @@ html, body {
 
 .home-content {
     margin-left: 20px;
+    margin-right: 40px;
+    width: 100%;
 }
 
 .home-content h1 {
@@ -18,5 +20,107 @@ html, body {
     margin-top: 20px;
     margin-bottom: 20px;
 }
+
+.home-tiles {
+    display: flex;
+    flex-direction: row;
+    gap: 20px; 
+}
+
+.home-content h2 {
+    margin-bottom: 15px;
+    margin-top: 0px;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.products-tile {
+    background-color: #181818;
+    border-radius: 25px;
+    border: solid rgba(255, 255, 255, .25) 1px;
+    width: calc(50% - 10px);
+    height: 83vh;
+    padding: 15px;
+    padding-top: 10px;
+}
+
+.home-products {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+    height: calc(100% - 47px);
+    gap: 15px;
+}
+
+.home-product {
+    width: calc(50% - 7.5px);
+    min-width: 300px;
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.view-all-products {
+    background: linear-gradient(to right, #FF4949, #FF8000);
+    width: calc(50% - 7.5px);
+    min-width: 300px;
+    border-radius: 25px;
+    display: flex;
+    flex-direction: row;
+    transition: transform 0.3s ease;
+}
+
+.home-product:hover, .view-all-products:hover {
+    transform: scale(1.01);
+    cursor: pointer;
+}
+
+.home-product h3, .view-all-products h3 {
+    margin: 15px;
+    margin-top: 10px;
+    margin-right: 2px;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.arrow-right {
+    height: 16px;
+    margin: 0px;
+    margin-top: 19px;
+    border-radius: 5px;
+}
+
+/* For border gradient */
+.home-product::before {
+    content: "";
+    position: absolute;
+    inset: 0; 
+    padding: 2px; 
+    border-radius: 25px;
+    background: linear-gradient(to bottom, #FF4949, #FF8000);
+    -webkit-mask: linear-gradient(white 0 0) content-box, linear-gradient(white 0 0);
+    mask: linear-gradient(white 0 0) content-box, linear-gradient(white 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none; 
+}
+
+.small-home-tiles {
+    width: calc(50% - 10px);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.small-home-tile {
+    width: 100%;
+    height: calc(50% - 10px);
+    background-color: #181818;
+    border-radius: 25px;
+    border: solid rgba(255, 255, 255, .25) 1px;
+    padding: 15px;
+    padding-top: 10px;
+}
+
 
 
