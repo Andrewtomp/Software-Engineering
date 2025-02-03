@@ -54,7 +54,7 @@ html, body {
 }
 
 .home-product {
-    width: calc(50% - 7.5px);
+    width: 100%;
     min-width: 300px;
     position: relative;
     transition: transform 0.3s ease;
@@ -62,7 +62,7 @@ html, body {
 
 .view-all-products {
     background: linear-gradient(to right, #FF4949, #FF8000);
-    width: calc(50% - 7.5px);
+    width: 100%;
     min-width: 300px;
     border-radius: 25px;
     display: flex;
