@@ -1,5 +1,4 @@
 import React, {useState} from 'react';
-import NavBar from './NavBar';
 import { AgGridReact } from 'ag-grid-react';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community'; 
 import './Home.css';
@@ -31,7 +30,6 @@ const Home = () => {
 
     return (
         <div className='home'>
-            <NavBar />
             <div className='home-content'>
                 <h1>Home</h1>
                 <div className='home-tiles'>
@@ -46,21 +44,27 @@ const Home = () => {
                             </div>
                         </div>
                         <div className='home-products'>
-                            <div className='home-product'>
-                                <h3>Product 1</h3>
+                            <div className='home-product' style={{ backgroundImage: `url("../images/image-1.png")` }}>
+                                <div className='product-info'>
+                                    <h2>Product 1</h2>
+                                    <p>Product 1 is a great product that people should buy</p>
+                                </div>
+                                <img src='../images/image-1.png' alt='product-image' className='product-image-preview'/>
                             </div>
-                            <div className='home-product'>
-                                <h3>Product 2</h3>
+                            <div className='home-product' style={{ backgroundImage: `url("../images/image-2.png")` }}>
+                                <div className='product-info'>
+                                    <h2>Product 2</h2>
+                                    <p>Product 2 is a great product that people should buy</p>
+                                </div>
+                                <img src='../images/image-2.png' alt='product-image' className='product-image-preview'/>
                             </div>
-                            <div className='home-product'>
-                                <h3>Product 3</h3>
+                            <div className='home-product' style={{ backgroundImage: `url("../images/image-3.png")` }}>
+                                <div className='product-info'>
+                                    <h2>Product 3</h2>
+                                    <p>Product 3 is a great product that people should buy</p>
+                                </div>
+                                <img src='../images/image-3.png' alt='product-image' className='product-image-preview'/>
                             </div>
-                            <div className='home-product'>
-                                <h3>Product 4</h3>
-                            </div>
-                            {/* <div className='home-product'>
-                                <h3>Product 5</h3>
-                            </div> */}
                             
                         </div>
                     </div>

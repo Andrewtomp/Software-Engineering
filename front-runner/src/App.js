@@ -4,10 +4,12 @@ import Products from "./components/Products";
 import Storefronts from "./components/Storefronts";
 import Orders from "./components/Orders";
 import Settings from "./components/Settings";
+import NavBar from "./components/NavBar";
 
 function App() {
     return (
-        <BrowserRouter>            
+        <BrowserRouter>  
+            <NavBar />          
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/products" element={<Products />} />
