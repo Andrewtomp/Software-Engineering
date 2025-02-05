@@ -1,0 +1,35 @@
+body {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.title {
+    text-align: center;
+    width: 30vw;
+    background-color: rgb(190, 164, 214);
+    padding: 2vw 1vw;
+    border-radius: 10px 10px 0 0;
+    font-size: 2rem;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+.Login {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+    width: 30vw;
+    padding: 2vw 1vw;
+    background-color: rgb(250, 194, 194);
+    border-radius: 0 0 10px 10px;
+}
+
+input {
+    border: 1px solid rgb(172, 171, 171);
+    border-radius: 10px;
+    padding: 1vw 1vw;
+    outline: none;
+    margin: 5px;
+}
