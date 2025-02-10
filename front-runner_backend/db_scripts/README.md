@@ -9,9 +9,14 @@ Once in the shell run the following commands:
 ```
 CREATE DATABASE users;
 
+\c users
+
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(50) UNIQUE NOT NULL,
-    password_hash VARCHAR(100) NOT NULL
+    password_hash VARCHAR(100) NOT NULL,
+    business_name VARCHAR(100)
 );
+
+quit
 ```
