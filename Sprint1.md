@@ -33,7 +33,7 @@
 ## Completed Issues
 ### Front end
 1. Completed interfaces for creating an account and logging in
-2. Completed UI for dashboard so users can see a previer of their products, storefronts, and orders
+2. Completed UI for dashboard so users can see a preview of their products, storefronts, and orders
 3. Continuously making the application accessible for users on different platforms
 
 ### Back end
