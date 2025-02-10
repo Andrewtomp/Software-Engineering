@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/gorilla/sessions"
 	"golang.org/x/crypto/bcrypt"
@@ -20,11 +21,14 @@ var (
 	sessionStore *sessions.CookieStore
 )
 
+var validEmailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.com$`)
+
 // User represents the user model in the database.
 type User struct {
 	ID           uint   `gorm:"primaryKey"`
-	Username     string `gorm:"unique;not null"`
+	Email        string `gorm:"unique;not null"`
 	PasswordHash string `gorm:"not null"`
+	BusinessName string
 }
 
 // Init sets up the session store and connects to the PostgreSQL database using GORM.
@@ -51,15 +55,30 @@ func init() {
 	if err := db.AutoMigrate(&User{}); err != nil {
 		panic(fmt.Sprintf("failed to migrate database schema: %v", err))
 	}
+
+	// Setting the auth cookie to ba available through the whole domain
+	sessionStore = sessions.NewCookieStore(key)
+	sessionStore.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   86400 * 7, // e.g. valid for 7 days by default
+		HttpOnly: true,
+	}
 }
 
 // RegisterUser creates a new user record.
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
-	username := r.FormValue("username")
+	email := r.FormValue("email")
 	password := r.FormValue("password")
+	businessName := r.FormValue("business_name")
 
-	if username == "" || password == "" {
-		http.Error(w, "Username and password are required", http.StatusBadRequest)
+	if email == "" || password == "" {
+		http.Error(w, "Email and password are required", http.StatusBadRequest)
+		return
+	}
+
+	// Validate email format.
+	if !validEmailRegex.MatchString(email) {
+		http.Error(w, "Invalid email format", http.StatusBadRequest)
 		return
 	}
 
@@ -72,13 +91,14 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	// Create a new user record.
 	user := User{
-		Username:     username,
+		Email:        email,
 		PasswordHash: string(hashedPassword),
+		BusinessName: businessName,
 	}
 
 	// Use GORM to insert the new user into the database.
 	if err := db.Create(&user).Error; err != nil {
-		http.Error(w, "Username already exists or database error", http.StatusConflict)
+		http.Error(w, "Email already in use or database error", http.StatusConflict)
 		return
 	}
 
@@ -87,17 +107,31 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 // LoginUser authenticates a user and creates a session.
 func LoginUser(w http.ResponseWriter, r *http.Request) {
-	username := r.FormValue("username")
+	// Retrieve the session first.
+	session, err := sessionStore.Get(r, "auth")
+	if err != nil {
+		http.Error(w, "Error retrieving session", http.StatusInternalServerError)
+		return
+	}
+
+	// Check if the user is already logged in.
+	if auth, ok := session.Values["authenticated"].(bool); ok && auth {
+		fmt.Fprintf(w, "User is already logged in")
+		return
+	}
+
+	// Read login credentials from the request.
+	email := r.FormValue("email")
 	password := r.FormValue("password")
 
-	if username == "" || password == "" {
-		http.Error(w, "Username and password are required", http.StatusBadRequest)
+	if email == "" || password == "" {
+		http.Error(w, "Email and password are required", http.StatusBadRequest)
 		return
 	}
 
 	var user User
 	// Look up the user by username.
-	if err := db.Where("username = ?", username).First(&user).Error; err != nil {
+	if err := db.Where("email = ?", email).First(&user).Error; err != nil {
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
@@ -105,13 +139,6 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	// Compare the provided password with the stored hash.
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
-		return
-	}
-
-	// Create a session.
-	session, err := sessionStore.Get(r, "auth")
-	if err != nil {
-		http.Error(w, "Error creating session", http.StatusInternalServerError)
 		return
 	}
 
@@ -123,8 +150,9 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Optionally, generate a token.
-	token := generateToken()
-	fmt.Fprintf(w, "Logged in successfully. Token: %s", token)
+	// token := generateToken()
+	// fmt.Fprintf(w, "Logged in successfully. Token: %s", token)
+	fmt.Fprintf(w, "Logged in successfully.")
 }
 
 // LogoutUser clears the user's session.
@@ -134,13 +162,26 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error getting session", http.StatusInternalServerError)
 		return
 	}
-	session.Options.MaxAge = -1 // Mark the session for deletion.
+
+	// You might also want to explicitly check the authentication flag
+	loggedIn := false
+	if auth, ok := session.Values["authenticated"].(bool); ok && auth {
+		loggedIn = true
+	}
+
+	// Clearing the session cookie by marking it for deletion
+	session.Options.MaxAge = -1
 	if err := session.Save(r, w); err != nil {
 		http.Error(w, "Error saving session", http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Fprintf(w, "Logged out successfully")
+	// Provide a message based on whether the user was logged in.
+	if loggedIn {
+		fmt.Fprintf(w, "Logged out successfully")
+	} else {
+		fmt.Fprintf(w, "User is already logged out")
+	}
 }
 
 // generateToken creates a random token.
