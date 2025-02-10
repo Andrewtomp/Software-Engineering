@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	login "front-runner/login"
+	login "front-runner/internal/login"
 
 	"github.com/gorilla/mux"
 )
