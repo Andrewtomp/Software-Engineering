@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
-	"regexp"
+	"net/mail"
 
 	"github.com/gorilla/sessions"
 	"golang.org/x/crypto/bcrypt"
@@ -21,14 +21,18 @@ var (
 	sessionStore *sessions.CookieStore
 )
 
-var validEmailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.com$`)
-
 // User represents the user model in the database.
 type User struct {
 	ID           uint   `gorm:"primaryKey"`
 	Email        string `gorm:"unique;not null"`
 	PasswordHash string `gorm:"not null"`
 	BusinessName string
+}
+
+// valid uses mail.ParseAddress to check whether the provided email is valid.
+func valid(email string) bool {
+	_, err := mail.ParseAddress(email)
+	return err == nil
 }
 
 // Init sets up the session store and connects to the PostgreSQL database using GORM.
@@ -76,8 +80,8 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate email format.
-	if !validEmailRegex.MatchString(email) {
+	// Validate the email format using the standard library.
+	if !valid(email) {
 		http.Error(w, "Invalid email format", http.StatusBadRequest)
 		return
 	}
