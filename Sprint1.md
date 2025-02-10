@@ -22,3 +22,26 @@
 18.	As a user, I want to be able to manage my storefronts and product from anywhere.
 
 ## Issues to Tackle
+### Front end
+1. **(Issue #21)** Create interfaces so users can create an account for themselves and log in
+2. **(Issue #11)** Create UI for dashboard so users can see a preview of their products, storefronts, and orders
+3. **(Issue #23)** Make the application accessible to users on different platforms by making the interfaces responsive to screen size
+4. **(Issue #6)** Create interfaces for users to create and manage their products
+   
+### Back end
+
+## Completed Issues
+### Front end
+1. Completed interfaces for creating an account and logging in
+2. Completed UI for dashboard so users can see a previer of their products, storefronts, and orders
+3. Continuously making the application accessible for users on different platforms
+
+### Back end
+
+## Incomplete Issues
+### Front end
+1. Have not created the form to create a product as the back end functionality is not present yet.
+   - We did however, create the products page where users can see an overview of their products and have the option to make a new one.
+   - Leaves **Issue #6** incomplete
+2. We have not linked the dashboard to real information pulled from the back end as the functionality does not exist yet. Currently just dummy data.
+   - Leaves **Issue #11** incomplete
