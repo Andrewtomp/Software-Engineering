@@ -30,7 +30,9 @@ func main() {
 	router.HandleFunc("/register", login.RegisterUser).Methods("POST")
 	router.HandleFunc("/login", login.LoginUser).Methods("POST")
 	router.HandleFunc("/logout", login.LogoutUser).Methods("GET")
-
+	s := http.StripPrefix("/static/", http.FileServer(http.Dir("../../../front-runner/build/static/")))
+	router.PathPrefix("/static/").Handler(s)
+	router.PathPrefix("/").Handler(http.FileServer(http.Dir("../../../front-runner/build")))
 	http.Handle("/", router)
 
 	server := &http.Server{
