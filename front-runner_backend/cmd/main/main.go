@@ -2,22 +2,46 @@
 package main
 
 import (
-	"fmt"
+	"crypto/tls"
+	"front-runner/internal/login"
+	"log"
 	"net/http"
-
-	login "front-runner/internal/login"
 
 	"github.com/gorilla/mux"
 )
 
+const (
+	port = ":8080"
+)
+
 func main() {
-	r := mux.NewRouter()
 
-	r.HandleFunc("/register", login.RegisterUser).Methods("POST")
-	r.HandleFunc("/login", login.LoginUser).Methods("POST")
-	r.HandleFunc("/logout", login.LogoutUser).Methods("GET")
+	cert, err := tls.LoadX509KeyPair("server.crt", "server.key")
 
-	http.Handle("/", r)
-	fmt.Println("Server is running on :8080")
-	http.ListenAndServe(":8080", nil)
+	if err != nil {
+		log.Fatalf("Failed to load X509 key pair: %v", err)
+	}
+
+	config := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+	}
+
+	router := mux.NewRouter()
+	router.HandleFunc("/register", login.RegisterUser).Methods("POST")
+	router.HandleFunc("/login", login.LoginUser).Methods("POST")
+	router.HandleFunc("/logout", login.LogoutUser).Methods("GET")
+
+	http.Handle("/", router)
+
+	server := &http.Server{
+		Addr:      port,
+		Handler:   router,
+		TLSConfig: config,
+	}
+
+	log.Printf("Listening on %s...", port)
+	err = server.ListenAndServeTLS("", "")
+	if err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 }
