@@ -1,19 +1,19 @@
 [
     {
         "title": "Dog",
-        "text": "A dog",
+        "text": "A dog this product is a placeholder",
         "img": "Dog",
         "link":"https://en.wikipedia.org/wiki/Dog"
     },
     {
         "title": "Rabbit",
-        "text": "A rabbit",
+        "text": "A rabbit this product is a placeholder",
         "img": "Rabbit",
         "link":"https://en.wikipedia.org/wiki/Rabbit"
     },
     {
         "title": "Cat",
-        "text": "A cat",
+        "text": "A cat this product is a placeholder",
         "img": "Cat",
         "link":"https://en.wikipedia.org/wiki/Cat"
     }

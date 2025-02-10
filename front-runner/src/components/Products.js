@@ -3,7 +3,7 @@ import Button from 'react-bootstrap/Button';
 import Card from 'react-bootstrap/Card';
 import config from './products.json'
 
-function CardPage() {
+function Products() {
     let cardArr = config;
   return (
     <div className='row' style={{marginTop:'4%', marginLeft:'2%'}}>
@@ -26,4 +26,4 @@ function CardPage() {
   )
 }
 
-export default CardPage
+export default Products
