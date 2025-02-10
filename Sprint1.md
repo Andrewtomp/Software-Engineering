@@ -1,5 +1,5 @@
 # Sprint 1
-Front End Dev Video: https://www.youtube.com/watch?v=YResLlC-lZ0
+Front End Dev Video: https://youtu.be/mdaRm1VyFQM
 
 Back End Dev Video:
 
