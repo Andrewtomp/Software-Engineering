@@ -2,7 +2,6 @@ package login
 
 import (
 	"crypto/rand"
-	"encoding/base64"
 	"fmt"
 	"net/http"
 	"net/mail"
@@ -153,9 +152,6 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Optionally, generate a token.
-	// token := generateToken()
-	// fmt.Fprintf(w, "Logged in successfully. Token: %s", token)
 	fmt.Fprintf(w, "Logged in successfully.")
 }
 
@@ -186,14 +182,4 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fmt.Fprintf(w, "User is already logged out")
 	}
-}
-
-// generateToken creates a random token.
-func generateToken() string {
-	token := make([]byte, 32)
-	_, err := rand.Read(token)
-	if err != nil {
-		panic(err)
-	}
-	return base64.URLEncoding.EncodeToString(token)
 }
