@@ -27,6 +27,7 @@
 2. **(Issue #11)** Create UI for dashboard so users can see a preview of their products, storefronts, and orders
 3. **(Issue #23)** Make the application accessible to users on different platforms by making the interfaces responsive to screen size
 4. **(Issue #6)** Create interfaces for users to create and manage their products
+5. **(Issue #24)** Identify and test a framework to standardize appearances for next sprint
    
 ### Back end
 
@@ -35,7 +36,7 @@
 1. Completed interfaces for creating an account and logging in
 2. Completed UI for dashboard so users can see a preview of their products, storefronts, and orders
 3. Continuously making the application accessible for users on different platforms
-
+4. Identified and tested boostrap as framework
 ### Back end
 
 ## Incomplete Issues
@@ -45,3 +46,4 @@
    - Leaves **Issue #6** incomplete
 2. We have not linked the dashboard to real information pulled from the back end as the functionality does not exist yet. Currently just dummy data.
    - Leaves **Issue #11** incomplete
+### Back end
