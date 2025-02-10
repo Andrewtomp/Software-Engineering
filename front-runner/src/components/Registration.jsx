@@ -1,24 +1,46 @@
 import React from 'react';
-import { useForm } from "react-hook-form";
-import "./Registration.css";
+import { CardBody } from 'react-bootstrap';
+import Button from 'react-bootstrap/Button';
+import Form from 'react-bootstrap/Form';
+import Card from 'react-bootstrap/Card';
 
 function Registration() {
-    const { register, handleSubmit, formState: { errors } } = useForm();
-
-    const onSubmit = (data) => console.log(data);
 
     return (
-        <>
-            <p className="title">Registration Form</p>
-            <form className="App" onSubmit={handleSubmit(onSubmit)}>
-                <input type="text" {...register("name")} />
-                <input type="email" {...register("email", { required: true })} />
-                {errors.email && <span style={{ color: "red" }}>
-                    *Email* is mandatory </span>}
-                <input type="password" {...register("password")} />
-                <input type={"submit"} style={{ backgroundColor: "#a1eafb" }} />
-            </form>
-        </>
+        <Card>
+            <CardBody>
+            <Form>
+        <Form.Group className="mb-3" controlId="formBasicName">
+        <Form.Label>Email address</Form.Label>
+        <Form.Control type="business name" placeholder="Enter business name" />
+        <Form.Text className="text-muted">
+        </Form.Text>
+      </Form.Group>
+
+      <Form.Group className="mb-3" controlId="formBasicEmail">
+        <Form.Label>Email address</Form.Label>
+        <Form.Control type="email" placeholder="Enter email" />
+        <Form.Text className="text-muted">
+        </Form.Text>
+      </Form.Group>
+
+      <Form.Group className="mb-3" controlId="formBasicPassword">
+        <Form.Label>Password</Form.Label>
+        <Form.Control type="password" placeholder="Password" />
+      </Form.Group>
+
+      <Form.Group className="mb-3" controlId="formConfirmPassword">
+        <Form.Label>Confirm Password</Form.Label>
+        <Form.Control type="confirm password" placeholder="confirmPassword" />
+      </Form.Group>
+      
+      <Button variant="primary" type="submit">
+        Submit
+      </Button>
+    </Form>
+
+            </CardBody>
+        </Card>
     );
 }
 export default Registration;

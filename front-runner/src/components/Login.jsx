@@ -1,38 +1,35 @@
-import React from "react";
-import { useForm } from "react-hook-form";
-import "./Login.css";
+import { CardBody } from 'react-bootstrap';
+import Button from 'react-bootstrap/Button';
+import Form from 'react-bootstrap/Form';
+import Card from 'react-bootstrap/Card';
 
 function Login() {
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-    } = useForm();
+  return (
+    <Card>
+        <CardBody>
+    <Form>
+      <Form.Group className="mb-3" controlId="formBasicEmail">
+        <Form.Label>Email address</Form.Label>
+        <Form.Control type="email" placeholder="Enter email" />
+        <Form.Text className="text-muted">
+          We'll never share your email with anyone else.
+        </Form.Text>
+      </Form.Group>
 
-    const onSubmit = (data) => {
-        const userData = JSON.parse(localStorage.getItem(data.email));
-        if (userData) { // getItem can return actual value or null
-            if (userData.password === data.password) {
-                console.log(userData.name + " You Are Successfully Logged In");
-            } else {
-                console.log("Email or Password is not matching with our record");
-            }
-        } else {
-            console.log("Email or Password is not matching with our record");
-        }
-    };
-    return (
-        <>
-            <p className="title">Login Form</p>
-
-            <form className="App" onSubmit={handleSubmit(onSubmit)}>
-                <input type="email" {...register("email", { required: true })} />
-                {errors.email && <span style={{ color: "red" }}>
-                    *Email* is mandatory </span>}
-                <input type="password" {...register("password")} />
-                <input type={"submit"} style={{ backgroundColor: "#a1eafb" }} />
-            </form>
-        </>
-    );
+      <Form.Group className="mb-3" controlId="formBasicPassword">
+        <Form.Label>Password</Form.Label>
+        <Form.Control type="password" placeholder="Password" />
+      </Form.Group>
+      <Form.Group className="mb-3" controlId="formBasicCheckbox">
+        <Form.Check type="checkbox" label="Check me out" />
+      </Form.Group>
+      <Button variant="primary" type="submit">
+        Submit
+      </Button>
+    </Form>
+    </CardBody>
+    </Card>
+  );
 }
+
 export default Login;
