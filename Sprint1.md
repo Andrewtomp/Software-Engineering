@@ -1,7 +1,7 @@
 # Sprint 1
 Front End Dev Video: https://youtu.be/mdaRm1VyFQM
 
-Back End Dev Video:
+Back End Dev Video: https://youtu.be/FsIfPVmnbAc?si=8sLbFlB9qS7bJuEV
 
 ## User Stories
 
@@ -33,6 +33,7 @@ Back End Dev Video:
 5. **(Issue #24)** Identify and test a framework to standardize appearances for next sprint
    
 ### Back end
+1. **(Issue #21)** Create log in api, allowing users to register accounts, log in, and log out
 
 ## Completed Issues
 ### Front end
@@ -41,6 +42,16 @@ Back End Dev Video:
 3. Continuously making the application accessible for users on different platforms
 4. Identified and tested boostrap as framework
 ### Back end
+1. Created back end API structure
+2. Created working login API that allows users to register an account, login, and logout
+3. Created back end documentation using Swagger
+4. Created unit tests using golang test file for login API
+5. Created test cases using Postman
+6. Created TLS certificate for in transit data encryption
+7. Implimented hashing for at rest passwords
+8. Created basic `user` postgres database where each user is represented as:
+   - ID, Email, HashedPassword, BusinessName
+
 
 ## Incomplete Issues
 ### Front end
@@ -49,4 +60,8 @@ Back End Dev Video:
    - Leaves **Issue #6** incomplete
 2. We have not linked the dashboard to real information pulled from the back end as the functionality does not exist yet. Currently just dummy data.
    - Leaves **Issue #11** incomplete
+
 ### Back end
+1. Have yet to connect the front end to the back end
+   - Working on making the static React pages play nicely with golang webserver hosting.
+   - API functioning, front end connection missing, **Issue 21** mostly complete.
