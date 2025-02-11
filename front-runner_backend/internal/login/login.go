@@ -1,3 +1,4 @@
+// login.go
 package login
 
 import (
@@ -12,13 +13,9 @@ import (
 	"gorm.io/gorm"
 )
 
-var (
-	// db will hold the GORM DB instance
-	db *gorm.DB
-
-	// sessionStore is used to manage sessions
-	sessionStore *sessions.CookieStore
-)
+// File-level annotations (optional):
+// @title Authentication Endpoints
+// @description Endpoints for user registration, login, and logout.
 
 // User represents the user model in the database.
 type User struct {
@@ -33,6 +30,14 @@ func valid(email string) bool {
 	_, err := mail.ParseAddress(email)
 	return err == nil
 }
+
+var (
+	// db will hold the GORM DB instance
+	db *gorm.DB
+
+	// sessionStore is used to manage sessions
+	sessionStore *sessions.CookieStore
+)
 
 // Init sets up the session store and connects to the PostgreSQL database using GORM.
 func init() {
@@ -69,6 +74,18 @@ func init() {
 }
 
 // RegisterUser creates a new user record.
+// @Summary Register a new user
+// @Description Registers a new user using email, password, and an optional business name.
+// @Tags Authentication
+// @Accept application/x-www-form-urlencoded
+// @Produce plain
+// @Param email formData string true "User email"
+// @Param password formData string true "User password"
+// @Param business_name formData string false "Business name"
+// @Success 200 {string} string "User registered successfully"
+// @Failure 400 {string} string "Email and password are required or invalid email format"
+// @Failure 409 {string} string "Email already in use or database error"
+// @Router /register [post]
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
@@ -109,6 +126,17 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // LoginUser authenticates a user and creates a session.
+// @Summary User login
+// @Description Authenticates a user and creates a session.
+// @Tags Authentication
+// @Accept application/x-www-form-urlencoded
+// @Produce plain
+// @Param email formData string true "User email"
+// @Param password formData string true "User password"
+// @Success 200 {string} string "Logged in successfully."
+// @Failure 400 {string} string "Email and password are required"
+// @Failure 401 {string} string "Invalid credentials"
+// @Router /login [post]
 func LoginUser(w http.ResponseWriter, r *http.Request) {
 	// Retrieve the session first.
 	session, err := sessionStore.Get(r, "auth")
@@ -156,6 +184,12 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // LogoutUser clears the user's session.
+// @Summary User logout
+// @Description Logs out the current user by clearing the session.
+// @Tags Authentication
+// @Produce plain
+// @Success 200 {string} string "Logged out successfully"
+// @Router /logout [get]
 func LogoutUser(w http.ResponseWriter, r *http.Request) {
 	session, err := sessionStore.Get(r, "auth")
 	if err != nil {
