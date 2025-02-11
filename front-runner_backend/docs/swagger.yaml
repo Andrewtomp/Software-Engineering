@@ -1,0 +1,102 @@
+basePath: /
+host: localhost:8080
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+    url: http://www.swagger.io/support
+  description: API documentation for the Front Runner application.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Front Runner API
+  version: "1.0"
+paths:
+  /login:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Authenticates a user and creates a session.
+      parameters:
+      - description: User email
+        in: formData
+        name: email
+        required: true
+        type: string
+      - description: User password
+        in: formData
+        name: password
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Logged in successfully.
+          schema:
+            type: string
+        "400":
+          description: Email and password are required
+          schema:
+            type: string
+        "401":
+          description: Invalid credentials
+          schema:
+            type: string
+      summary: User login
+      tags:
+      - Authentication
+  /logout:
+    get:
+      description: Logs out the current user by clearing the session.
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Logged out successfully
+          schema:
+            type: string
+      summary: User logout
+      tags:
+      - Authentication
+  /register:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Registers a new user using email, password, and an optional business
+        name.
+      parameters:
+      - description: User email
+        in: formData
+        name: email
+        required: true
+        type: string
+      - description: User password
+        in: formData
+        name: password
+        required: true
+        type: string
+      - description: Business name
+        in: formData
+        name: business_name
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: User registered successfully
+          schema:
+            type: string
+        "400":
+          description: Email and password are required or invalid email format
+          schema:
+            type: string
+        "409":
+          description: Email already in use or database error
+          schema:
+            type: string
+      summary: Register a new user
+      tags:
+      - Authentication
+swagger: "2.0"
