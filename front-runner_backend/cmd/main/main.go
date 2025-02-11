@@ -49,9 +49,9 @@ func main() {
 	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 	// Serve static files for your webpage
-	s := http.StripPrefix("/static/", http.FileServer(http.Dir("../../../front-runner/build/static/")))
+	s := http.StripPrefix("/static/", http.FileServer(http.Dir("../front-runner/build/static/")))
 	router.PathPrefix("/static/").Handler(s)
-	router.PathPrefix("/").Handler(http.FileServer(http.Dir("../../../front-runner/build")))
+	router.PathPrefix("/").Handler(http.FileServer(http.Dir("../front-runner/build")))
 	http.Handle("/", router)
 
 	server := &http.Server{
