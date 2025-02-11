@@ -27,6 +27,14 @@ CREATE TABLE users (
 quit
 ```
 
+## Start GO Server
+
+Start the go server by running:
+
+```golang
+go run front-runner_backend/cmd/main/main.go
+```
+
 ## To Generate docs
 
 ```bash
