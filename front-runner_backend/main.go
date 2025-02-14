@@ -15,6 +15,7 @@ package main
 import (
 	"crypto/tls"
 	"front-runner/internal/login"
+	"front-runner/internal/usertable"
 	"log"
 	"net/http"
 
@@ -41,7 +42,7 @@ func main() {
 	router := mux.NewRouter()
 
 	// API endpoints
-	router.HandleFunc("/register", login.RegisterUser).Methods("POST")
+	router.HandleFunc("/register", usertable.RegisterUser).Methods("POST")
 	router.HandleFunc("/login", login.LoginUser).Methods("POST")
 	router.HandleFunc("/logout", login.LogoutUser).Methods("GET")
 
