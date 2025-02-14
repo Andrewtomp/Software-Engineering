@@ -13,9 +13,9 @@ Replace `johnny` with the host system user (also need to change in the `.go` fil
 Once in the shell run the following commands:
 
 ```
-CREATE DATABASE users;
+CREATE DATABASE frontrunner;
 
-\c users
+\c frontrunner
 
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -38,7 +38,7 @@ go run front-runner_backend/cmd/main/main.go
 ## To Generate docs
 
 ```bash
-swag init -g main.go -d cmd/main,internal/login --parseInternal
+swag init --parseInternal -g main.go -d internal/login,internal
 ```
 
 Additional `-d` directories will be added as we build more modules.
