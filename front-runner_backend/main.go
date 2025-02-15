@@ -2,11 +2,9 @@
 // @title Front Runner API
 // @version 1.0
 // @description API documentation for the Front Runner application.
-// @termsOfService http://swagger.io/terms/
 // @contact.name API Support
-// @contact.url http://www.swagger.io/support
-// @contact.email support@example.com
-// @license.name Apache 2.0
+// @contact.email jonathan.bravo@ufl.edu
+// @license.name MIT
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 // @host localhost:8080
 // @BasePath /
@@ -14,14 +12,13 @@ package main
 
 import (
 	"crypto/tls"
-	"front-runner/internal/login"
 	"log"
 	"net/http"
 
 	_ "front-runner/docs" // This is important for swagger to find your docs!
+	"front-runner/internal/routes"
 
 	"github.com/gorilla/mux"
-	httpSwagger "github.com/swaggo/http-swagger" // swagger middleware
 )
 
 const (
@@ -40,19 +37,7 @@ func main() {
 
 	router := mux.NewRouter()
 
-	// API endpoints
-	router.HandleFunc("/register", login.RegisterUser).Methods("POST")
-	router.HandleFunc("/login", login.LoginUser).Methods("POST")
-	router.HandleFunc("/logout", login.LogoutUser).Methods("GET")
-
-	// Serve Swagger UI on /swagger/*
-	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
-
-	// Serve static files for your webpage
-	s := http.StripPrefix("/static/", http.FileServer(http.Dir("../front-runner/build/static/")))
-	router.PathPrefix("/static/").Handler(s)
-	router.PathPrefix("/").Handler(http.FileServer(http.Dir("../front-runner/build")))
-	http.Handle("/", router)
+	routes.RegisterRoutes(router)
 
 	server := &http.Server{
 		Addr:      port,

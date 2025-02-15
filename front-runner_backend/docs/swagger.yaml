@@ -2,14 +2,12 @@ basePath: /
 host: localhost:8080
 info:
   contact:
-    email: support@example.com
+    email: jonathan.bravo@ufl.edu
     name: API Support
-    url: http://www.swagger.io/support
   description: API documentation for the Front Runner application.
   license:
-    name: Apache 2.0
+    name: MIT
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-  termsOfService: http://swagger.io/terms/
   title: Front Runner API
   version: "1.0"
 paths:
@@ -46,7 +44,8 @@ paths:
             type: string
       summary: User login
       tags:
-      - Authentication
+      - authentication
+      - login
   /logout:
     get:
       description: Logs out the current user by clearing the session.
@@ -59,7 +58,8 @@ paths:
             type: string
       summary: User logout
       tags:
-      - Authentication
+      - authentication
+      - logout
   /register:
     post:
       consumes:
@@ -98,5 +98,27 @@ paths:
             type: string
       summary: Register a new user
       tags:
-      - Authentication
+      - authentication
+      - user
+      - dbtable
+  /validemail:
+    get:
+      description: Checks if the provided email address is in a valid format. Returns
+        true if valid, false otherwise.
+      parameters:
+      - description: Email address to validate
+        in: query
+        name: email
+        required: true
+        type: string
+      responses:
+        "200":
+          description: true if email is valid, false otherwise
+          schema:
+            type: boolean
+      summary: Validate email address
+      tags:
+      - utility
+      - email
+      - validate
 swagger: "2.0"
