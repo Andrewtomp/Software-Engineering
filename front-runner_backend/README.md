@@ -13,9 +13,9 @@ Replace `johnny` with the host system user (also need to change in the `.go` fil
 Once in the shell run the following commands:
 
 ```
-CREATE DATABASE users;
+CREATE DATABASE frontrunner;
 
-\c users
+\c frontrunner
 
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -32,23 +32,17 @@ quit
 Start the go server by running:
 
 ```golang
-go run front-runner_backend/cmd/main/main.go
+go run front-runner_backend/main.go
 ```
 
 ## To Generate docs
 
 ```bash
-swag init -g main.go -d cmd/main,internal/login --parseInternal
+swag init --parseInternal
 ```
 
 Additional `-d` directories will be added as we build more modules.
 
 ## To access the docs
-
-Start the go server:
-
-```golang
-go run cmd/main/main.go
-```
 
 go to this webpage: https://localhost:8080/swagger/index.html

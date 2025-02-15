@@ -9,14 +9,12 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "http://swagger.io/terms/",
         "contact": {
             "name": "API Support",
-            "url": "http://www.swagger.io/support",
-            "email": "support@example.com"
+            "email": "jonathan.bravo@ufl.edu"
         },
         "license": {
-            "name": "Apache 2.0",
+            "name": "MIT",
             "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
         },
         "version": "{{.Version}}"
@@ -34,7 +32,8 @@ const docTemplate = `{
                     "text/plain"
                 ],
                 "tags": [
-                    "Authentication"
+                    "authentication",
+                    "login"
                 ],
                 "summary": "User login",
                 "parameters": [
@@ -82,7 +81,8 @@ const docTemplate = `{
                     "text/plain"
                 ],
                 "tags": [
-                    "Authentication"
+                    "authentication",
+                    "logout"
                 ],
                 "summary": "User logout",
                 "responses": {
@@ -105,7 +105,9 @@ const docTemplate = `{
                     "text/plain"
                 ],
                 "tags": [
-                    "Authentication"
+                    "authentication",
+                    "user",
+                    "dbtable"
                 ],
                 "summary": "Register a new user",
                 "parameters": [
@@ -147,6 +149,34 @@ const docTemplate = `{
                         "description": "Email already in use or database error",
                         "schema": {
                             "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/validemail": {
+            "get": {
+                "description": "Checks if the provided email address is in a valid format. Returns true if valid, false otherwise.",
+                "tags": [
+                    "utility",
+                    "email",
+                    "validate"
+                ],
+                "summary": "Validate email address",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Email address to validate",
+                        "name": "email",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "true if email is valid, false otherwise",
+                        "schema": {
+                            "type": "boolean"
                         }
                     }
                 }
