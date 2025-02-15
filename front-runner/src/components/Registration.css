@@ -1,35 +1,56 @@
-body {
-    height: 100vh;
+.logo-header {
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+}
+
+.logo-header h1 {
+    font-style: italic;
+    font-weight: 700;
+}
+
+/* Center the card in the middle of the screen */
+.register-container {
+    position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
-}
-
-.title {
-    text-align: center;
-    width: 30vw;
-    background-color: rgb(190, 164, 214);
-    padding: 2vw 1vw;
-    border-radius: 10px 10px 0 0;
-    font-size: 2rem;
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
-}
-
-.Registration {
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    margin: auto;
-    width: 30vw;
-    padding: 2vw 1vw;
-    background-color: rgb(250, 194, 194);
-    border-radius: 0 0 10px 10px;
-}
-
-input {
-    border: 1px solid rgb(172, 171, 171);
+    height: 100vh;
+    color: white;
+    background-color: #0b0b0b;
+  }
+  
+  /* Style the card */
+  .register-card {
+    width: 100%;
+    max-width: 400px; /* Set a max width */
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 10px;
-    padding: 1vw 1vw;
-    outline: none;
-    margin: 5px;
-}
+    color: white;
+    align-items: center;
+    background-color: #181818;
+  }
+  
+  /* Customize the submit button */
+  .register-button {
+    width: 100%;
+    font-size: 1.1rem;
+    background: linear-gradient(to right, #FF4949, #FF8000);
+    border: none;
+  }
+  
+  .text-muted {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  .register-card a {
+    color: rgba(255, 255, 255, 0.75) !important;
+  }
+
+  .register-card a:hover {
+    color: rgba(255, 255, 255, 1) !important;
+  }
