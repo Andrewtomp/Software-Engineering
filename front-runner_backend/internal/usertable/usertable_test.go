@@ -13,6 +13,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// TestMain sets up the test database environment for user table tests.
+//
+// @Summary      Setup user table test environment
+// @Description  Initializes the database connection and clears the user table before and after running tests.
+//
+// @Tags         testing, user, dbtable
 func TestMain(m *testing.M) {
 	// Get the test database instance.
 	db = coredbutils.GetDB()
@@ -35,6 +41,12 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+// TestDirectUserEntry tests direct insertion of user records into the database.
+//
+// @Summary      Direct user entry test
+// @Description  Inserts a set of test users directly into the database, then verifies that each user can be retrieved successfully.
+//
+// @Tags         testing, user, dbtable
 func TestDirectUserEntry(t *testing.T) {
 
 	t.Logf("db %s", db.Name())
@@ -75,7 +87,12 @@ func TestDirectUserEntry(t *testing.T) {
 	}
 }
 
-// TestRegisterUser checks that registering a new user works as expected.
+// TestRegisterUser tests the RegisterUser HTTP handler for successful user registration.
+//
+// @Summary      Test user registration
+// @Description  Simulates a POST request to the /register endpoint with valid form data and verifies that the user is registered successfully.
+//
+// @Tags         testing, user, dbtable
 func TestRegisterUser(t *testing.T) {
 	// Prepare form data using the correct keys.
 	form := url.Values{}
@@ -109,7 +126,12 @@ func TestRegisterUser(t *testing.T) {
 	}
 }
 
-// TestRegisterUserEmptyFields verifies that missing form values result in an error.
+// TestRegisterUserEmptyFields verifies that the registration endpoint returns an error when required fields are missing.
+//
+// @Summary      Test registration with empty fields
+// @Description  Simulates a POST request to /register without form data and expects a 400 Bad Request response due to missing email and password.
+//
+// @Tags         testing, user, dbtable
 func TestRegisterUserEmptyFields(t *testing.T) {
 	// Create a request with no form data.
 	req := httptest.NewRequest("POST", "/register", nil)

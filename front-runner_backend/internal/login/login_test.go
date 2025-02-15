@@ -14,6 +14,11 @@ import (
 )
 
 // TestMain sets up the test database environment before tests run.
+//
+// @Summary      Setup test environment
+// @Description  Obtains a test database connection and clears the user table before and after running tests.
+//
+// @Tags         testing, setup
 func TestMain(m *testing.M) {
 	// Get the test database instance.
 	db = coredbutils.GetDB()
@@ -37,6 +42,11 @@ func TestMain(m *testing.M) {
 }
 
 // TestLoginUser checks that logging in with valid credentials works.
+//
+// @Summary      Test login with valid credentials
+// @Description  Registers a new user and then logs in with the same credentials. Verifies that the login endpoint returns 200 OK, includes the success message, and sets the session cookie named "auth".
+//
+// @Tags         testing, login
 func TestLoginUser(t *testing.T) {
 	// First, register a user to log in.
 	form := url.Values{}
@@ -83,6 +93,11 @@ func TestLoginUser(t *testing.T) {
 }
 
 // TestLoginUserInvalid checks that an invalid login attempt returns an error.
+//
+// @Summary      Test login with invalid credentials
+// @Description  Attempts to log in with credentials that do not exist and verifies that the login endpoint returns a 401 Unauthorized status.
+//
+// @Tags         testing, login
 func TestLoginUserInvalid(t *testing.T) {
 	form := url.Values{}
 	form.Add("email", "nonexistent@example.com")
@@ -99,6 +114,12 @@ func TestLoginUserInvalid(t *testing.T) {
 	}
 }
 
+// createLogoutTestUser is a helper function that registers a test user for logout testing.
+//
+// @Summary      Create test user for logout
+// @Description  Registers a test user that can later be used to verify the logout functionality.
+//
+// @Tags         testing, helper
 func createLogoutTestUser(t *testing.T) {
 	form := url.Values{}
 	form.Add("email", "test@example.com")
@@ -116,6 +137,11 @@ func createLogoutTestUser(t *testing.T) {
 }
 
 // TestLogoutUser verifies that logging out clears the session.
+//
+// @Summary      Test logout functionality
+// @Description  Simulates a login to obtain a session cookie and then logs out, verifying that the session is cleared.
+//
+// @Tags         testing, logout
 func TestLogoutUser(t *testing.T) {
 	// Creating a test user for logout test
 	createLogoutTestUser(t)

@@ -10,6 +10,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// TestRegisterRoutes_Match verifies that the router matches expected routes and methods.
+//
+// @Summary      Verify route matching
+// @Description  Creates a new router with registered routes and checks that expected HTTP methods and paths are correctly matched.
+//
+// @Tags         testing, routes, router
 func TestRegisterRoutes_Match(t *testing.T) {
 	// Create a new router and register the routes.
 	router := mux.NewRouter()
@@ -44,6 +50,12 @@ func TestRegisterRoutes_Match(t *testing.T) {
 	}
 }
 
+// createDummyIndex creates a dummy index.html file in a temporary directory for testing static file serving.
+//
+// @Summary      Create dummy index file
+// @Description  Creates a temporary directory with a dummy index.html file to simulate a static build directory.
+//
+// @Tags         testing, helper, routes, router
 func createDummyIndex(t *testing.T) string {
 	// Create a temporary directory to simulate the static build directory.
 	tempDir, err := os.MkdirTemp("", "build")
@@ -62,6 +74,12 @@ func createDummyIndex(t *testing.T) string {
 	return tempDir
 }
 
+// registerDummyRoutes registers dummy API endpoints and static file routes using the provided temporary directory.
+//
+// @Summary      Register dummy routes
+// @Description  Registers dummy API endpoints and static file serving routes for testing purposes using a temporary directory.
+//
+// @Tags         testing, routes, router, helper
 func registerDummyRoutes(router *mux.Router, tempDir string) {
 	// Register your API routes as usual.
 	router.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {}).Methods("POST")
@@ -76,6 +94,12 @@ func registerDummyRoutes(router *mux.Router, tempDir string) {
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir(tempDir)))
 }
 
+// TestRegisterRoutes_WithDummyStaticFile verifies that the static file server returns the dummy index file.
+//
+// @Summary      Test static file serving
+// @Description  Sets up a dummy static file server and verifies that a GET request to "/" returns the expected dummy index content.
+//
+// @Tags         testing, router, routes
 func TestRegisterRoutes_WithDummyStaticFile(t *testing.T) {
 	tempDir := createDummyIndex(t)
 

@@ -32,23 +32,17 @@ quit
 Start the go server by running:
 
 ```golang
-go run front-runner_backend/cmd/main/main.go
+go run front-runner_backend/main.go
 ```
 
 ## To Generate docs
 
 ```bash
-swag init --parseInternal -g main.go -d internal/login,internal
+swag init --parseInternal
 ```
 
 Additional `-d` directories will be added as we build more modules.
 
 ## To access the docs
-
-Start the go server:
-
-```golang
-go run cmd/main/main.go
-```
 
 go to this webpage: https://localhost:8080/swagger/index.html

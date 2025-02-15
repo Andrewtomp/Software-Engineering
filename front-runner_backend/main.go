@@ -2,11 +2,9 @@
 // @title Front Runner API
 // @version 1.0
 // @description API documentation for the Front Runner application.
-// @termsOfService http://swagger.io/terms/
 // @contact.name API Support
-// @contact.url http://www.swagger.io/support
-// @contact.email support@example.com
-// @license.name Apache 2.0
+// @contact.email jonathan.bravo@ufl.edu
+// @license.name MIT
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 // @host localhost:8080
 // @BasePath /

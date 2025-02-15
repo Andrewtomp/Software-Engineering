@@ -47,17 +47,19 @@ func init() {
 }
 
 // LoginUser authenticates a user and creates a session.
-// @Summary User login
-// @Description Authenticates a user and creates a session.
-// @Tags Authentication
-// @Accept application/x-www-form-urlencoded
-// @Produce plain
-// @Param email formData string true "User email"
-// @Param password formData string true "User password"
-// @Success 200 {string} string "Logged in successfully."
-// @Failure 400 {string} string "Email and password are required"
-// @Failure 401 {string} string "Invalid credentials"
-// @Router /login [post]
+//
+// @Summary      User login
+// @Description  Authenticates a user and creates a session.
+//
+// @Tags         authentication, login
+// @Accept       application/x-www-form-urlencoded
+// @Produce      plain
+// @Param        email formData string true "User email"
+// @Param        password formData string true "User password"
+// @Success      200 {string} string "Logged in successfully."
+// @Failure      400 {string} string "Email and password are required"
+// @Failure      401 {string} string "Invalid credentials"
+// @Router       /login [post]
 func LoginUser(w http.ResponseWriter, r *http.Request) {
 	// Retrieve the session first.
 	session, err := sessionStore.Get(r, "auth")
@@ -105,12 +107,14 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // LogoutUser clears the user's session.
-// @Summary User logout
-// @Description Logs out the current user by clearing the session.
-// @Tags Authentication
-// @Produce plain
-// @Success 200 {string} string "Logged out successfully"
-// @Router /logout [get]
+//
+// @Summary      User logout
+// @Description  Logs out the current user by clearing the session.
+//
+// @Tags         authentication, logout
+// @Produce      plain
+// @Success      200 {string} string "Logged out successfully"
+// @Router       /logout [get]
 func LogoutUser(w http.ResponseWriter, r *http.Request) {
 	session, err := sessionStore.Get(r, "auth")
 	if err != nil {

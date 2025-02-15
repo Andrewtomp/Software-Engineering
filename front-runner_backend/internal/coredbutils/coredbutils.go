@@ -7,11 +7,14 @@ import (
 	"gorm.io/gorm"
 )
 
-var (
-	// db will hold the GORM DB instance
-	db *gorm.DB
-)
+var db *gorm.DB
 
+// GetDB initializes and returns a connection to the PostgreSQL database.
+//
+// @Summary      Initialize database connection
+// @Description  Build the DSN and connect to the PostgreSQL database using GORM. Returns a *gorm.DB instance that can be used by internal packages to interact with the database.
+//
+// @Tags         database
 func GetDB() *gorm.DB {
 	// Build the DSN (Data Source Name) for PostgreSQL.
 	// Adjust the parameters (host, user, password, dbname, port, sslmode, TimeZone) as needed.

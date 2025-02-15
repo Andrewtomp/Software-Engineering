@@ -2,6 +2,12 @@ package validemail
 
 import "testing"
 
+// TestValidEmail verifies that a properly formatted email address is considered valid.
+//
+// @Summary      Validate a correct email address
+// @Description  Ensures that a correctly formatted email (e.g., "user@tester.com") returns true using the Valid function.
+//
+// @Tags         validate, email, testing
 func TestValidEmail(t *testing.T) {
 	email := "user@tester.com"
 
@@ -10,6 +16,11 @@ func TestValidEmail(t *testing.T) {
 	}
 }
 
+// TestInvalidEmail verifies that improperly formatted email addresses are considered invalid.
+//
+// @Summary      Validate incorrect email addresses
+// @Description  Ensures that various improperly formatted email addresses return false using the Valid function.
+// @Tags         validate, email, testing
 func TestInvalidEmail(t *testing.T) {
 	email := []string{
 		"usertester.com",

@@ -10,10 +10,9 @@ import (
 	"gorm.io/gorm"
 )
 
-// File-level annotations (optional):
 // @title Authentication Endpoints
 // @description Endpoints for user registration, login, and logout.
-
+//
 // User represents an authenticated user.
 // swagger:model User
 type User struct {
@@ -32,8 +31,15 @@ func init() {
 	db = coredbutils.GetDB()
 }
 
-// ClearDatabase deletes all records from the users table.
+// ClearUserTable deletes all records from the users table.
 // The AllowGlobalUpdate flag is required for global deletes in GORM v2.
+//
+// @Summary     Clear user table
+// @Description Deletes all records from the user table in the database. Useful for testing and reset purposes.
+//
+// @Tags        dbtable, user, housekeeping
+// @Success     200 {string} string "User table cleared successfully"
+// @Failure     500 {string} string "Error clearing users table"
 func ClearUserTable(db *gorm.DB) error {
 	if err := db.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&User{}).Error; err != nil {
 		return fmt.Errorf("error clearing users table: %w", err)
@@ -42,18 +48,20 @@ func ClearUserTable(db *gorm.DB) error {
 }
 
 // RegisterUser creates a new user record.
-// @Summary Register a new user
-// @Description Registers a new user using email, password, and an optional business name.
-// @Tags Authentication
-// @Accept application/x-www-form-urlencoded
-// @Produce plain
-// @Param email formData string true "User email"
-// @Param password formData string true "User password"
-// @Param business_name formData string false "Business name"
-// @Success 200 {string} string "User registered successfully"
-// @Failure 400 {string} string "Email and password are required or invalid email format"
-// @Failure 409 {string} string "Email already in use or database error"
-// @Router /register [post]
+//
+// @Summary      Register a new user
+// @Description  Registers a new user using email, password, and an optional business name.
+//
+// @Tags         authentication, user, dbtable
+// @Accept       application/x-www-form-urlencoded
+// @Produce      plain
+// @Param        email formData string true "User email"
+// @Param        password formData string true "User password"
+// @Param        business_name formData string false "Business name"
+// @Success      200 {string} string "User registered successfully"
+// @Failure      400 {string} string "Email and password are required or invalid email format"
+// @Failure      409 {string} string "Email already in use or database error"
+// @Router       /register [post]
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
