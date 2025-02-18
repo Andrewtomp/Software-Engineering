@@ -61,7 +61,7 @@ func ClearUserTable(db *gorm.DB) error {
 // @Success      200 {string} string "User registered successfully"
 // @Failure      400 {string} string "Email and password are required or invalid email format"
 // @Failure      409 {string} string "Email already in use or database error"
-// @Router       /register [post]
+// @Router       /api/register [post]
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")

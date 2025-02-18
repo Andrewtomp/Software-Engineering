@@ -59,7 +59,7 @@ func init() {
 // @Success      200 {string} string "Logged in successfully."
 // @Failure      400 {string} string "Email and password are required"
 // @Failure      401 {string} string "Invalid credentials"
-// @Router       /login [post]
+// @Router       /api/login [post]
 func LoginUser(w http.ResponseWriter, r *http.Request) {
 	// Retrieve the session first.
 	session, err := sessionStore.Get(r, "auth")
@@ -114,7 +114,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 // @Tags         authentication, logout
 // @Produce      plain
 // @Success      200 {string} string "Logged out successfully"
-// @Router       /logout [get]
+// @Router       /api/logout [get]
 func LogoutUser(w http.ResponseWriter, r *http.Request) {
 	session, err := sessionStore.Get(r, "auth")
 	if err != nil {
