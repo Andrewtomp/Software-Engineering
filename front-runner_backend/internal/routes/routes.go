@@ -3,11 +3,50 @@ package routes
 import (
 	"front-runner/internal/login"
 	"front-runner/internal/usertable"
+	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/gorilla/mux"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
+
+type spaHandler struct {
+	staticPath string
+	indexPath  string
+}
+
+// Serves the static ReactJS site. Continually serves index.html as a result of ReactJS internal routing.
+func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Join internally call path.Clean to prevent directory traversal
+	path := filepath.Join(h.staticPath, r.URL.Path)
+
+	// check whether a file exists or is a directory at the given path
+	fi, err := os.Stat(path)
+	if os.IsNotExist(err) || fi.IsDir() {
+		// file does not exist or path is a directory, serve index.html
+		http.ServeFile(w, r, filepath.Join(h.staticPath, h.indexPath))
+		return
+	}
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// otherwise, use http.FileServer to serve the static file
+	http.FileServer(http.Dir(h.staticPath)).ServeHTTP(w, r)
+}
+
+// Logs URI requests to the console.
+func activityLogger(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.RequestURI)
+		// Call the next handler, which can be another middleware in the chain, or the final handler.
+		next.ServeHTTP(w, r)
+	})
+}
 
 // RegisterRoutes sets up all the application routes including API endpoints, Swagger UI, and static file serving.
 //
@@ -18,17 +57,21 @@ import (
 // @Accept       json
 // @Produce      html
 func RegisterRoutes(router *mux.Router) {
+	// API subrouter
+	api := router.PathPrefix("/api").Subrouter()
+
 	// API endpoints
-	router.HandleFunc("/register", usertable.RegisterUser).Methods("POST")
-	router.HandleFunc("/login", login.LoginUser).Methods("POST")
-	router.HandleFunc("/logout", login.LogoutUser).Methods("GET")
+	api.HandleFunc("/register", usertable.RegisterUser).Methods("POST")
+	api.HandleFunc("/login", login.LoginUser).Methods("POST")
+	api.HandleFunc("/logout", login.LogoutUser).Methods("GET")
 
 	// Serve Swagger UI on /swagger/*
 	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
-	// Serve static files for your webpage
-	s := http.StripPrefix("/static/", http.FileServer(http.Dir("../front-runner/build/static/")))
-	router.PathPrefix("/static/").Handler(s)
-	router.PathPrefix("/").Handler(http.FileServer(http.Dir("../front-runner/build")))
-	http.Handle("/", router)
+	// Serve static files for webpage
+	spa := spaHandler{staticPath: "../front-runner/build", indexPath: "index.html"}
+	router.PathPrefix("/").Handler(spa)
+
+	// Logging
+	// router.Use(activityLogger)
 }
