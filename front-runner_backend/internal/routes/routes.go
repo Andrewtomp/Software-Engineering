@@ -39,6 +39,10 @@ func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.FileServer(http.Dir(h.staticPath)).ServeHTTP(w, r)
 }
 
+func InvalidAPI(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "Invalid API Endpoint", http.StatusNotFound)
+}
+
 // Logs URI requests to the console.
 func activityLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -64,6 +68,7 @@ func RegisterRoutes(router *mux.Router) {
 	api.HandleFunc("/register", usertable.RegisterUser).Methods("POST")
 	api.HandleFunc("/login", login.LoginUser).Methods("POST")
 	api.HandleFunc("/logout", login.LogoutUser).Methods("GET")
+	api.PathPrefix("/").HandlerFunc(InvalidAPI)
 
 	// Serve Swagger UI on /swagger/*
 	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
