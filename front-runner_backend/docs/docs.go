@@ -22,7 +22,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/login": {
+        "/api/login": {
             "post": {
                 "description": "Authenticates a user and creates a session.",
                 "consumes": [
@@ -74,7 +74,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/logout": {
+        "/api/logout": {
             "get": {
                 "description": "Logs out the current user by clearing the session.",
                 "produces": [
@@ -95,7 +95,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/register": {
+        "/api/register": {
             "post": {
                 "description": "Registers a new user using email, password, and an optional business name.",
                 "consumes": [
@@ -154,7 +154,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/validemail": {
+        "/api/validemail": {
             "get": {
                 "description": "Checks if the provided email address is in a valid format. Returns true if valid, false otherwise.",
                 "tags": [
