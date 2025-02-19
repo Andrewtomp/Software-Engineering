@@ -12,6 +12,7 @@ package main
 
 import (
 	"crypto/tls"
+	"flag"
 	"log"
 	"net/http"
 
@@ -35,13 +36,17 @@ func main() {
 		Certificates: []tls.Certificate{cert},
 	}
 
+	var verboseFlag bool
+	flag.BoolVar(&verboseFlag, "verbose", false, "Enable logging of incomming HTTP requests")
+	flag.Parse()
+
 	router := mux.NewRouter()
 
-	routes.RegisterRoutes(router)
+	routeHandler := routes.RegisterRoutes(router, verboseFlag)
 
 	server := &http.Server{
 		Addr:      port,
-		Handler:   router,
+		Handler:   routeHandler,
 		TLSConfig: config,
 	}
 

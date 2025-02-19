@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -43,15 +44,6 @@ func InvalidAPI(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Invalid API Endpoint", http.StatusNotFound)
 }
 
-// Logs URI requests to the console.
-func activityLogger(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println(r.RequestURI)
-		// Call the next handler, which can be another middleware in the chain, or the final handler.
-		next.ServeHTTP(w, r)
-	})
-}
-
 // RegisterRoutes sets up all the application routes including API endpoints, Swagger UI, and static file serving.
 //
 // @Summary      Register application routes
@@ -60,7 +52,7 @@ func activityLogger(next http.Handler) http.Handler {
 // @Tags         routes, router
 // @Accept       json
 // @Produce      html
-func RegisterRoutes(router *mux.Router) {
+func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
 	// API subrouter
 	api := router.PathPrefix("/api").Subrouter()
 
@@ -78,5 +70,8 @@ func RegisterRoutes(router *mux.Router) {
 	router.PathPrefix("/").Handler(spa)
 
 	// Logging
-	// router.Use(activityLogger)
+	if logging {
+		return handlers.LoggingHandler(os.Stdout, router)
+	}
+	return router
 }
