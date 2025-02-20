@@ -12,7 +12,6 @@ package main
 
 import (
 	"crypto/tls"
-	"flag"
 	"log"
 	"net/http"
 
@@ -20,10 +19,12 @@ import (
 	"front-runner/internal/routes"
 
 	"github.com/gorilla/mux"
+	"github.com/pborman/getopt/v2"
 )
 
-const (
-	port = ":8080"
+var (
+	port         = "8080"
+	verbose bool = false
 )
 
 func main() {
@@ -36,21 +37,22 @@ func main() {
 		Certificates: []tls.Certificate{cert},
 	}
 
-	var verboseFlag bool
-	flag.BoolVar(&verboseFlag, "verbose", false, "Enable logging of incomming HTTP requests")
-	flag.Parse()
+	getopt.FlagLong(&verbose, "verbose", 'v', "Enable logging of incomming HTTP requests")
+	getopt.FlagLong(&port, "port", 'p', "Specify port to listen for connnections")
+
+	getopt.Parse()
 
 	router := mux.NewRouter()
 
-	routeHandler := routes.RegisterRoutes(router, verboseFlag)
+	routeHandler := routes.RegisterRoutes(router, verbose)
 
 	server := &http.Server{
-		Addr:      port,
+		Addr:      ":" + port,
 		Handler:   routeHandler,
 		TLSConfig: config,
 	}
 
-	log.Printf("Listening on %s...", port)
+	log.Printf("Listening on %s...", server.Addr)
 	err = server.ListenAndServeTLS("", "")
 	if err != nil {
 		log.Fatalf("Failed to start server: %v", err)

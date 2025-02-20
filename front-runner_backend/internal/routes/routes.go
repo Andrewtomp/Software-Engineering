@@ -3,7 +3,6 @@ package routes
 import (
 	"front-runner/internal/login"
 	"front-runner/internal/usertable"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
