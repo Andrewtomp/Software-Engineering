@@ -28,7 +28,7 @@ html {
 
 .my-orders-content h1 {
     color: white;
-    font-size: 3.5rem;
+    font-size: 2rem;
     margin-top: 20px;
     margin-bottom: 10px;
 }
@@ -39,7 +39,7 @@ html {
     flex-wrap: wrap;
     gap: 20px;
     width: 100%;
-    height: calc(100% - 105.2px - 20px);
+    height: calc(100% - 72.4px - 20px);
 }
 
 .order-info-tile {
@@ -58,16 +58,54 @@ html {
     margin-bottom: 15px;
     margin-top: 0px;
     color: white;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     z-index: 1;
     position: relative;
+    width: fit-content;
 }
 
-.small-order-tile {
+.export {
+    display: flex;
+    flex-direction: row;
+    color: white;
+    position: absolute;
+    top: 0px;
+    right: 15px;
+}
+
+.export p {
+    margin: 0px;
+    margin-top: 10px;
+    transition: transform 0.3s ease;
+}
+
+.export-arrow {
+    transform: rotate(-45deg);
+    height: 12px;
+    margin: 0px;
+    margin-top: 16px;
+    border-radius: 5px;
+    transition: transform 0.3s ease;
+}
+
+.export:hover .export-arrow {
+    transform: translateX(2px) translateY(-2px) rotate(-45deg);
+}
+
+
+.export:hover {
+    cursor: pointer;
+}
+
+.export:hover p {
+    transform: skewX(-10deg);
+}
+
+.order-metrics-tile {
     background-color: #181818;
     border-radius: 25px;
     border: solid rgba(255, 255, 255, 0.25) 1px;
-    width: calc(50% - 10px); /* Keep this */
+    width: 100%; /* Keep this */
     height: calc(35% - 10px);
     padding: 15px;
     padding-top: 10px;

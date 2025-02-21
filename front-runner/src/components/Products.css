@@ -30,7 +30,7 @@ html {
 
 .my-products-content h1 {
     color: white;
-    font-size: 3.5rem;
+    font-size: 2rem;
     margin-top: 20px;
     margin-bottom: 10px;
 }
@@ -49,7 +49,7 @@ html {
 .product-tile h2 {
     margin: 0px;
     color: white;
-    font-size: 2rem;
+    font-size: 1.25rem;
     z-index: 1;
     position: relative;
 }
@@ -73,7 +73,7 @@ html {
     height: 225px;
     padding: 10px;
     padding-left: 15px;
-    border: 1px rgba(255, 255, 255, 1) solid;
+    border: 1px rgba(255, 255, 255, .25) solid;
     border-radius: 25px;
     background-size: cover;
     background-position: center;
