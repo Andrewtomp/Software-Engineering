@@ -1,0 +1,113 @@
+html, body {
+    background-color: #0b0b0b;
+}
+
+html {
+    height: 100%;
+  }
+  body {
+    min-height: 100%;
+  }
+
+.my-products {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+}
+
+.products-header{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.my-products-content {
+    margin-left: 140px;
+    margin-right: 40px;
+    width: 100%;
+}
+
+.my-products-content h1 {
+    color: white;
+    font-size: 3.5rem;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.products-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.product-tile:hover {
+    cursor: pointer;
+}
+
+.product-tile h2 {
+    margin: 0px;
+    color: white;
+    font-size: 2rem;
+    z-index: 1;
+    position: relative;
+}
+
+.product-tile p {
+    z-index: 1;
+    position: relative;
+    margin-top: 10px;
+    color: white;
+}
+
+.add-new-icon {
+    margin-top: 16px;
+    margin-left: 12px;
+    height: 3rem;
+    width: 3rem;
+}
+
+.product-tile {
+    width: calc(50% - 48px);
+    height: 225px;
+    padding: 10px;
+    padding-left: 15px;
+    border: 1px rgba(255, 255, 255, 1) solid;
+    border-radius: 25px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    overflow: hidden; /* Hide anything spilling out */
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.product-tile::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 25px;
+    background: rgba(24, 24, 24, 0.5); /* Semi-transparent dark overlay */
+    backdrop-filter: blur(7px); /* Apply blur effect */
+    z-index: 0; /* Ensure the overlay is beneath the text */
+}
+
+.product-info {
+    width: 65%;
+    height: 100%;
+}
+
+.product-image-preview {
+    z-index: 1;
+    margin-left: auto;
+    height: 100%;
+    width: auto; /* Maintain aspect ratio */
+    border-radius: 15px;
+    border: 1px white solid;
+}

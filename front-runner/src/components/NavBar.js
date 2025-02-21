@@ -1,30 +1,35 @@
-import { Link } from "react-router-dom";
 import "./NavBar.css";
 
 const NavBar = () => {
     return (
         <nav className="nav-bar">
             <div className="nav-icons">
-                <Link to="/">
+                <div onClick={() => window.location.href = "/"} className="nav-option">
                     <img src="../assets/Logo.svg" className="logo" alt="FR logo"/>
-                </Link>
-                <Link to="/products">
+                    <h2><i>FrontRunner </i></h2>
+                </div>
+                <div onClick={() => window.location.href = "/products"} className="nav-option">
                     <img src="../assets/Product icon.svg" className="nav-icon" alt="products"/>
-                </Link>
-                <Link to="/storefronts">
+                    <h2>My Products</h2>
+                </div>
+                <div onClick={() => window.location.href = "/storefronts"} className="nav-option">
                     <img src="../assets/Storefront icon.svg" className="nav-icon" alt="storefronts"/>
-                </Link>
-                <Link to="/orders">
+                    <h2>My Storefronts</h2>
+                </div>
+                <div onClick={() => window.location.href = "/orders"} className="nav-option">
                     <img src="../assets/Orders icon.svg" className="nav-icon" alt="orders"/>
-                </Link>
+                    <h2>My Orders</h2>
+                </div>
             </div>
             <div className="bottom-nav-icons">
-                <Link to="/settings">   
+                <div onClick={() => window.location.href = "/settings"} className="nav-option">   
                     <img src="../assets/Settings icon.svg" className="bottom-nav-icon" alt="icon"/>
-                </Link>
-                <Link to="/logout">   
+                    <h2>Settings</h2>
+                </div>
+                <div onClick={() => window.location.href = "/logout"} className="nav-option">   
                     <img src="../assets/Logout icon.svg" className="nav-icon" alt="icon"/>
-                </Link>
+                    <h2>Logout</h2>
+                </div>
             </div>
         </nav>
     );
