@@ -113,6 +113,18 @@ html {
     box-sizing: border-box; /* Ensures width includes padding/border */
 }
 
+.table-button {
+    color: white;
+    background: linear-gradient(to right, #FF4949, #FF8000);
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px 5px 10px ;
+}
+
+.table-button:hover {
+    cursor: pointer;
+}
+
 .orders-ag-theme {
     --ag-background-color: #333; /* Dark grey background */
     --ag-foreground-color: white; /* White text */
@@ -152,3 +164,7 @@ html {
     background-color: #444; /* Match dark theme */
     z-index: 2; /* Ensure it's above rows */
 }
+
+.orders-ag-theme .ag-header-cell-label {
+    justify-content: center;
+  }
