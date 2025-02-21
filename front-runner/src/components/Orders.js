@@ -46,9 +46,9 @@ const Orders = () => {
                 <div className='order-tiles-container'>
                     <div className='order-info-tile'>
                         <h2>My Orders</h2>
-                        <div className='view-all-products' onClick={() => window.location.href='/orders'}>
+                        <div className='export' onClick={() => window.location.href=''}>
                             <p>Export</p>
-                            <svg width="26" height="24" viewBox="0 0 26 24" fill="none" xmlns="http://www.w3.org/2000/svg" className='arrow-right'>
+                            <svg width="26" height="24" viewBox="0 0 26 24" fill="none" xmlns="http://www.w3.org/2000/svg" className='export-arrow'>
                                 <path d="M25.0607 13.0607C25.6464 12.4749 25.6464 11.5251 25.0607 10.9393L15.5147 1.3934C14.9289 0.807612 13.9792 0.807612 13.3934 1.3934C12.8076 1.97918 12.8076 2.92893 13.3934 3.51472L21.8787 12L13.3934 20.4853C12.8076 21.0711 12.8076 22.0208 13.3934 22.6066C13.9792 23.1924 14.9289 23.1924 15.5147 22.6066L25.0607 13.0607ZM0 13.5H24V10.5H0L0 13.5Z" fill="white"/>
                             </svg>
                         </div>
@@ -65,12 +65,8 @@ const Orders = () => {
                         </div>
                     </div>
 
-                    <div className='small-order-tile'>
-
-                    </div>
-
-                    <div className='small-order-tile'>
-
+                    <div className='order-metrics-tile'>
+                        <h2>Order Metrics</h2>
                     </div>
                 </div>
             </div>
