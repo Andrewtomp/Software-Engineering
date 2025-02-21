@@ -229,6 +229,10 @@ html, body {
     z-index: 2; /* Ensure it's above rows */
 }
 
+.home-ag-theme .ag-header-cell-label {
+    justify-content: center;
+  }
+
 .storefront-tiles {
     display: flex;
     flex-direction: row;
