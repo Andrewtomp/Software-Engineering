@@ -1,0 +1,116 @@
+html, body {
+    background-color: #0b0b0b;
+}
+html {
+    height: 100%;
+  }
+  body {
+    min-height: 100%;
+  }
+
+  #root {
+    height: 100vh;
+  }
+
+.my-orders {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+}
+
+.my-orders-content {
+    margin-left: 140px;
+    margin-right: 40px;
+    width: 100%;
+    height: 100%;
+}
+
+.my-orders-content h1 {
+    color: white;
+    font-size: 3.5rem;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.order-tiles-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 20px;
+    width: 100%;
+    height: calc(100% - 105.2px - 20px);
+}
+
+.order-info-tile {
+    background-color: #181818;
+    border-radius: 25px;
+    border: solid rgba(255, 255, 255, .25) 1px;
+    width: 100%;
+    height: calc(65% - 10px);
+    padding: 15px;
+    padding-top: 10px;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.my-orders-content h2 {
+    margin-bottom: 15px;
+    margin-top: 0px;
+    color: white;
+    font-size: 1.5rem;
+    z-index: 1;
+    position: relative;
+}
+
+.small-order-tile {
+    background-color: #181818;
+    border-radius: 25px;
+    border: solid rgba(255, 255, 255, 0.25) 1px;
+    width: calc(50% - 10px); /* Keep this */
+    height: calc(35% - 10px);
+    padding: 15px;
+    padding-top: 10px;
+    position: relative;
+    box-sizing: border-box; /* Ensures width includes padding/border */
+}
+
+.orders-ag-theme {
+    --ag-background-color: #333; /* Dark grey background */
+    --ag-foreground-color: white; /* White text */
+    --ag-header-background-color: #444; /* Slightly darker header */
+    --ag-border-color: transparent; /* Remove default borders */
+    /* Hover color */
+    --ag-row-hover-color: rgba(255, 73, 73, 0.3); /* Red hover with transparency */
+    border-radius: 25px;
+    height: calc(100% - 47px);
+    width: 100%;
+}
+
+/* Remove external scrollbar, only allow the internal scrollbar */
+.orders-ag-theme .ag-root-wrapper {
+    overflow: hidden; /* Prevent outer scrollbars */
+    
+}
+
+.orders-ag-theme .ag-body-viewport {
+    overflow-y: auto; /* Enable internal vertical scrollbar */
+}
+
+.orders-ag-theme .ag-body {
+    height: 375px;
+}
+
+
+/* Apply red border to selected cell */
+.orders-ag-theme .ag-cell:focus {
+    border: 2px solid rgba(255, 73, 73, 0.3) !important; /* Red border on focus */
+    outline: none !important; /* Remove default outline */
+}
+
+.orders-ag-theme .ag-header {
+    position: sticky;
+    top: 0;
+    background-color: #444; /* Match dark theme */
+    z-index: 2; /* Ensure it's above rows */
+}
