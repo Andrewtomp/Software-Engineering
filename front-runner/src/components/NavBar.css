@@ -2,14 +2,65 @@
     margin: 20px;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: left;
     padding: 15px;
     background-color: #181818;
-    width: fit-content;
-    position: relative; 
+    width: 40px;
+    position: fixed;
     border-radius: 25px;
     height: 92vh; /* Full screen height */
+    transition: width 0.3s ease-out, transition-delay 0.3s; /* Include delay for width */
+    z-index: 3;
 }
+
+.nav-bar:hover {
+    width: 175px; /* Expand the width by 120px */
+}
+
+.nav-option {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.nav-option:hover {
+    cursor: pointer;
+}
+
+.nav-option h2 {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
+    font-size: 1.1rem;
+    text-decoration: none;
+    margin: 0;
+    margin-left: 12px;
+    background: linear-gradient(to right, #FF4949, #FF8000);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    white-space: nowrap; /* Prevent text from wrapping to a new line */
+}
+
+/* On hover, show text with delay */
+.nav-bar:hover .nav-option h2 {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0.3s; /* Delay text fade-in */
+}
+
+/* When hover ends, hide text immediately */
+.nav-bar:not(:hover) .nav-option h2 {
+    opacity: 0;
+    visibility: hidden;
+    transition-delay: 0s; /* No delay when hiding */
+}
+
+/* Delay navbar width retraction after text is hidden */
+.nav-bar:not(:hover) {
+    transition-delay: 0.3s; /* Delay retraction of bar until text is hidden */
+}
+
 
 /* For border gradient */
 .nav-bar::before {
@@ -27,15 +78,15 @@
 }
 
 .logo {
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
 }
 
 /* Wrap the icons in a container to push them to the top */
 .nav-icons {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: left;
     gap: 30px;
     margin-bottom: auto;
 }
@@ -55,5 +106,6 @@
 .bottom-nav-icons {
     display: flex;
     flex-direction: column;
+    align-items: left;
     gap: 30px;
 }

@@ -9,7 +9,7 @@ html, body {
 }
 
 .home-content {
-    margin-left: 20px;
+    margin-left: 140px;
     margin-right: 40px;
     width: 100%;
 }
@@ -18,7 +18,7 @@ html, body {
     color: white;
     font-size: 3.5rem;
     margin-top: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .home-tiles {
@@ -32,6 +32,8 @@ html, body {
     margin-top: 0px;
     color: white;
     font-size: 1.5rem;
+    z-index: 1;
+    position: relative;
 }
 
 .products-tile {
@@ -42,67 +44,119 @@ html, body {
     height: 83vh;
     padding: 15px;
     padding-top: 10px;
+    position: relative; 
+}
+
+.tile-header {
+    display: flex;
+    flex-direction: row;
 }
 
 .home-products {
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
+    flex-direction: column;
     width: 100%;
     height: calc(100% - 47px);
     gap: 15px;
 }
 
 .home-product {
-    width: calc(50% - 7.5px);
-    min-width: 300px;
+    width: 100%;
+    height: calc(33% - 47px);
     position: relative;
     transition: transform 0.3s ease;
+    border: 2px solid white;
+    border-radius: 25px;
+    transform-origin: center center; /* ensure scaling from center */
+}
+
+.home-product:hover, .home-storefront:hover {
+    cursor: pointer;
+    box-shadow: white;
+}
+
+.home-product {
+    width: calc(100% - 30px);
+    height: 30%;
+    padding: 10px;
+    padding-left: 15px;
+    border: 1px rgba(255, 255, 255, 1) solid;
+    border-radius: 25px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    overflow: hidden; /* Hide anything spilling out */
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.3s ease;
+}
+
+.home-product::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 25px;
+    background: rgba(24, 24, 24, 0.5); /* Semi-transparent dark overlay */
+    backdrop-filter: blur(7px); /* Apply blur effect */
+    z-index: 0; /* Ensure the overlay is beneath the text */
+}
+
+.home-product p {
+    z-index: 1;
+    position: relative;
+    margin-top: 10px;
+    color: white;
 }
 
 .view-all-products {
-    background: linear-gradient(to right, #FF4949, #FF8000);
-    width: calc(50% - 7.5px);
-    min-width: 300px;
-    border-radius: 25px;
     display: flex;
     flex-direction: row;
+    color: white;
+    position: absolute;
+    top: 5px;
+    right: 15px;
+}
+
+.view-all-products p {
+    margin: 0px;
+    margin-top: 10px;
     transition: transform 0.3s ease;
 }
 
-.home-product:hover, .view-all-products:hover {
-    transform: scale(1.01);
+.arrow-right {
+    height: 12px;
+    margin: 0px;
+    margin-top: 16px;
+    border-radius: 5px;
+    transition: transform 0.3s ease;
+}
+
+.view-all-products:hover .arrow-right {
+    transform: translateX(3px);
+}
+
+.view-all-products:hover {
     cursor: pointer;
 }
 
-.home-product h3, .view-all-products h3 {
+.view-all-products:hover p {
+    transform: skewX(-10deg);
+}
+
+
+
+.home-product h3, .home-storefront h3{
     margin: 15px;
     margin-top: 10px;
     margin-right: 2px;
     font-size: 1.5rem;
     color: white;
-}
-
-.arrow-right {
-    height: 16px;
-    margin: 0px;
-    margin-top: 19px;
-    border-radius: 5px;
-}
-
-/* For border gradient */
-.home-product::before {
-    content: "";
-    position: absolute;
-    inset: 0; 
-    padding: 2px; 
-    border-radius: 25px;
-    background: linear-gradient(to bottom, #FF4949, #FF8000);
-    -webkit-mask: linear-gradient(white 0 0) content-box, linear-gradient(white 0 0);
-    mask: linear-gradient(white 0 0) content-box, linear-gradient(white 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none; 
 }
 
 .small-home-tiles {
@@ -114,13 +168,75 @@ html, body {
 
 .small-home-tile {
     width: 100%;
-    height: calc(50% - 10px);
     background-color: #181818;
     border-radius: 25px;
     border: solid rgba(255, 255, 255, .25) 1px;
     padding: 15px;
     padding-top: 10px;
+    position: relative;
 }
 
+.storefronts-small-home-tile {
+    height: calc(40% - 10px);
+}
+
+.orders-small-home-tile {
+    height: calc(60% - 10px);
+}
+
+.home-ag-theme {
+    --ag-background-color: #333; /* Dark grey background */
+    --ag-foreground-color: white; /* White text */
+    --ag-header-background-color: #444; /* Slightly darker header */
+    --ag-border-color: transparent; /* Remove default borders */
+    /* Hover color */
+    --ag-row-hover-color: rgba(255, 73, 73, 0.3); /* Red hover with transparency */
+    border-radius: 25px;
+    height: calc(100% - 47px);
+    width: 100%;
+}
+
+/* Remove external scrollbar, only allow the internal scrollbar */
+.home-ag-theme .ag-root-wrapper {
+    overflow: hidden; /* Prevent outer scrollbars */
+    
+}
+
+.home-ag-theme .ag-body-viewport {
+    overflow-y: auto; /* Enable internal vertical scrollbar */
+}
+
+.home-ag-theme .ag-body {
+    height: 375px;
+}
+
+
+/* Apply red border to selected cell */
+.home-ag-theme .ag-cell:focus {
+    border: 2px solid rgba(255, 73, 73, 0.3) !important; /* Red border on focus */
+    outline: none !important; /* Remove default outline */
+}
+
+.home-ag-theme .ag-header {
+    position: sticky;
+    top: 0;
+    background-color: #444; /* Match dark theme */
+    z-index: 2; /* Ensure it's above rows */
+}
+
+.storefront-tiles {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    height: calc(100% - 47px);
+}
+
+.home-storefront {
+    width: calc(33% - 7.5px);
+    height: 100%;
+    border-radius: 25px;
+    border: 2px white solid;
+    transition: transform 0.3s ease;
+}
 
 
