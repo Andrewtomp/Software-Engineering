@@ -105,12 +105,12 @@ html {
     background-color: #181818;
     border-radius: 25px;
     border: solid rgba(255, 255, 255, 0.25) 1px;
-    width: 100%; /* Keep this */
+    width: 100%; 
     height: calc(35% - 10px);
     padding: 15px;
     padding-top: 10px;
     position: relative;
-    box-sizing: border-box; /* Ensures width includes padding/border */
+    box-sizing: border-box;
 }
 
 .table-button {
@@ -118,7 +118,7 @@ html {
     background: linear-gradient(to right, #FF4949, #FF8000);
     border: none;
     border-radius: 5px;
-    padding: 5px 10px 5px 10px ;
+    padding: 5px 10px 5px 10px;
 }
 
 .table-button:hover {
@@ -137,10 +137,8 @@ html {
     width: 100%;
 }
 
-/* Remove external scrollbar, only allow the internal scrollbar */
 .orders-ag-theme .ag-root-wrapper {
     overflow: hidden; /* Prevent outer scrollbars */
-    
 }
 
 .orders-ag-theme .ag-body-viewport {
