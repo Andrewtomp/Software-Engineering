@@ -1,0 +1,37 @@
+# Front Runner
+
+This project is built using React and React Bootstrap.
+
+## Installation
+
+Follow these steps to set up the project:
+
+1. Clone the repository:
+  
+    git clone <repository-url>
+    cd front-runner
+
+2. Install the dependencies:
+
+    npm install
+
+3. Install React:
+
+    npm install react
+    npm install react react-dom
+
+4. Install React Bootstrap:
+
+    npm install react-bootstrap bootstrap
+
+5. Install React JSON Schema Form:
+    npm install @rjsf/core @rjsf/utils @rjsf/validator-ajv8 --save
+
+## Starting the Development Server
+
+To start the development server, run the following command:
+```bash
+npm start
+```
+
+The application will be available at `http://localhost:3000`.
