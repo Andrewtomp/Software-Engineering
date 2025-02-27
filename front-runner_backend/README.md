@@ -26,7 +26,8 @@ CREATE TABLE users (
 
 CREATE TABLE product_images (
     filename VARCHAR(50) PRIMARY KEY,
-    id int NOT NULL
+    id int NOT NULL,
+    FOREIGN KEY (id) REFERENCES users(id)
 );
 
 quit
