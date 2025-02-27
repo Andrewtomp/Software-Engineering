@@ -16,8 +16,9 @@ import (
 // @Description  Fetches an image if it exists and they are authorized.
 //
 // @Tags         images
-// @Produce      image
-// @Success      200 {binary} binary
+// @Produce      image/*
+// @Param        filename path string true "Filepath of image"
+// @Success      200 {string} binary
 // @Failure      401 {string} string "User is not logged in"
 // @Failure      403 {string} string "Permission denied"
 // @Failure      404 {string} string "Requested image does not exist"
