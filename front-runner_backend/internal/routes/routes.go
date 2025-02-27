@@ -64,6 +64,7 @@ func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
 	api.PathPrefix("/").HandlerFunc(InvalidAPI)
 
 	data.HandleFunc("/image/{imagePath}", imageStore.LoadImage).Methods("GET")
+	data.HandleFunc("/upload", imageStore.UploadImage).Methods("POST")
 
 	// Serve Swagger UI on /swagger/*
 	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
