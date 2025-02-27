@@ -59,7 +59,7 @@ paths:
         type: file
       responses:
         "200":
-          description: OK
+          description: Filename of uploaded image
           schema:
             type: string
         "401":
@@ -72,6 +72,10 @@ paths:
             type: string
         "404":
           description: Requested image does not exist
+          schema:
+            type: string
+        "415":
+          description: Invalid file type
           schema:
             type: string
         "500":

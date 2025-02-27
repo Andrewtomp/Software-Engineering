@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
@@ -91,10 +92,11 @@ func LoadImage(w http.ResponseWriter, r *http.Request) {
 //	@Tags			images
 //	@Param			filename formData file true "Filepath of image"
 //	@Accept			mpfd
-//	@Success		200	{string}	binary
+//	@Success		200	{string}	body	"Filename of uploaded image"
 //	@Failure		401	{string}	string	"User is not logged in"
 //	@Failure		403	{string}	string	"Permission denied"
 //	@Failure		404	{string}	string	"Requested image does not exist"
+//	@Failure		415	{string}	string	"Invalid file type"
 //	@Failure		500	{string}	string	"Unable to retrieve User ID"
 //	@Failure		500	{string}	string	"File already exists"
 //	@Router			/api/data/upload [post]
@@ -121,21 +123,27 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	uploadedType := http.DetectContentType(fileBytes)
+	if !strings.HasPrefix(uploadedType, "image/") {
+		http.Error(w, "Invalid file type", http.StatusUnsupportedMediaType)
+		return
+	}
+
 	tempFile, err := os.CreateTemp("data/images", "upload-*"+filepath.Ext(handler.Filename))
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer tempFile.Close()
 
-	fileBytes, err := io.ReadAll(file)
-	if err != nil {
-		fmt.Println(err)
-	}
-
 	tempFile.Write(fileBytes)
-
+	localFileName := filepath.Base(tempFile.Name())
 	image := ProductImage{
-		Filename: filepath.Base(tempFile.Name()),
+		Filename: localFileName,
 		ID:       userID,
 	}
 
@@ -144,5 +152,5 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "Successfully Uploaded File\n")
+	fmt.Fprintf(w, "%s", localFileName)
 }

@@ -96,7 +96,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Filename of uploaded image",
                         "schema": {
                             "type": "string"
                         }
@@ -115,6 +115,12 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Requested image does not exist",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "415": {
+                        "description": "Invalid file type",
                         "schema": {
                             "type": "string"
                         }
