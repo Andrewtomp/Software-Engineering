@@ -84,7 +84,7 @@ func LoadImage(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, imagePath)
 }
 
-// Retrieves the specified image.
+// Uploads a specified image
 //
 //	@Summary		Upload an image
 //	@Description	Uploads an image if the user is authorized.
