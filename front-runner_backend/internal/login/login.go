@@ -21,8 +21,8 @@ var (
 	// db will hold the GORM DB instance
 	db *gorm.DB
 
-	// sessionStore is used to manage sessions
-	sessionStore *sessions.CookieStore
+	// SessionStore is used to manage sessions
+	SessionStore *sessions.CookieStore
 )
 
 // Init sets up the session store and connects to the PostgreSQL database using GORM.
@@ -33,13 +33,13 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	sessionStore = sessions.NewCookieStore(key)
+	SessionStore = sessions.NewCookieStore(key)
 
 	db = coredbutils.GetDB()
 
 	// Setting the auth cookie to ba available through the whole domain
-	sessionStore = sessions.NewCookieStore(key)
-	sessionStore.Options = &sessions.Options{
+	SessionStore = sessions.NewCookieStore(key)
+	SessionStore.Options = &sessions.Options{
 		Path:     "/",
 		MaxAge:   86400 * 7, // e.g. valid for 7 days by default
 		HttpOnly: true,
@@ -62,7 +62,7 @@ func init() {
 // @Router       /api/login [post]
 func LoginUser(w http.ResponseWriter, r *http.Request) {
 	// Retrieve the session first.
-	session, err := sessionStore.Get(r, "auth")
+	session, err := SessionStore.Get(r, "auth")
 	if err != nil {
 		http.Error(w, "Error retrieving session", http.StatusInternalServerError)
 		return
@@ -116,7 +116,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 // @Success      200 {string} string "Logged out successfully"
 // @Router       /api/logout [get]
 func LogoutUser(w http.ResponseWriter, r *http.Request) {
-	session, err := sessionStore.Get(r, "auth")
+	session, err := SessionStore.Get(r, "auth")
 	if err != nil {
 		http.Error(w, "Error getting session", http.StatusInternalServerError)
 		return
