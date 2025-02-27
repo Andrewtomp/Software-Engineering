@@ -19,7 +19,7 @@ import (
 func TestRegisterRoutes_Match(t *testing.T) {
 	// Create a new router and register the routes.
 	router := mux.NewRouter()
-	RegisterRoutes(router)
+	RegisterRoutes(router, false)
 
 	// Define a list of test cases with the expected HTTP method and path.
 	testCases := []struct {
@@ -27,9 +27,9 @@ func TestRegisterRoutes_Match(t *testing.T) {
 		path        string
 		shouldMatch bool
 	}{
-		{"POST", "/register", true},
-		{"POST", "/login", true},
-		{"GET", "/logout", true},
+		{"POST", "/api/register", true},
+		{"POST", "/api/login", true},
+		{"GET", "/api/logout", true},
 		{"GET", "/swagger/index.html", true},
 		{"GET", "/static/somefile.js", true},
 		{"GET", "/", true},
