@@ -24,6 +24,11 @@ CREATE TABLE users (
     business_name VARCHAR(100)
 );
 
+CREATE TABLE product_images (
+    filename VARCHAR(50) PRIMARY KEY,
+    id int NOT NULL
+);
+
 quit
 ```
 
