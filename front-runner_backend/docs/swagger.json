@@ -16,6 +16,59 @@
     "host": "localhost:8080",
     "basePath": "/",
     "paths": {
+        "/api/data/image/{filename}": {
+            "get": {
+                "description": "Fetches an image if it exists and they are authorized.",
+                "produces": [
+                    "image/*"
+                ],
+                "tags": [
+                    "images"
+                ],
+                "summary": "Retrive an image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filepath of image",
+                        "name": "filename",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "User is not logged in",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Permission denied",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Requested image does not exist",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Unable to retrieve User ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/login": {
             "post": {
                 "description": "Authenticates a user and creates a session.",
