@@ -75,6 +75,59 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/data/upload": {
+            "post": {
+                "description": "Uploads an image if the user is authorized.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "tags": [
+                    "images"
+                ],
+                "summary": "Upload an image",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Filepath of image",
+                        "name": "filename",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "User is not logged in",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Permission denied",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Requested image does not exist",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "File already exists",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/login": {
             "post": {
                 "description": "Authenticates a user and creates a session.",

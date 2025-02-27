@@ -37,18 +37,18 @@ func init() {
 
 // Retrieves the specified image.
 //
-// @Summary      Retrive an image
-// @Description  Fetches an image if it exists and they are authorized.
+//	@Summary		Retrive an image
+//	@Description	Fetches an image if it exists and they are authorized.
 //
-// @Tags         images
-// @Produce      image/*
-// @Param        filename path string true "Filepath of image"
-// @Success      200 {string} binary
-// @Failure      401 {string} string "User is not logged in"
-// @Failure      403 {string} string "Permission denied"
-// @Failure      404 {string} string "Requested image does not exist"
-// @Failure      500 {string} string "Unable to retrieve User ID"
-// @Router       /api/data/image/{filename} [get]
+//	@Tags			images
+//	@Produce		image/*
+//	@Param			filename	path		string	true	"Filepath of image"
+//	@Success		200			{string}	binary
+//	@Failure		401			{string}	string	"User is not logged in"
+//	@Failure		403			{string}	string	"Permission denied"
+//	@Failure		404			{string}	string	"Requested image does not exist"
+//	@Failure		500			{string}	string	"Unable to retrieve User ID"
+//	@Router			/api/data/image/{filename} [get]
 func LoadImage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	filename := vars["imagePath"]
@@ -85,17 +85,19 @@ func LoadImage(w http.ResponseWriter, r *http.Request) {
 
 // Retrieves the specified image.
 //
-// @Summary      Retrive an image
-// @Description  Fetches an image if it exists and they are authorized.
+//	@Summary		Upload an image
+//	@Description	Uploads an image if the user is authorized.
 //
-// @Tags         images
-// @Param        filename formData string true "Filepath of image"
-// @Success      200 {string} binary
-// @Failure      401 {string} string "User is not logged in"
-// @Failure      403 {string} string "Permission denied"
-// @Failure      404 {string} string "Requested image does not exist"
-// @Failure      500 {string} string "Unable to retrieve User ID"
-// @Router       /api/data/upload [post]
+//	@Tags			images
+//	@Param			filename formData file true "Filepath of image"
+//	@Accept			mpfd
+//	@Success		200	{string}	binary
+//	@Failure		401	{string}	string	"User is not logged in"
+//	@Failure		403	{string}	string	"Permission denied"
+//	@Failure		404	{string}	string	"Requested image does not exist"
+//	@Failure		500	{string}	string	"Unable to retrieve User ID"
+//	@Failure		500	{string}	string	"File already exists"
+//	@Router			/api/data/upload [post]
 func UploadImage(w http.ResponseWriter, r *http.Request) {
 
 	if !login.IsLoggedIn(r) {
@@ -138,7 +140,7 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := db.Create(&image).Error; err != nil {
-		http.Error(w, "File already exists.", http.StatusInternalServerError)
+		http.Error(w, "File already exists", http.StatusInternalServerError)
 		return
 	}
 
