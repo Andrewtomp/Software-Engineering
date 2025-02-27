@@ -2,13 +2,28 @@ package imageStore
 
 import (
 	"errors"
+	"front-runner/internal/coredbutils"
 	"front-runner/internal/login"
 	"net/http"
 	"os"
 	"path/filepath"
 
 	"github.com/gorilla/mux"
+	"gorm.io/gorm"
 )
+
+var (
+	db *gorm.DB
+)
+
+type ProductImage struct {
+	Filename string `gorm:"primaryKey;not null"`
+	ID       uint   `gorm:"not null"`
+}
+
+func init() {
+	db = coredbutils.GetDB()
+}
 
 // Retrieves the specified image.
 //
@@ -26,7 +41,8 @@ import (
 // @Router       /api/data/image/{filename} [get]
 func LoadImage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	imagePath := filepath.Join("data/images", vars["imagePath"])
+	filename := vars["imagePath"]
+	imagePath := filepath.Join("data/images", filename)
 
 	if !login.IsLoggedIn(r) {
 		http.Error(w, "User is not logged in", http.StatusUnauthorized)
@@ -39,11 +55,16 @@ func LoadImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if userID == 0 {
-
+	var image ProductImage
+	if err := db.Where("filename = ?", filename).First(&image).Error; err != nil {
+		http.Error(w, "Invalid filename", http.StatusUnauthorized)
+		return
 	}
 
-	//TODO: check if user has access to file
+	if userID != image.ID {
+		http.Error(w, "Permission denied", http.StatusForbidden)
+		return
+	}
 
 	if _, err := os.Stat(imagePath); errors.Is(err, os.ErrNotExist) {
 		http.Error(w, "Requested image does not exist", http.StatusNotFound)
