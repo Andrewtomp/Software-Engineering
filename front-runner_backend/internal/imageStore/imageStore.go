@@ -26,8 +26,13 @@ type ProductImage struct {
 func init() {
 	db = coredbutils.GetDB()
 
-	os.Mkdir("data", 0755)
-	os.Mkdir("data/images", 0755)
+	if _, err := os.Stat("data"); os.IsNotExist(err) {
+		os.Mkdir("data", 0755)
+	}
+
+	if _, err := os.Stat("data/images"); os.IsNotExist(err) {
+		os.Mkdir("data/images", 0755)
+	}
 }
 
 // Retrieves the specified image.
