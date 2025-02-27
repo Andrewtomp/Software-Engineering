@@ -3,6 +3,7 @@ package login
 
 import (
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"front-runner/internal/coredbutils"
 	"front-runner/internal/usertable"
@@ -141,4 +142,28 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fmt.Fprintf(w, "User is already logged out")
 	}
+}
+
+// Given a request header, checks if the user is logged in.
+func IsLoggedIn(r *http.Request) bool {
+	session, err := SessionStore.Get(r, "auth")
+	if err != nil {
+		return false
+	}
+	auth, ok := session.Values["authenticated"].(bool)
+	return ok && auth
+}
+
+// Given a request header, retrieves the user's ID.
+func GetUserID(r *http.Request) (uint, error) {
+	session, err := SessionStore.Get(r, "auth")
+	if err != nil {
+		return 0, err
+	}
+	userID, ok := session.Values["user_id"].(uint)
+	if !ok {
+		return 0, errors.New("no user id associated with session")
+	}
+
+	return userID, nil
 }
