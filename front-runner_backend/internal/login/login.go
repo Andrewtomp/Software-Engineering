@@ -22,8 +22,8 @@ var (
 	// db will hold the GORM DB instance
 	db *gorm.DB
 
-	// SessionStore is used to manage sessions
-	SessionStore *sessions.CookieStore
+	// sessionStore is used to manage sessions
+	sessionStore *sessions.CookieStore
 )
 
 // Init sets up the session store and connects to the PostgreSQL database using GORM.
@@ -34,13 +34,13 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	SessionStore = sessions.NewCookieStore(key)
+	sessionStore = sessions.NewCookieStore(key)
 
 	db = coredbutils.GetDB()
 
 	// Setting the auth cookie to ba available through the whole domain
-	SessionStore = sessions.NewCookieStore(key)
-	SessionStore.Options = &sessions.Options{
+	sessionStore = sessions.NewCookieStore(key)
+	sessionStore.Options = &sessions.Options{
 		Path:     "/",
 		MaxAge:   86400 * 7, // e.g. valid for 7 days by default
 		HttpOnly: true,
@@ -63,7 +63,7 @@ func init() {
 // @Router       /api/login [post]
 func LoginUser(w http.ResponseWriter, r *http.Request) {
 	// Retrieve the session first.
-	session, err := SessionStore.Get(r, "auth")
+	session, err := sessionStore.Get(r, "auth")
 	if err != nil {
 		http.Error(w, "Error retrieving session", http.StatusInternalServerError)
 		return
@@ -117,7 +117,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 // @Success      200 {string} string "Logged out successfully"
 // @Router       /api/logout [get]
 func LogoutUser(w http.ResponseWriter, r *http.Request) {
-	session, err := SessionStore.Get(r, "auth")
+	session, err := sessionStore.Get(r, "auth")
 	if err != nil {
 		http.Error(w, "Error getting session", http.StatusInternalServerError)
 		return
@@ -146,7 +146,7 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 
 // Given a request header, checks if the user is logged in.
 func IsLoggedIn(r *http.Request) bool {
-	session, err := SessionStore.Get(r, "auth")
+	session, err := sessionStore.Get(r, "auth")
 	if err != nil {
 		return false
 	}
@@ -156,7 +156,7 @@ func IsLoggedIn(r *http.Request) bool {
 
 // Given a request header, retrieves the user's ID.
 func GetUserID(r *http.Request) (uint, error) {
-	session, err := SessionStore.Get(r, "auth")
+	session, err := sessionStore.Get(r, "auth")
 	if err != nil {
 		return 0, err
 	}
