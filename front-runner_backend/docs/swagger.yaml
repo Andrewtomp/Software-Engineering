@@ -46,6 +46,41 @@ paths:
       summary: Retrive an image
       tags:
       - images
+  /api/data/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads an image if the user is authorized.
+      parameters:
+      - description: Filepath of image
+        in: formData
+        name: filename
+        required: true
+        type: file
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "401":
+          description: User is not logged in
+          schema:
+            type: string
+        "403":
+          description: Permission denied
+          schema:
+            type: string
+        "404":
+          description: Requested image does not exist
+          schema:
+            type: string
+        "500":
+          description: File already exists
+          schema:
+            type: string
+      summary: Upload an image
+      tags:
+      - images
   /api/login:
     post:
       consumes:
