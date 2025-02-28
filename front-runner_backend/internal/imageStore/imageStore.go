@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 )
@@ -34,6 +35,12 @@ func init() {
 	if _, err := os.Stat("data/images"); os.IsNotExist(err) {
 		os.Mkdir("data/images", 0755)
 	}
+}
+
+// Checks if a given file exists. Returns true if exists, false if not.
+func doesFileExist(filepath string) bool {
+	_, err := os.Stat(filepath)
+	return !errors.Is(err, os.ErrNotExist)
 }
 
 // Retrieves the specified image.
@@ -77,7 +84,7 @@ func LoadImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := os.Stat(imagePath); errors.Is(err, os.ErrNotExist) {
+	if !doesFileExist(imagePath) {
 		http.Error(w, "Requested image does not exist", http.StatusNotFound)
 		return
 	}
@@ -134,7 +141,13 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tempFile, err := os.CreateTemp("data/images", "upload-*"+filepath.Ext(handler.Filename))
+	imagePath := filepath.Join("data/images", uuid.New().String()+filepath.Ext(handler.Filename))
+
+	for doesFileExist(imagePath) {
+		imagePath = filepath.Join("data/images", uuid.New().String()+filepath.Ext(handler.Filename))
+	}
+
+	tempFile, err := os.Create(imagePath)
 	if err != nil {
 		fmt.Println(err)
 	}
