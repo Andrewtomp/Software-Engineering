@@ -6,6 +6,7 @@ import Orders from "./components/Orders";
 import Settings from "./components/Settings";
 import NavBar from "./components/NavBar";
 import Login from "./components/Login";
+import ProductForm from "./components/ProductForm";
 
 function App() {
     return (
@@ -18,6 +19,7 @@ function App() {
                 <Route path="/orders" element={<Orders />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/add-product" element={<ProductForm />} />
             </Routes>
         </BrowserRouter>
     );

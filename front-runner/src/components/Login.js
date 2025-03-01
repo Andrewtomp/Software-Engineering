@@ -1,12 +1,11 @@
-// LoginForm.tsx (or LoginForm.js if you're not using TypeScript)
+// LoginForm.js
 import React from 'react';
 import Form from '@rjsf/core';
-import { RJSFSchema } from '@rjsf/utils';
 import validator from '@rjsf/validator-ajv8';
 
 // Define the JSON Schema for the login form
-const schema: RJSFSchema = {
-  title: 'Login Form',
+const schema = {
+  title: 'Login',
   type: 'object',
   properties: {
     username: {
@@ -34,7 +33,7 @@ const uiSchema = {
 };
 
 // Define the login form's onSubmit handler
-const onSubmit = ({ formData }: any) => {
+const onSubmit = ({ formData }) => {
   // Here you can process the login form data
   console.log('Form data submitted:', formData);
   // For example, send the data to an API to authenticate the user
@@ -42,7 +41,7 @@ const onSubmit = ({ formData }: any) => {
 };
 
 // LoginForm Component
-const Login = () => {
+const LoginForm = () => {
   return (
     <div style={{ width: '400px', margin: '0 auto', padding: '20px', backgroundColor: '#f9f9f9' }}>
       <h2>Login</h2>
@@ -56,4 +55,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default LoginForm;
