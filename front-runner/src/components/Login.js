@@ -42,7 +42,7 @@ const onSubmit = ({ formData }: any) => {
 };
 
 // LoginForm Component
-const LoginForm = () => {
+const Login = () => {
   return (
     <div style={{ width: '400px', margin: '0 auto', padding: '20px', backgroundColor: '#f9f9f9' }}>
       <h2>Login</h2>
@@ -56,4 +56,4 @@ const LoginForm = () => {
   );
 };
 
-export default LoginForm;
+export default Login;
