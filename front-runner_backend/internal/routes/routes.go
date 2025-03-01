@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"fmt"
 	"front-runner/internal/login"
 	"front-runner/internal/prodtable"
 	"front-runner/internal/usertable"
@@ -30,10 +29,6 @@ func RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/add_product", prodtable.AddProduct)
 	router.HandleFunc("/delete_product", prodtable.DeleteProduct)
 	router.HandleFunc("/update_product", prodtable.UpdateProduct)
-
-	fmt.Println("Server running on :8080")
-	http.ListenAndServe(":8080", nil)
-
 	// Serve Swagger UI on /swagger/*
 	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
