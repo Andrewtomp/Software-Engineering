@@ -10,7 +10,7 @@ import "net/mail"
 // @Tags         utility, email, validate
 // @Param        email query string true "Email address to validate"
 // @Success      200 {boolean} boolean "true if email is valid, false otherwise"
-// @Router       /validemail [get]
+// @Router       /api/validemail [get]
 func Valid(email string) bool {
 	_, err := mail.ParseAddress(email)
 	return err == nil

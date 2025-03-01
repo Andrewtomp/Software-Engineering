@@ -11,7 +11,7 @@ info:
   title: Front Runner API
   version: "1.0"
 paths:
-  /login:
+  /api/login:
     post:
       consumes:
       - application/x-www-form-urlencoded
@@ -46,7 +46,7 @@ paths:
       tags:
       - authentication
       - login
-  /logout:
+  /api/logout:
     get:
       description: Logs out the current user by clearing the session.
       produces:
@@ -60,7 +60,7 @@ paths:
       tags:
       - authentication
       - logout
-  /register:
+  /api/register:
     post:
       consumes:
       - application/x-www-form-urlencoded
@@ -101,7 +101,7 @@ paths:
       - authentication
       - user
       - dbtable
-  /validemail:
+  /api/validemail:
     get:
       description: Checks if the provided email address is in a valid format. Returns
         true if valid, false otherwise.
