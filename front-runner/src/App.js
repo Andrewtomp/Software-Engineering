@@ -7,6 +7,7 @@ import Settings from "./components/Settings";
 import NavBar from "./components/NavBar";
 import Login from "./components/Login";
 import ProductForm from "./components/ProductForm";
+import RegistrationForm from "./components/Registration";
 
 function App() {
     return (
@@ -20,6 +21,8 @@ function App() {
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/add-product" element={<ProductForm />} />
+                <Route path= "/register" element={<RegistrationForm />} />
+
             </Routes>
         </BrowserRouter>
     );
