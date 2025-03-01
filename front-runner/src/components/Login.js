@@ -8,9 +8,9 @@ const schema = {
   title: 'Login',
   type: 'object',
   properties: {
-    username: {
+    email: {
       type: 'string',
-      title: 'Username',
+      title: 'Email',
     },
     password: {
       type: 'string',
@@ -18,7 +18,7 @@ const schema = {
       minLength: 6, // Minimum length for password validation
     },
   },
-  required: ['username', 'password'], // Make both fields required
+  required: ['email', 'password'], // Make both fields required
 };
 
 // Define the UI Schema for the form fields (optional customization)
@@ -27,17 +27,19 @@ const uiSchema = {
     'ui:widget': 'password', // Automatically uses a password input
     'ui:placeholder': 'Enter your password',
   },
-  username: {
-    'ui:placeholder': 'Enter your username or email',
+  email: {
+    'ui:placeholder': 'Enter your email',
   },
 };
 
 // Define the login form's onSubmit handler
 const onSubmit = ({ formData }) => {
-  // Here you can process the login form data
-  console.log('Form data submitted:', formData);
-  // For example, send the data to an API to authenticate the user
-  alert('Login attempt: ' + JSON.stringify(formData));
+  const headers = new Headers();
+  headers.set("Content-Type", "application/x-www-form-urlencoded")
+  fetch("/api/login", {
+      method: 'post',
+      body: new URLSearchParams(formData)
+  });
 };
 
 // LoginForm Component
