@@ -45,6 +45,33 @@ func InvalidAPI(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Invalid API Endpoint", http.StatusNotFound)
 }
 
+// isAuthenticated checks if a user is validated.
+// Replace this with your real authentication logic (e.g. check session, JWT, etc.).
+func isAuthenticated(r *http.Request) bool {
+	cookie, err := r.Cookie("session")
+	if err != nil || cookie.Value == "" {
+		return false
+	}
+	// Optionally, validate the cookie value or session here.
+	return true
+}
+
+// authMiddleware redirects to /login if the user is not authenticated.
+func authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !isAuthenticated(r) {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// ServeIndex serves index.html.
+func ServeIndex(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, filepath.Join("../front-runner/build", "index.html"))
+}
+
 // RegisterRoutes sets up all the application routes including API endpoints, Swagger UI, and static file serving.
 //
 // @Summary      Register application routes
@@ -75,7 +102,13 @@ func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
 	data.HandleFunc("/upload", imageStore.UploadImage).Methods("POST")
 
 	// Serve Swagger UI on /swagger/*
-	api.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+
+	// Page routes.
+	// /login always serves the SPA. React will show the login UI.
+	router.HandleFunc("/login", ServeIndex).Methods("GET")
+	// / is the main page. It is wrapped with authMiddleware.
+	router.Handle("/", authMiddleware(http.HandlerFunc(ServeIndex))).Methods("GET")
 
 	// Serve static files for webpage
 	spa := spaHandler{staticPath: "../front-runner/build", indexPath: "index.html"}
