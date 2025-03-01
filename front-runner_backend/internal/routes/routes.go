@@ -58,16 +58,16 @@ func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
 
 	// API endpoints
 	// User Table
-	router.HandleFunc("/register", usertable.RegisterUser).Methods("POST")
+	api.HandleFunc("/register", usertable.RegisterUser).Methods("POST")
 	// Login
-	router.HandleFunc("/login", login.LoginUser).Methods("POST")
-	router.HandleFunc("/logout", login.LogoutUser).Methods("GET")
+	api.HandleFunc("/login", login.LoginUser).Methods("POST")
+	api.HandleFunc("/logout", login.LogoutUser).Methods("GET")
 	// Product Table
-	router.HandleFunc("/add_product", prodtable.AddProduct)
-	router.HandleFunc("/delete_product", prodtable.DeleteProduct)
-	router.HandleFunc("/update_product", prodtable.UpdateProduct)
+	api.HandleFunc("/add_product", prodtable.AddProduct)
+	api.HandleFunc("/delete_product", prodtable.DeleteProduct)
+	api.HandleFunc("/update_product", prodtable.UpdateProduct)
 	// Serve Swagger UI on /swagger/*
-	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+	api.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 	// Serve static files for webpage
 	spa := spaHandler{staticPath: "../front-runner/build", indexPath: "index.html"}
