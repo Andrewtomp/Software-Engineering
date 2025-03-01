@@ -22,6 +22,7 @@ type Image struct {
 
 type Product struct {
 	ID              uint   `gorm:"primaryKey"`
+	UserID          uint   `gorm:"not null;index"`
 	ProdName        string `gorm:"unique;not null"`
 	ProdDescription string `gorm:"not null"`
 	ImgID           uint
@@ -54,12 +55,21 @@ func MigrateProdDB() {
 
 func ClearProdTable(db *gorm.DB) error {
 	if err := db.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&Product{}).Error; err != nil {
-		return fmt.Errorf("error clearing users table: %w", err)
+		return fmt.Errorf("error clearing product table: %w", err)
 	}
 	return nil
 }
 
+// AddProduct creates a new product and associates it with the logged-in user.
 func AddProduct(w http.ResponseWriter, r *http.Request) {
+	// Extract the logged in user's ID from the context.
+	// (Assumes you have middleware that sets the "userID" key in the context)
+	userID, ok := r.Context().Value("userID").(uint)
+	if !ok {
+		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
+
 	err := r.ParseMultipartForm(10 << 20) // Limit to 10MB
 	if err != nil {
 		http.Error(w, "Error parsing form", http.StatusBadRequest)
@@ -90,8 +100,9 @@ func AddProduct(w http.ResponseWriter, r *http.Request) {
 	defer dst.Close()
 	io.Copy(dst, file)
 
-	// Save Product & Image in Database
+	// Save Product & Image in Database, including the user ID.
 	product := Product{
+		UserID:          userID,
 		ProdName:        productName,
 		ProdDescription: productDescription,
 		ProdPrice:       productPrice,
@@ -116,12 +127,26 @@ func AddProduct(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Product added successfully"))
 }
 
+// DeleteProduct removes a product but only if it belongs to the logged-in user.
 func DeleteProduct(w http.ResponseWriter, r *http.Request) {
+	// Extract user ID from context
+	userID, ok := r.Context().Value("userID").(uint)
+	if !ok {
+		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
+
 	productID := r.URL.Query().Get("id")
 	var product Product
 
 	if err := db.Preload("Img").First(&product, productID).Error; err != nil {
 		http.Error(w, "Product not found", http.StatusNotFound)
+		return
+	}
+
+	// Check if the product belongs to the logged in user.
+	if product.UserID != userID {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -137,12 +162,26 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Product deleted successfully"))
 }
 
+// UpdateProduct allows updating a product if it belongs to the logged-in user.
 func UpdateProduct(w http.ResponseWriter, r *http.Request) {
+	// Extract user ID from context
+	userID, ok := r.Context().Value("userID").(uint)
+	if !ok {
+		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
+
 	productID := r.URL.Query().Get("id")
 	var product Product
 
 	if err := db.First(&product, productID).Error; err != nil {
 		http.Error(w, "Product not found", http.StatusNotFound)
+		return
+	}
+
+	// Ensure that the logged-in user owns this product.
+	if product.UserID != userID {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
