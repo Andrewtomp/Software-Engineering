@@ -5,6 +5,7 @@ import Storefronts from "./components/Storefronts";
 import Orders from "./components/Orders";
 import Settings from "./components/Settings";
 import NavBar from "./components/NavBar";
+import Login from "./components/Login";
 
 function App() {
     return (
@@ -16,6 +17,7 @@ function App() {
                 <Route path="/storefronts" element={<Storefronts />} />
                 <Route path="/orders" element={<Orders />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/login" element={<Login />} />
             </Routes>
         </BrowserRouter>
     );
