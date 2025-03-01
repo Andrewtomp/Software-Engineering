@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"front-runner/internal/coredbutils"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -37,6 +38,18 @@ var (
 
 func init() {
 	db = coredbutils.GetDB()
+}
+
+func MigrateProdDB() {
+	if db == nil {
+		log.Fatal("Database connection is not initialized")
+	}
+	log.Println("Running database migrations...")
+	err := db.AutoMigrate(&Product{}, &Image{})
+	if err != nil {
+		log.Fatalf("Migration failed: %v", err)
+	}
+	log.Println("Database migration complete")
 }
 
 func ClearProdTable(db *gorm.DB) error {
