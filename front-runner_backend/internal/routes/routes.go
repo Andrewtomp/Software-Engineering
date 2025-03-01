@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"front-runner/internal/imageStore"
 	"front-runner/internal/login"
 	"front-runner/internal/prodtable"
 	"front-runner/internal/usertable"
@@ -53,8 +54,9 @@ func InvalidAPI(w http.ResponseWriter, r *http.Request) {
 // @Accept       json
 // @Produce      html
 func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
-	// API subrouter
+	// Subrouters
 	api := router.PathPrefix("/api").Subrouter()
+	data := api.PathPrefix("/data").Subrouter()
 
 	// API endpoints
 	// User Table
@@ -66,6 +68,12 @@ func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
 	api.HandleFunc("/add_product", prodtable.AddProduct)
 	api.HandleFunc("/delete_product", prodtable.DeleteProduct)
 	api.HandleFunc("/update_product", prodtable.UpdateProduct)
+
+	api.PathPrefix("/").HandlerFunc(InvalidAPI)
+
+	data.HandleFunc("/image/{imagePath}", imageStore.LoadImage).Methods("GET")
+	data.HandleFunc("/upload", imageStore.UploadImage).Methods("POST")
+
 	// Serve Swagger UI on /swagger/*
 	api.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
