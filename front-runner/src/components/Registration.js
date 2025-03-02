@@ -42,8 +42,12 @@ const uiSchema = {
 
 // Define the form's onSubmit handler
 const onSubmit = ({ formData }) => {
-  console.log('Form data submitted:', formData);
-  alert('User registration attempt: ' + JSON.stringify(formData));
+        const headers = new Headers();
+        headers.set("Content-Type", "application/x-www-form-urlencoded")
+        fetch("/api/register", {
+            method: 'post',
+            body: new URLSearchParams(formData)
+        });
 };
 
 // RegistrationForm Component
