@@ -5,7 +5,7 @@
     align-items: left;
     padding: 15px;
     background-color: #181818;
-    width: 40px;
+    width: 70px;
     position: fixed;
     border-radius: 25px;
     height: 92vh; /* Full screen height */
@@ -14,7 +14,7 @@
 }
 
 .nav-bar:hover {
-    width: 175px; /* Expand the width by 120px */
+    width: 215px; /* Expand the width by 120px */
 }
 
 .nav-option {
