@@ -1,6 +1,7 @@
 import React from 'react';
 import Form from '@rjsf/core';
 import validator from '@rjsf/validator-ajv8';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 // Define the JSON Schema for the login form
 const schema = {
@@ -37,6 +38,7 @@ const onSubmit = ({ formData }) => {
   console.log('Form data submitted:', formData);
   // For example, send the data to an API to authenticate the user
   alert('Login attempt: ' + JSON.stringify(formData));
+  
 };
 
 // LoginForm Component
