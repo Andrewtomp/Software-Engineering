@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"front-runner/internal/coredbutils"
 	"front-runner/internal/validemail"
+	"log"
 	"net/http"
 
 	"golang.org/x/crypto/bcrypt"
@@ -29,6 +30,18 @@ var (
 
 func init() {
 	db = coredbutils.GetDB()
+}
+
+func MigrateUserDB() {
+	if db == nil {
+		log.Fatal("Database connection is not initialized")
+	}
+	log.Println("Running database migrations...")
+	err := db.AutoMigrate(&User{})
+	if err != nil {
+		log.Fatalf("Migration failed: %v", err)
+	}
+	log.Println("Database migration complete")
 }
 
 // ClearUserTable deletes all records from the users table.

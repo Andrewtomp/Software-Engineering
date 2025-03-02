@@ -7,7 +7,9 @@ const Products = () => {
             <div className='my-products-content'>
                 <div className='products-header'>
                     <h1>My Products</h1>
-                    <img src='../assets/Add new.svg' alt='add new' className='add-new-icon'/>
+                    <div onClick={() => window.location.href = "/add-product"} className="nav-option">
+                        <img src='../assets/Add new.svg' alt='add new' className='add-new-icon'/>
+                    </div>
                 </div>
                 
                 <div className='products-container' >
