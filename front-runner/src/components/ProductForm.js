@@ -17,8 +17,25 @@ const schema = {
       type: 'string',
       title: 'Description',
     },
+    price: {
+      type: "string",
+      title: "Price",
+      description: "Enter the price in dollars (e.g., $12.99)",
+      pattern: "^(\\$)?\\d+(\\.\\d{2})?$" // Optional $ at start, then digits, then a decimal with two digits
+    },
+    count: {
+      type: "integer",
+      title: "Count",
+      minimum: 0
+    },
+    tags: {
+      type: "string",
+      title: "Tags",
+      description: "Enter tags starting with '#' separated by commas (e.g., #sale, #new)",
+      pattern: "^(#\\w+(,\\s*#\\w+)*)?$" // Optional: validate comma-separated tags that start with #
+    },
   },
-  required: ['productName', 'description'], // Make both fields required
+  required: ['productName', 'description', 'price'], // Make both fields required
 };
 
 // Define the UI Schema for the form fields (optional customization)
@@ -29,6 +46,17 @@ const uiSchema = {
   description: {
     'ui:widget': 'textarea', // Allows multiline input
     'ui:placeholder': 'Enter a brief product description',
+  },
+  price: {
+    "ui:widget": "text",
+    "ui:placeholder": "$0.00"
+  },
+  count: {
+    "ui:widget": "updown" // Provides a spinner widget, or you can use "number" for a standard input field.
+  },
+  tags: {
+    "ui:widget": "textarea", // Alternatively, you could create a custom widget for tag entry.
+    "ui:placeholder": "#tag1, #tag2, ..."
   },
 };
 
