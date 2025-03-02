@@ -3,10 +3,12 @@ import React from 'react';
 import Form from '@rjsf/core';
 import validator from '@rjsf/validator-ajv8';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './ProductForm.css';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTimes } from '@fortawesome/free-solid-svg-icons';
 
 // Define the JSON Schema for the Add Product form
 const schema = {
-  title: 'Add Product',
   type: 'object',
   properties: {
     productName: {
@@ -16,6 +18,11 @@ const schema = {
     description: {
       type: 'string',
       title: 'Description',
+    },
+    image: {
+      type: 'string',
+      title: 'Product Image',
+      format: 'uri', // Format as URI for image
     },
     price: {
       type: "string",
@@ -47,6 +54,12 @@ const uiSchema = {
     'ui:widget': 'textarea', // Allows multiline input
     'ui:placeholder': 'Enter a brief product description',
   },
+  image: {
+    "ui:widget": "file", // Use file input for image upload
+    "ui:options": {
+      accept: "image/*", // Restrict to image files only
+    },
+  },
   price: {
     "ui:widget": "text",
     "ui:placeholder": "$0.00"
@@ -60,25 +73,34 @@ const uiSchema = {
   },
 };
 
-// Define the add product form's onSubmit handler
 const onSubmit = async ({ formData }) => {
   console.log('Product data submitted:', formData);
+
+  const formDataToSend = new FormData();
+  
+  // Append the form fields to the FormData object
+  Object.keys(formData).forEach((key) => {
+    formDataToSend.append(key, formData[key]);
+  });
+
+  // If the image is selected, append the file
+  if (formData.image) {
+    formDataToSend.append('image', formData.image[0]); // Assuming only one image is selected
+  }
+
   try {
-    // Send the product data to your API endpoint.
     const response = await fetch("/api/add_product", {
       method: 'POST',
-      body: new URLSearchParams(formData),
+      body: formDataToSend,
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded', // Change to application/json if your API expects JSON.
+        // Don't set Content-Type manually with FormData, it will be set automatically
       },
       credentials: 'include',
-      redirect: 'manual'
+      redirect: 'manual',
     });
-    
+
     if (response.ok) {
-      // Notify the user.
       alert('Product added successfully!');
-      // Reload the page to clear the form.
       window.location.reload();
     } else {
       const errorText = await response.text();
@@ -91,17 +113,21 @@ const onSubmit = async ({ formData }) => {
   }
 };
 
+
 // AddProductForm Component
-const AddProductForm = () => {
+const AddProductForm = ({ onClose }) => {
   return (
-    <div style={{ width: '400px', margin: '0 auto', padding: '20px', backgroundColor: '#f9f9f9' }}>
-      <h2>Add Product</h2>
-      <Form
-        schema={schema}
-        uiSchema={uiSchema}
-        validator={validator}
-        onSubmit={onSubmit} // Handle form submission
-      />
+    <div className="add-product-container" style={{backgroundColor: "rgba(0,0,0,0.8)"}}>
+      <div className='add-product-card'>
+        <h2>Add Product</h2>
+        <FontAwesomeIcon icon={faTimes} onClick={onClose} style={{position: "absolute", top: "10", right: "10", width: "32px", height:"32px", cursor: "pointer"}}/>
+        <Form
+          schema={schema}
+          uiSchema={uiSchema}
+          validator={validator}
+          onSubmit={onSubmit} // Handle form submission
+        />
+      </div>
     </div>
   );
 };
