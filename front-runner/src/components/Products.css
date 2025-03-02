@@ -1,19 +1,9 @@
-html, body {
-    background-color: #0b0b0b;
-}
-
-html {
-    height: 100%;
-  }
-  body {
-    min-height: 100%;
-  }
-
 .my-products {
     box-sizing: border-box;
     display: flex;
     flex-direction: row;
-    height: 100%;
+    background-color: #0b0b0b;
+    height: 100vh;
 }
 
 .products-header{
@@ -39,7 +29,7 @@ html {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    height: calc(100% - 72.4px - 20px);
+    /* max-height: calc(100% - 72.4px - 20px); */
     gap: 20px;
 }
 

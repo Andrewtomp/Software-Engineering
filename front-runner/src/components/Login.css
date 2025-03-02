@@ -1,26 +1,12 @@
-.logo-header {
-    position: absolute;
-    top: 15px;
-    left: 20px;
-    display: flex;
-    flex-direction: row;
-    gap: 15px;
-}
-
-.logo-header h1 {
-    font-style: italic;
-    font-weight: 700;
-}
-
 /* Center the card in the middle of the screen */
 .login-container {
     position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
     color: white;
-    background-color: #0b0b0b; /* Light gray background */
+    background-color: #0b0b0b;
+    height: 100vh;
   }
   
   /* Style the card */
@@ -47,6 +33,10 @@
     border: none;
   }
 
+  .login-card button:focus {
+    box-shadow: none !important;
+  }
+
   .text-muted {
     color: rgba(255, 255, 255, 0.5) !important;
   }
@@ -66,6 +56,25 @@
 .rjsf {
     width: 90%;
 }
+
+.form-control {
+  background-color: #1e1e1e !important; /* Dark background */
+  color: #fff !important; /* White text */
+  border: 1px solid #444 !important; /* Grey border */
+  margin-bottom: 10px;
+}
+
+.form-control::placeholder {
+  color: #bbb !important; /* Lighter text for placeholders */
+  font-size: 0.9rem;
+}
+
+.form-control:focus {
+  box-shadow: none !important;
+  border-color: #FF4949 !important; /* Change border on focus */
+  outline: none !important;
+}
+
 
   
 

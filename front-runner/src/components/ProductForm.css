@@ -1,0 +1,65 @@
+/* Center the card in the middle of the screen */
+.add-product-container {
+    z-index: 3;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    background-color: #0b0b0b;
+    height: 100%;
+    width: 100vw;
+  }
+  
+  /* Style the card */
+  .add-product-card {
+    max-height: 100%;
+    width: 40%;
+    min-width: 400px; /* Set a max width */
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 10px;
+    color: white;
+    background-color: #181818;
+    align-items: left;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  
+  /* Customize the submit button */
+  .add-product-card .btn-info {
+    width: 100%;
+    font-size: 1.1rem;
+    background: linear-gradient(to right, #FF4949, #FF8000);
+    color: white;
+    margin-top: 20px;
+    border: none;
+  }
+
+  .add-product-card button:focus {
+    box-shadow: none !important;
+  }
+
+  .add-product-card .rjsf {
+    width: 100%;
+  }
+
+  .add-product-card .field-description {
+    color: rgba(255, 255, 255, 0.5) !important;
+    font-size: 0.9rem;
+    margin-bottom: 0px;
+  }
+
+  .add-product-card .form-control {
+    max-height: 150px;
+  }
+
+  .btn-danger {
+    height: 2px;
+    margin-left: 10px;
+    color: white;
+    border: none;
+  }
