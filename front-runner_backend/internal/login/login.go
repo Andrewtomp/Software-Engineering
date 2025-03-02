@@ -3,11 +3,15 @@ package login
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"front-runner/internal/coredbutils"
 	"front-runner/internal/usertable"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/sessions"
 	"golang.org/x/crypto/bcrypt"
@@ -28,23 +32,32 @@ var (
 
 // Init sets up the session store and connects to the PostgreSQL database using GORM.
 func init() {
-	// Initialize the session store with a random key.
-	key := make([]byte, 64)
-	_, err := rand.Read(key)
-	if err != nil {
-		panic(err)
+	secret := os.Getenv("SESSION_SECRET")
+	if secret == "" {
+		// Initialize the session store with a random key.
+		key := make([]byte, 64)
+		_, err := rand.Read(key)
+		if err != nil {
+			panic(err)
+		}
+		sessionStore = sessions.NewCookieStore(key)
+	} else {
+		// Optionally, hash the secret to ensure it has the desired length.
+		hash := sha256.Sum256([]byte(secret))
+		key, _ := hex.DecodeString(hex.EncodeToString(hash[:]))
+		sessionStore = sessions.NewCookieStore(key)
 	}
-	sessionStore = sessions.NewCookieStore(key)
-
-	db = coredbutils.GetDB()
 
 	// Setting the auth cookie to ba available through the whole domain
-	sessionStore = sessions.NewCookieStore(key)
+	// sessionStore = sessions.NewCookieStore(key)
 	sessionStore.Options = &sessions.Options{
 		Path:     "/",
 		MaxAge:   86400 * 7, // e.g. valid for 7 days by default
 		HttpOnly: true,
 	}
+
+	db = coredbutils.GetDB()
+	log.Println("login package init: sessionStore initialized")
 }
 
 // LoginUser authenticates a user and creates a session.
@@ -63,10 +76,32 @@ func init() {
 // @Router       /api/login [post]
 func LoginUser(w http.ResponseWriter, r *http.Request) {
 	// Retrieve the session first.
+	log.Println("LoginUser: Received login request")
 	session, err := sessionStore.Get(r, "auth")
 	if err != nil {
-		http.Error(w, "Error retrieving session", http.StatusInternalServerError)
-		return
+		if err.Error() == "securecookie: the value is not valid" {
+			log.Println("Detected invalid cookie, clearing it")
+			// Invalidate the current cookie
+			http.SetCookie(w, &http.Cookie{
+				Name:   "auth",
+				Value:  "",
+				Path:   "/",
+				MaxAge: -1,
+			})
+			// Remove the cookie from the request so that a new session is created without trying to decode it
+			r.Header.Set("Cookie", "")
+			// Optionally, try to get a fresh session
+			session, err = sessionStore.New(r, "auth")
+			if err != nil {
+				log.Println("Error creating a new session:", err)
+				http.Error(w, "Error creating session", http.StatusInternalServerError)
+				return
+			}
+		} else {
+			log.Println("Error retrieving session:", err)
+			http.Error(w, "Error retrieving session: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	// Check if the user is already logged in.
@@ -104,7 +139,8 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "Logged in successfully.")
+	// fmt.Fprintf(w, "Logged in successfully.")
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 // LogoutUser clears the user's session.
@@ -132,7 +168,7 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 	// Clearing the session cookie by marking it for deletion
 	session.Options.MaxAge = -1
 	if err := session.Save(r, w); err != nil {
-		http.Error(w, "Error saving session", http.StatusInternalServerError)
+		http.Error(w, "Error saving session"+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
