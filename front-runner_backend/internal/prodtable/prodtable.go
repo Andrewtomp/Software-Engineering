@@ -16,8 +16,9 @@ import (
 )
 
 type Image struct {
-	ID  uint   `gorm:"primaryKey"`
-	URL string `gorm:"not null"`
+	ID     uint   `gorm:"primaryKey"`
+	URL    string `gorm:"not null"`
+	UserID uint   `gorm:"not null;index"`
 }
 
 type Product struct {
@@ -120,7 +121,8 @@ func AddProduct(w http.ResponseWriter, r *http.Request) {
 
 	// Save Image record
 	image := Image{
-		URL: imagePath, // Store path instead of image data
+		URL:    imagePath, // Store path instead of image data
+		UserID: userID,
 	}
 	db.Create(&image)
 
