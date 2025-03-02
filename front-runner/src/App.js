@@ -4,15 +4,13 @@ import Products from "./components/Products";
 import Storefronts from "./components/Storefronts";
 import Orders from "./components/Orders";
 import Settings from "./components/Settings";
-import NavBar from "./components/NavBar";
 import Login from "./components/Login";
 import ProductForm from "./components/ProductForm";
 import RegistrationForm from "./components/Registration";
 
 function App() {
     return (
-        <BrowserRouter>  
-            <NavBar />          
+        <BrowserRouter>          
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/products" element={<Products />} />

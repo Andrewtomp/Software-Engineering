@@ -18,9 +18,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
     color: white;
-    background-color: #0b0b0b; /* Light gray background */
+    background-color: #0b0b0b;
+    height: 100vh;
   }
   
   /* Style the card */

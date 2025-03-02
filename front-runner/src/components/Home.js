@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community'; 
+import NavBar from './NavBar';
 import './Home.css';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -30,6 +31,7 @@ const Home = () => {
 
     return (
         <div className='home'>
+                        <NavBar />  
             <div className='home-content'>
                 <h1>Home</h1>
                 <div className='home-tiles'>

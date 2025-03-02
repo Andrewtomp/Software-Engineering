@@ -8,7 +8,7 @@
     width: 70px;
     position: fixed;
     border-radius: 25px;
-    height: calc(100% - 70px); /* Full screen height */
+    height: calc(100% - 40px); /* Full screen height */
     transition: width 0.3s ease-out, transition-delay 0.3s; /* Include delay for width */
     z-index: 3;
 }
@@ -32,6 +32,7 @@
     visibility: hidden;
     transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
     font-size: 1.1rem;
+    font-weight: bold;
     text-decoration: none;
     margin: 0;
     margin-left: 12px;
