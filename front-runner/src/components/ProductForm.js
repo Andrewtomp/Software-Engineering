@@ -65,13 +65,14 @@ const onSubmit = async ({ formData }) => {
   console.log('Product data submitted:', formData);
   try {
     // Send the product data to your API endpoint.
+    var multipart = new FormData();
+    for ( var key in formData ) {
+      multipart.append(key, formData[key]);
+    }
+
     const response = await fetch("/api/add_product", {
       method: 'POST',
-      body: new URLSearchParams(formData),
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded', // Change to application/json if your API expects JSON.
-      },
-      credentials: 'include',
+      body: multipart,
       redirect: 'manual'
     });
     
