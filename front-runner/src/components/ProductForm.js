@@ -17,6 +17,11 @@ const schema = {
       type: 'string',
       title: 'Description',
     },
+    image: {
+      type: 'string',
+      title: 'Image Upload',
+      format: 'data-url'
+    },
     price: {
       type: "string",
       title: "Price",
@@ -57,8 +62,30 @@ const uiSchema = {
   tags: {
     "ui:widget": "textarea", // Alternatively, you could create a custom widget for tag entry.
     "ui:placeholder": "#tag1, #tag2, ..."
-  },
+  }
 };
+
+function dataURItoBlob(dataURI) {
+  // convert base64/URLEncoded data component to raw binary data held in a string
+  var byteString;
+  if (dataURI.split(',')[0].indexOf('base64') >= 0)
+      byteString = atob(dataURI.split(',')[1]);
+  else
+      byteString = unescape(dataURI.split(',')[1]);
+
+  // separate out the mime component
+  var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+
+  // write the bytes of the string to a typed array
+  var ia = new Uint8Array(byteString.length);
+  for (var i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+  }
+
+  return new Blob([ia], {type:mimeString});
+}
+
+
 
 // Define the add product form's onSubmit handler
 const onSubmit = async ({ formData }) => {
@@ -67,7 +94,13 @@ const onSubmit = async ({ formData }) => {
     // Send the product data to your API endpoint.
     var multipart = new FormData();
     for ( var key in formData ) {
-      multipart.append(key, formData[key]);
+      if (key == "image"){
+        var filename = formData[key].split(',')[0].split(';')[1].split('=')[1]
+        var test = dataURItoBlob(formData[key]);
+        multipart.append(key, test, filename);
+      } else{
+        multipart.append(key, formData[key]);
+      }
     }
 
     const response = await fetch("/api/add_product", {
