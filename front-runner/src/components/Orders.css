@@ -113,12 +113,20 @@ html {
 }
 
 .table-button {
+    display: flex;
+    align-items: center; /* Ensures vertical alignment */
+    justify-content: center; /* Optional: Centers text horizontally if necessary */
     color: white;
     background: linear-gradient(to right, #FF4949, #FF8000);
     border: none;
     border-radius: 5px;
-    padding: 5px 10px 5px 10px;
+    text-decoration: none;
+    width: fit-content;
+    height: 25px;
+    padding: 0 10px; /* Adds horizontal padding to ensure text doesn't touch edges */
+    line-height: 25px; /* Vertically aligns the text inside the button */
 }
+
 
 .table-button:hover {
     cursor: pointer;
