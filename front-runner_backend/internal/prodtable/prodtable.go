@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/sessions"
 	"gorm.io/gorm"
 )
 
@@ -35,6 +36,8 @@ type Product struct {
 var (
 	// db will hold the GORM DB instance
 	db *gorm.DB
+
+	sessionStore *sessions.CookieStore
 )
 
 func init() {
@@ -64,22 +67,29 @@ func ClearProdTable(db *gorm.DB) error {
 func AddProduct(w http.ResponseWriter, r *http.Request) {
 	// Extract the logged in user's ID from the context.
 	// (Assumes you have middleware that sets the "userID" key in the context)
-	userID, ok := r.Context().Value("userID").(uint)
+	_, err := sessionStore.Get(r, "auth")
+	if err != nil {
+		log.Println("Error retrieving session:", err)
+		http.Error(w, "Error retrieving session: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	userID, ok := r.Context().Value("user_id").(uint)
 	if !ok {
 		http.Error(w, "User not authenticated", http.StatusUnauthorized)
 		return
 	}
 
-	err := r.ParseMultipartForm(10 << 20) // Limit to 10MB
+	err = r.ParseMultipartForm(10 << 20) // Limit to 10MB
 	if err != nil {
 		http.Error(w, "Error parsing form", http.StatusBadRequest)
 		return
 	}
 
-	productName := r.FormValue("product_name")
-	productDescription := r.FormValue("product_description")
-	productPrice, _ := strconv.ParseFloat(r.FormValue("item_price"), 64)
-	productCount, _ := strconv.Atoi(r.FormValue("stock_amount"))
+	productName := r.FormValue("productName")
+	productDescription := r.FormValue("description")
+	productPrice, _ := strconv.ParseFloat(r.FormValue("price"), 64)
+	productCount, _ := strconv.Atoi(r.FormValue("count"))
 	productTags := r.FormValue("tags")
 
 	// Handle File Upload
