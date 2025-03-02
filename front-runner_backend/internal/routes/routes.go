@@ -5,7 +5,6 @@ import (
 	"front-runner/internal/login"
 	"front-runner/internal/prodtable"
 	"front-runner/internal/usertable"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -59,7 +58,6 @@ func authMiddleware(next http.Handler) http.Handler {
 
 // ServeIndex serves index.html.
 func ServeIndex(w http.ResponseWriter, r *http.Request) {
-	log.Println("Serve Index")
 	http.ServeFile(w, r, filepath.Join("../front-runner/build", "index.html"))
 }
 
