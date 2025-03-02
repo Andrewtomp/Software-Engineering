@@ -17,9 +17,8 @@ import (
 )
 
 type Image struct {
-	ID        uint   `gorm:"primaryKey"`
-	URL       string `gorm:"not null"`
-	ProductID uint   `gorm:"index"`
+	ID  uint   `gorm:"primaryKey"`
+	URL string `gorm:"not null"`
 }
 
 type Product struct {
@@ -43,6 +42,10 @@ var (
 
 func init() {
 	db = coredbutils.GetDB()
+
+	if _, err := os.Stat("uploads"); os.IsNotExist(err) {
+		os.Mkdir("uploads", 0755)
+	}
 }
 
 func MigrateProdDB() {
@@ -119,18 +122,19 @@ func AddProduct(w http.ResponseWriter, r *http.Request) {
 		ProdTags:        productTags,
 	}
 
+	// Save Image record
+	image := Image{
+		URL: imagePath, // Store path instead of image data
+	}
+	db.Create(&image)
+
+	product.ImgID = image.ID
+
 	// Save product first
 	if err := db.Create(&product).Error; err != nil {
 		http.Error(w, "Error saving product", http.StatusInternalServerError)
 		return
 	}
-
-	// Save Image record
-	image := Image{
-		URL:       imagePath, // Store path instead of image data
-		ProductID: product.ID,
-	}
-	db.Create(&image)
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Product added successfully"))
