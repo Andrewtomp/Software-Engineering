@@ -70,7 +70,6 @@ func ClearProdTable(db *gorm.DB) error {
 // AddProduct creates a new product and associates it with the logged-in user.
 func AddProduct(w http.ResponseWriter, r *http.Request) {
 	// Extract the logged in user's ID from the context.
-	// (Assumes you have middleware that sets the "userID" key in the context)
 	if !login.IsLoggedIn(r) {
 		http.Error(w, "User not authenticated", http.StatusUnauthorized)
 		return
@@ -143,9 +142,14 @@ func AddProduct(w http.ResponseWriter, r *http.Request) {
 // DeleteProduct removes a product but only if it belongs to the logged-in user.
 func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from context
-	userID, ok := r.Context().Value("userID").(uint)
-	if !ok {
+	if !login.IsLoggedIn(r) {
 		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := login.GetUserID(r)
+	if err != nil {
+		http.Error(w, "Error retrieving session: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -178,9 +182,14 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 // UpdateProduct allows updating a product if it belongs to the logged-in user.
 func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from context
-	userID, ok := r.Context().Value("userID").(uint)
-	if !ok {
+	if !login.IsLoggedIn(r) {
 		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := login.GetUserID(r)
+	if err != nil {
+		http.Error(w, "Error retrieving session: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
