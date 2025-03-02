@@ -16,15 +16,20 @@ import (
 	"net/http"
 
 	_ "front-runner/docs" // This is important for swagger to find your docs!
+	"front-runner/internal/coredbutils"
+	"front-runner/internal/prodtable"
 	"front-runner/internal/routes"
+	"front-runner/internal/usertable"
 
 	"github.com/gorilla/mux"
 	"github.com/pborman/getopt/v2"
+	"gorm.io/gorm"
 )
 
 var (
 	port         = "8080"
 	verbose bool = false
+	db      *gorm.DB
 )
 
 func main() {
@@ -41,6 +46,10 @@ func main() {
 	getopt.FlagLong(&port, "port", 'p', "Specify port to listen for connnections")
 
 	getopt.Parse()
+
+	db = coredbutils.GetDB()
+	prodtable.MigrateProdDB()
+	usertable.MigrateUserDB()
 
 	router := mux.NewRouter()
 
