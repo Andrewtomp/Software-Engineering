@@ -11,11 +11,11 @@
     background-color: #0b0b0b;
     height: 100%;
     width: 100vw;
+    overflow-x: hidden;
   }
   
   /* Style the card */
   .add-product-card {
-    max-height: 100%;
     width: 40%;
     min-width: 400px; /* Set a max width */
     padding: 20px;
