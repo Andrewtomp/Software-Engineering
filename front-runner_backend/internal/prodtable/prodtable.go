@@ -3,6 +3,7 @@ package prodtable
 import (
 	"fmt"
 	"front-runner/internal/coredbutils"
+	"front-runner/internal/login"
 	"io"
 	"log"
 	"net/http"
@@ -67,16 +68,14 @@ func ClearProdTable(db *gorm.DB) error {
 func AddProduct(w http.ResponseWriter, r *http.Request) {
 	// Extract the logged in user's ID from the context.
 	// (Assumes you have middleware that sets the "userID" key in the context)
-	_, err := sessionStore.Get(r, "auth")
-	if err != nil {
-		log.Println("Error retrieving session:", err)
-		http.Error(w, "Error retrieving session: "+err.Error(), http.StatusInternalServerError)
+	if !login.IsLoggedIn(r) {
+		http.Error(w, "User not authenticated", http.StatusUnauthorized)
 		return
 	}
 
-	userID, ok := r.Context().Value("user_id").(uint)
-	if !ok {
-		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+	userID, err := login.GetUserID(r)
+	if err != nil {
+		http.Error(w, "Error retrieving session: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
