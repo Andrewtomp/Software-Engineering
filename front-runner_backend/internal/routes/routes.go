@@ -97,7 +97,7 @@ func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
 	router.PathPrefix("/manifest.json").Handler(spa).Methods("GET")
 	// / is the main page. It is wrapped with authMiddleware.
 	// // Serve static files for webpage
-	router.PathPrefix("/").Handler(authMiddleware(http.Handler(spa))).Methods("GET")
+	router.PathPrefix("/").Handler(authMiddleware(spa)).Methods("GET")
 
 	// Logging
 	if logging {
