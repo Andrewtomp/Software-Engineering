@@ -42,7 +42,7 @@ const schema = {
       pattern: "^(#\\w+(,\\s*#\\w+)*)?$" // Optional: validate comma-separated tags that start with #
     },
   },
-  required: ['productName', 'description', 'price'], // Make both fields required
+  required: ['productName', 'description', 'price', 'image'], // Make both fields required
 };
 
 // Define the UI Schema for the form fields (optional customization)
