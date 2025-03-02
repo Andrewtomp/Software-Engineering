@@ -79,7 +79,7 @@ const Orders = () => {
                         </div>
                         <h2>Order Info</h2>
                         <div className="orders-ag-theme">
-                            <AgGridReact rowData={rowData} columnDefs={colDefs} defaultColDef={{ flex: 1, resizable: true, cellStyle: { alignItems: "center", textAlign: "center" } }} />
+                            <AgGridReact rowData={rowData} columnDefs={colDefs} defaultColDef={{ flex: 1, resizable: true, cellStyle: { display: "flex", alignItems: "center", textAlign: "center", justifyContent: "center" } }} />
                         </div>
                     </div>
                     <div className='order-metrics-tile'>
