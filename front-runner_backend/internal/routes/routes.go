@@ -14,6 +14,10 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
+// var (
+// 	sessionStore *sessions.CookieStore
+// )
+
 type spaHandler struct {
 	staticPath string
 	indexPath  string
@@ -92,6 +96,7 @@ func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
 	spa := spaHandler{staticPath: "../front-runner/build", indexPath: "index.html"}
 	// /login always serves the SPA. React will show the login UI.
 	router.Handle("/login", spa).Methods("GET")
+	router.Handle("/register", spa).Methods("GET")
 	// node-specified routes will be routed directly to the spa
 	router.PathPrefix("/static").Handler(spa).Methods("GET")
 	router.PathPrefix("/assets").Handler(spa).Methods("GET")
