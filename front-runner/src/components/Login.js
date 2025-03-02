@@ -37,7 +37,7 @@ const onSubmit = ({ formData }) => {
   // Here you can process the login form data
   console.log('Form data submitted:', formData);
   // For example, send the data to an API to authenticate the user
-  alert('Login attempt: ' + JSON.stringify(formData));
+ // alert('Login attempt: ' + JSON.stringify(formData));
   
 };
 
