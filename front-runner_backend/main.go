@@ -28,6 +28,7 @@ import (
 
 var (
 	port         = "8080"
+	local   bool = false
 	verbose bool = false
 	db      *gorm.DB
 )
@@ -44,6 +45,7 @@ func main() {
 
 	getopt.FlagLong(&verbose, "verbose", 'v', "Enable logging of incomming HTTP requests")
 	getopt.FlagLong(&port, "port", 'p', "Specify port to listen for connnections")
+	getopt.FlagLong(&local, "local", 'l', "Only listen for connnections over localhost")
 
 	getopt.Parse()
 
@@ -55,8 +57,13 @@ func main() {
 
 	routeHandler := routes.RegisterRoutes(router, verbose)
 
+	var address = ""
+	if local {
+		address = "localhost"
+	}
+
 	server := &http.Server{
-		Addr:      ":" + port,
+		Addr:      address + ":" + port,
 		Handler:   routeHandler,
 		TLSConfig: config,
 	}
