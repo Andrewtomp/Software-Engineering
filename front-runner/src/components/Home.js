@@ -86,6 +86,7 @@ const Home = () => {
                                     defaultColDef={{
                                         flex: 1,
                                         resizable: true,
+                                        cellStyle: { alignItems: "center", textAlign: "center" },
                                     }}
                                     
                                 />
