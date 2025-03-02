@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./Orders.css";
 import { AgGridReact } from "ag-grid-react";
 import { OrderInfoPopup } from "./OrderInfoPopup";
+import NavBar from "./NavBar";
 
 const Orders = () => {
     // Generate dummy data for orders table
@@ -64,6 +65,7 @@ const Orders = () => {
 
     return (
         <div className="my-orders">
+                        <NavBar />  
             <div className="my-orders-content">
                 <h1>My Orders</h1>
 

@@ -1,9 +1,11 @@
 import React from 'react';  
 import './Products.css';
+import NavBar from './NavBar';
 
 const Products = () => {
     return (
         <div className='my-products'>
+                        <NavBar />  
             <div className='my-products-content'>
                 <div className='products-header'>
                     <h1>My Products</h1>
