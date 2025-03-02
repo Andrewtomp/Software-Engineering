@@ -2,6 +2,7 @@
 import React from 'react';
 import Form from '@rjsf/core';
 import validator from '@rjsf/validator-ajv8';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 // Define the JSON Schema for the Add Product form
 const schema = {
