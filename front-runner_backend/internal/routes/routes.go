@@ -45,21 +45,10 @@ func InvalidAPI(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Invalid API Endpoint", http.StatusNotFound)
 }
 
-// isAuthenticated checks if a user is validated.
-// Replace this with your real authentication logic (e.g. check session, JWT, etc.).
-func isAuthenticated(r *http.Request) bool {
-	cookie, err := r.Cookie("session")
-	if err != nil || cookie.Value == "" {
-		return false
-	}
-	// Optionally, validate the cookie value or session here.
-	return true
-}
-
 // authMiddleware redirects to /login if the user is not authenticated.
 func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !isAuthenticated(r) {
+		if !login.IsLoggedIn(r) {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
