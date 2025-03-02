@@ -92,11 +92,12 @@ func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
 	spa := spaHandler{staticPath: "../front-runner/build", indexPath: "index.html"}
 	// /login always serves the SPA. React will show the login UI.
 	router.Handle("/login", spa).Methods("GET")
+	// node-specified routes will be routed directly to the spa
 	router.PathPrefix("/static").Handler(spa).Methods("GET")
 	router.PathPrefix("/assets").Handler(spa).Methods("GET")
 	router.PathPrefix("/manifest.json").Handler(spa).Methods("GET")
-	// / is the main page. It is wrapped with authMiddleware.
-	// // Serve static files for webpage
+	// Serve static files for webpage
+	// All other pages are wrapped with authMiddleware.
 	router.PathPrefix("/").Handler(authMiddleware(spa)).Methods("GET")
 
 	// Logging
