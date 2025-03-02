@@ -1,0 +1,73 @@
+.logo-header {
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+}
+
+.logo-header h1 {
+    font-style: italic;
+    font-weight: 700;
+}
+
+/* Center the card in the middle of the screen */
+.login-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: white;
+    background-color: #0b0b0b; /* Light gray background */
+  }
+  
+  /* Style the card */
+  .login-card {
+    width: 100%;
+    max-width: 400px; /* Set a max width */
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 10px;
+    color: white;
+    background-color: #181818;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Customize the submit button */
+  .login-card button {
+    width: 100%;
+    font-size: 1.1rem;
+    background: linear-gradient(to right, #FF4949, #FF8000);
+    color: white;
+    margin-top: 20px;
+    border: none;
+  }
+
+  .text-muted {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  .login-card a {
+    margin-top: 10px;
+    color: rgba(255, 255, 255, 0.75) !important;
+    align-self: center;
+    text-decoration: none;
+  }
+
+  .login-card a:hover {
+    color: rgba(255, 255, 255, 1) !important;
+    cursor: pointer;
+  }
+
+.rjsf {
+    width: 90%;
+}
+
+  
+
+ 
+  

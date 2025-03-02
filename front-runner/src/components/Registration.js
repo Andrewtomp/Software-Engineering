@@ -5,7 +5,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 // Define the JSON Schema for the registration form
 const schema = {
-  title: 'User Registration',
   type: 'object',
   properties: {
     email: {
@@ -96,18 +95,22 @@ const onSubmit = async ({ formData }) => {
 // RegistrationForm Component
 const RegistrationForm = () => {
   return (
-    <div style={{ width: '400px', margin: '0 auto', padding: '20px', backgroundColor: '#f9f9f9' }}>
-      <h2>User Registration</h2>
-      <Form
-        schema={schema}
-        uiSchema={uiSchema}
-        validator={validator}
-        onSubmit={onSubmit} // Handle form submission
-      />
-      <div style={{ marginTop: '10px', textAlign: 'center' }}>
-      <button onClick={() => window.location.href = '/login'} style={{ padding: '10px', backgroundColor: '#28a745', color: '#fff', border: 'none', cursor: 'pointer' }}>
-          Login
-        </button>
+    <div className="login-container">
+      <div className='logo-header'>
+        <img src="../assets/Logo.svg" className="logo" alt="FR logo"/>
+        <h1>FrontRunner</h1>
+      </div>
+      <div className='login-card'>
+        <h2 className="text-center mb-4">Create an account</h2>
+        <Form
+          schema={schema}
+          uiSchema={uiSchema}
+          validator={validator}
+          onSubmit={onSubmit} // Handle form submission
+        />
+        <a href = '/login'>
+            Already have an account? Login here.
+        </a>
       </div>
     </div>
   );
