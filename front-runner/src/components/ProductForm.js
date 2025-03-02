@@ -22,7 +22,7 @@ const schema = {
     image: {
       type: 'string',
       title: 'Product Image',
-      format: 'uri', // Format as URI for image
+      format: 'data-url'
     },
     price: {
       type: "string",
@@ -42,7 +42,7 @@ const schema = {
       pattern: "^(#\\w+(,\\s*#\\w+)*)?$" // Optional: validate comma-separated tags that start with #
     },
   },
-  required: ['productName', 'description', 'price'], // Make both fields required
+  required: ['productName', 'description', 'price', 'image'], // Make both fields required
 };
 
 // Define the UI Schema for the form fields (optional customization)
@@ -70,33 +70,51 @@ const uiSchema = {
   tags: {
     "ui:widget": "textarea", // Alternatively, you could create a custom widget for tag entry.
     "ui:placeholder": "#tag1, #tag2, ..."
-  },
+  }
 };
 
-const onSubmit = async ({ formData }) => {
-  console.log('Product data submitted:', formData);
+function dataURItoBlob(dataURI) {
+  // convert base64/URLEncoded data component to raw binary data held in a string
+  var byteString;
+  if (dataURI.split(',')[0].indexOf('base64') >= 0)
+      byteString = atob(dataURI.split(',')[1]);
+  else
+      byteString = unescape(dataURI.split(',')[1]);
 
-  const formDataToSend = new FormData();
-  
-  // Append the form fields to the FormData object
-  Object.keys(formData).forEach((key) => {
-    formDataToSend.append(key, formData[key]);
-  });
+  // separate out the mime component
+  var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
 
-  // If the image is selected, append the file
-  if (formData.image) {
-    formDataToSend.append('image', formData.image[0]); // Assuming only one image is selected
+  // write the bytes of the string to a typed array
+  var ia = new Uint8Array(byteString.length);
+  for (var i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
   }
 
+  return new Blob([ia], {type:mimeString});
+}
+
+
+
+// Define the add product form's onSubmit handler
+const onSubmit = async ({ formData }) => {
+  console.log('Product data submitted:', formData);
   try {
+    // Send the product data to your API endpoint.
+    var multipart = new FormData();
+    for ( var key in formData ) {
+      if (key == "image"){
+        var filename = formData[key].split(',')[0].split(';')[1].split('=')[1]
+        var test = dataURItoBlob(formData[key]);
+        multipart.append(key, test, filename);
+      } else{
+        multipart.append(key, formData[key]);
+      }
+    }
+
     const response = await fetch("/api/add_product", {
       method: 'POST',
-      body: formDataToSend,
-      headers: {
-        // Don't set Content-Type manually with FormData, it will be set automatically
-      },
-      credentials: 'include',
-      redirect: 'manual',
+      body: multipart,
+      redirect: 'manual'
     });
 
     if (response.ok) {
