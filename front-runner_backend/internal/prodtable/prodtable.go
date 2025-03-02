@@ -12,7 +12,6 @@ import (
 	"strconv"
 
 	"github.com/google/uuid"
-	"github.com/gorilla/sessions"
 	"gorm.io/gorm"
 )
 
@@ -36,8 +35,6 @@ type Product struct {
 var (
 	// db will hold the GORM DB instance
 	db *gorm.DB
-
-	sessionStore *sessions.CookieStore
 )
 
 func init() {
