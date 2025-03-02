@@ -5,6 +5,7 @@ import (
 	"front-runner/internal/login"
 	"front-runner/internal/prodtable"
 	"front-runner/internal/usertable"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -58,6 +59,7 @@ func authMiddleware(next http.Handler) http.Handler {
 
 // ServeIndex serves index.html.
 func ServeIndex(w http.ResponseWriter, r *http.Request) {
+	log.Println("Serve Index")
 	http.ServeFile(w, r, filepath.Join("../front-runner/build", "index.html"))
 }
 
@@ -94,14 +96,15 @@ func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
 	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 	// Page routes.
-	// /login always serves the SPA. React will show the login UI.
-	router.HandleFunc("/login", ServeIndex).Methods("GET")
-	// / is the main page. It is wrapped with authMiddleware.
-	router.Handle("/", authMiddleware(http.HandlerFunc(ServeIndex))).Methods("GET")
-
-	// Serve static files for webpage
 	spa := spaHandler{staticPath: "../front-runner/build", indexPath: "index.html"}
-	router.PathPrefix("/").Handler(spa)
+	// /login always serves the SPA. React will show the login UI.
+	router.Handle("/login", spa).Methods("GET")
+	router.PathPrefix("/static").Handler(spa).Methods("GET")
+	router.PathPrefix("/assets").Handler(spa).Methods("GET")
+	router.PathPrefix("/manifest.json").Handler(spa).Methods("GET")
+	// / is the main page. It is wrapped with authMiddleware.
+	// // Serve static files for webpage
+	router.PathPrefix("/").Handler(authMiddleware(http.Handler(spa))).Methods("GET")
 
 	// Logging
 	if logging {
