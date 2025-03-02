@@ -56,11 +56,6 @@ func authMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// ServeIndex serves index.html.
-func ServeIndex(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, filepath.Join("../front-runner/build", "index.html"))
-}
-
 // RegisterRoutes sets up all the application routes including API endpoints, Swagger UI, and static file serving.
 //
 // @Summary      Register application routes
