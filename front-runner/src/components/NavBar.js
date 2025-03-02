@@ -1,5 +1,23 @@
 import "./NavBar.css";
 
+const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/logout", { method: "GET" });
+      if (response.ok) {
+        // Optionally log a message or check response text here
+        window.location.href = "/login";
+      } else {
+        console.error("Logout failed");
+        // Still redirect to login even if logout fails, or handle it differently
+        window.location.href = "/login";
+      }
+    } catch (error) {
+      console.error("Error during logout:", error);
+      // Redirect to login in case of error
+      window.location.href = "/login";
+    }
+  };
+
 const NavBar = () => {
     return (
         <nav className="nav-bar">
@@ -26,7 +44,7 @@ const NavBar = () => {
                     <img src="../assets/Settings icon.svg" className="bottom-nav-icon" alt="icon"/>
                     <h2>Settings</h2>
                 </div>
-                <div onClick={() => window.location.href = "/logout"} className="nav-option">   
+                <div onClick={handleLogout} className="nav-option">   
                     <img src="../assets/Logout icon.svg" className="nav-icon" alt="icon"/>
                     <h2>Logout</h2>
                 </div>

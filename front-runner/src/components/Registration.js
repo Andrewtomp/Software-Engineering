@@ -40,13 +40,56 @@ const uiSchema = {
 };
 
 // Define the form's onSubmit handler
-const onSubmit = ({ formData }) => {
-        const headers = new Headers();
-        headers.set("Content-Type", "application/x-www-form-urlencoded")
-        fetch("/api/register", {
-            method: 'post',
-            body: new URLSearchParams(formData)
-        });
+const onSubmit = async ({ formData }) => {
+  try {
+    console.log('Registration: Submitting registration request with data:', formData);
+    // First, call the registration API
+    const regResponse = await fetch("/api/register", {
+      method: 'POST',
+      body: new URLSearchParams(formData),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+    });
+    
+    if (!regResponse.ok) {
+      const regErrorText = await regResponse.text();
+      console.error("Registration failed:", regErrorText);
+      return;
+    }
+    
+    console.log("Registration succeeded, now auto-logging in");
+    
+    // Next, call the login API using the same credentials
+    const loginResponse = await fetch("/api/login", {
+      method: 'POST',
+      body: new URLSearchParams({
+        email: formData.email,
+        password: formData.password
+      }),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      redirect: 'manual'
+    });
+    
+    console.log("Login response status:", loginResponse.status, "type:", loginResponse.type);
+    
+    // Handle both opaqueredirect or explicit 303 from the server
+    if (loginResponse.status === 303 || loginResponse.type === "opaqueredirect") {
+      console.log("Auto-login redirect detected, navigating to home");
+      window.location.href = "/";
+    } else if (loginResponse.ok) {
+      console.log("Auto-login succeeded, navigating to home");
+      window.location.href = "/";
+    } else {
+      const loginErrorText = await loginResponse.text();
+      console.error("Auto-login failed:", loginErrorText);
+    }
+    
+  } catch (error) {
+    console.error("Error during registration and auto-login:", error);
+  }
 };
 
 // RegistrationForm Component
