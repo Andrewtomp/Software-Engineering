@@ -2,7 +2,7 @@ import "./NavBar.css";
 
 const handleLogout = async () => {
     try {
-      const response = await fetch("/api/logout", { method: "GET" });
+      const response = await fetch("/api/logout", { method: "POST" });
       if (response.ok) {
         // Optionally log a message or check response text here
         window.location.href = "/login";

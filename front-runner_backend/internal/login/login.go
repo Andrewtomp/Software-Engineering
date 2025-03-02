@@ -151,7 +151,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 // @Tags         authentication, logout
 // @Produce      plain
 // @Success      200 {string} string "Logged out successfully"
-// @Router       /api/logout [get]
+// @Router       /api/logout [post]
 func LogoutUser(w http.ResponseWriter, r *http.Request) {
 	session, err := sessionStore.Get(r, "auth")
 	if err != nil {

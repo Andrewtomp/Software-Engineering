@@ -3,6 +3,7 @@ package prodtable
 import (
 	"fmt"
 	"front-runner/internal/coredbutils"
+	"front-runner/internal/login"
 	"io"
 	"log"
 	"net/http"
@@ -11,14 +12,12 @@ import (
 	"strconv"
 
 	"github.com/google/uuid"
-	"github.com/gorilla/sessions"
 	"gorm.io/gorm"
 )
 
 type Image struct {
-	ID        uint   `gorm:"primaryKey"`
-	URL       string `gorm:"not null"`
-	ProductID uint   `gorm:"index"`
+	ID  uint   `gorm:"primaryKey"`
+	URL string `gorm:"not null"`
 }
 
 type Product struct {
@@ -36,12 +35,14 @@ type Product struct {
 var (
 	// db will hold the GORM DB instance
 	db *gorm.DB
-
-	sessionStore *sessions.CookieStore
 )
 
 func init() {
 	db = coredbutils.GetDB()
+
+	if _, err := os.Stat("uploads"); os.IsNotExist(err) {
+		os.Mkdir("uploads", 0755)
+	}
 }
 
 func MigrateProdDB() {
@@ -66,17 +67,14 @@ func ClearProdTable(db *gorm.DB) error {
 // AddProduct creates a new product and associates it with the logged-in user.
 func AddProduct(w http.ResponseWriter, r *http.Request) {
 	// Extract the logged in user's ID from the context.
-	// (Assumes you have middleware that sets the "userID" key in the context)
-	_, err := sessionStore.Get(r, "auth")
-	if err != nil {
-		log.Println("Error retrieving session:", err)
-		http.Error(w, "Error retrieving session: "+err.Error(), http.StatusInternalServerError)
+	if !login.IsLoggedIn(r) {
+		http.Error(w, "User not authenticated", http.StatusUnauthorized)
 		return
 	}
 
-	userID, ok := r.Context().Value("user_id").(uint)
-	if !ok {
-		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+	userID, err := login.GetUserID(r)
+	if err != nil {
+		http.Error(w, "Error retrieving session: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -120,18 +118,19 @@ func AddProduct(w http.ResponseWriter, r *http.Request) {
 		ProdTags:        productTags,
 	}
 
+	// Save Image record
+	image := Image{
+		URL: imagePath, // Store path instead of image data
+	}
+	db.Create(&image)
+
+	product.ImgID = image.ID
+
 	// Save product first
 	if err := db.Create(&product).Error; err != nil {
 		http.Error(w, "Error saving product", http.StatusInternalServerError)
 		return
 	}
-
-	// Save Image record
-	image := Image{
-		URL:       imagePath, // Store path instead of image data
-		ProductID: product.ID,
-	}
-	db.Create(&image)
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Product added successfully"))
@@ -140,9 +139,14 @@ func AddProduct(w http.ResponseWriter, r *http.Request) {
 // DeleteProduct removes a product but only if it belongs to the logged-in user.
 func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from context
-	userID, ok := r.Context().Value("userID").(uint)
-	if !ok {
+	if !login.IsLoggedIn(r) {
 		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := login.GetUserID(r)
+	if err != nil {
+		http.Error(w, "Error retrieving session: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -175,9 +179,14 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 // UpdateProduct allows updating a product if it belongs to the logged-in user.
 func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from context
-	userID, ok := r.Context().Value("userID").(uint)
-	if !ok {
+	if !login.IsLoggedIn(r) {
 		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := login.GetUserID(r)
+	if err != nil {
+		http.Error(w, "Error retrieving session: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 

@@ -187,7 +187,7 @@ const docTemplate = `{
             }
         },
         "/api/logout": {
-            "get": {
+            "post": {
                 "description": "Logs out the current user by clearing the session.",
                 "produces": [
                     "text/plain"
