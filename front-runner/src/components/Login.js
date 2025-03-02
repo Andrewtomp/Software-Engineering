@@ -2,10 +2,10 @@ import React from 'react';
 import Form from '@rjsf/core';
 import validator from '@rjsf/validator-ajv8';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './Login.css'; 
 
 // Define the JSON Schema for the login form
 const schema = {
-  title: 'Login',
   type: 'object',
   properties: {
     email: {
@@ -45,18 +45,22 @@ const onSubmit = ({ formData }) => {
 // LoginForm Component
 const LoginForm = () => {
   return (
-    <div style={{ width: '400px', margin: '0 auto', padding: '20px', backgroundColor: '#f9f9f9' }}>
-      <h2>Login</h2>
-      <Form
-        schema={schema}
-        uiSchema={uiSchema}
-        validator={validator}
-        onSubmit={onSubmit} // Handle form submission
-      />
-      <div style={{ marginTop: '10px', textAlign: 'center' }}>
-        <button onClick={() => window.location.href = '/register'} style={{ padding: '10px', backgroundColor: '#28a745', color: '#fff', border: 'none', cursor: 'pointer' }}>
-          Register
-        </button>
+    <div className="login-container">
+      <div className='logo-header'>
+        <img src="../assets/Logo.svg" className="logo" alt="FR logo"/>
+        <h1>FrontRunner</h1>
+      </div>
+      <div className='login-card'>
+        <h2 className="text-center mb-4">Login</h2>
+        <Form
+          schema={schema}
+          uiSchema={uiSchema}
+          validator={validator}
+          onSubmit={onSubmit} // Handle form submission
+        />
+          <a href= '/register'>
+          New here? Create an account.
+          </a>
       </div>
     </div>
   );
