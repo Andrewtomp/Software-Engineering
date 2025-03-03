@@ -54,7 +54,7 @@ func TestLoginUser(t *testing.T) {
 	form.Add("password", "loginpassword")
 	form.Add("business_name", "LoginBusiness")
 
-	reqRegister := httptest.NewRequest("POST", "/register", strings.NewReader(form.Encode()))
+	reqRegister := httptest.NewRequest("POST", "/api/register", strings.NewReader(form.Encode()))
 	reqRegister.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	recRegister := httptest.NewRecorder()
 	usertable.RegisterUser(recRegister, reqRegister)
@@ -63,19 +63,13 @@ func TestLoginUser(t *testing.T) {
 	}
 
 	// Now, attempt to log in with the registered credentials.
-	reqLogin := httptest.NewRequest("POST", "/login", strings.NewReader(form.Encode()))
+	reqLogin := httptest.NewRequest("POST", "/api/login", strings.NewReader(form.Encode()))
 	reqLogin.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	recLogin := httptest.NewRecorder()
 	LoginUser(recLogin, reqLogin)
 
-	if recLogin.Code != http.StatusOK {
-		t.Fatalf("expected status %d; got %d", http.StatusOK, recLogin.Code)
-	}
-
-	// Check that the response contains "Logged in successfully".
-	body := recLogin.Body.String()
-	if !strings.Contains(body, "Logged in successfully") {
-		t.Errorf("unexpected response body: %q", body)
+	if recLogin.Code != http.StatusSeeOther {
+		t.Fatalf("expected status %d; got %d", http.StatusSeeOther, recLogin.Code)
 	}
 
 	// Check that a session cookie is set.
