@@ -185,13 +185,15 @@ func TestLoadImage_PermissionDenied(t *testing.T) {
 // @Tags         testing, imageStore, images
 func TestLoadImage_FileNotExist(t *testing.T) {
 	db := setupTestDB(t)
-	createFakeUser(t)
+	user := createFakeUser(t)
 	cookie := loginFakeUser(t)
+
+	// userID, err := login.GetUserID(r)
 
 	// Insert an image record for a file that does not exist.
 	imageRecord := ProductImage{
 		Filename: "nonexistentfile.png",
-		ID:       1, // Matching logged-in user.
+		ID:       user.ID, // Matching logged-in user.
 	}
 	if err := db.Create(&imageRecord).Error; err != nil {
 		t.Fatalf("failed to create image record: %v", err)
@@ -224,7 +226,7 @@ func TestLoadImage_FileNotExist(t *testing.T) {
 // @Tags         testing, imageStore, images
 func TestLoadImage_Success(t *testing.T) {
 	db := setupTestDB(t)
-	createFakeUser(t)
+	user := createFakeUser(t)
 	cookie := loginFakeUser(t)
 
 	// Create a temporary file in the "data/images" directory.
@@ -242,7 +244,7 @@ func TestLoadImage_Success(t *testing.T) {
 	// Insert an image record with matching user ID.
 	imageRecord := ProductImage{
 		Filename: baseName,
-		ID:       1,
+		ID:       user.ID,
 	}
 	if err := db.Create(&imageRecord).Error; err != nil {
 		t.Fatalf("failed to create image record: %v", err)
