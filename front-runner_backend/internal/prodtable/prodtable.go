@@ -246,20 +246,13 @@ func GetProduct(w http.ResponseWriter, r *http.Request) {
 	productID := r.URL.Query().Get("id")
 	var product Product
 
-	if err := db.Where("id = ?", productID).First(&product).Error; err != nil {
+	if err := db.Preload("Img").Where("id = ?", productID).First(&product).Error; err != nil {
 		http.Error(w, "No Product with specified ID", http.StatusNotFound)
 		return
 	}
 
 	if userID != product.UserID {
 		http.Error(w, "Permission denied", http.StatusForbidden)
-		return
-	}
-
-	var image Image
-
-	if err := db.Where("id = ?", product.ID).First(&image).Error; err != nil {
-		http.Error(w, "Could not find image", http.StatusInternalServerError)
 		return
 	}
 
@@ -275,7 +268,7 @@ func GetProduct(w http.ResponseWriter, r *http.Request) {
 	var retrieve ProductReturn
 	retrieve.ProdName = product.ProdName
 	retrieve.ProdDescription = product.ProdDescription
-	retrieve.ImgPath = image.URL
+	retrieve.ImgPath = product.Img.URL
 	retrieve.ProdPrice = product.ProdPrice
 	retrieve.ProdCount = product.ProdCount
 	retrieve.ProdTags = product.ProdTags
