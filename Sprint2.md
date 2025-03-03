@@ -61,7 +61,10 @@ _Unit Tests_
 
 | Unit Test | Test Description |
 | --- | --- |
-| `Test Placeholder` | Placeholder for front end unit test |
+| `LoginForm.Test` | Tests the redering of login form, allowing user input, and submitting the form |
+| `RegistrationForm.Test` | Tests the redering of login form, allowing user input, validating the input, and submitting the form |
+| `NavBar.Test` | Tests the routing from the nav bar to the home, products, storefronts, and orders pages |
+| `ProductForm.Test` | Tests that the Product Form popup allows user input, validates the input, and submits the form |
 
 ### Back end
 Each internal package has an associated unit test that can be run by entering the following command from the `front-runner_backend` directory:
