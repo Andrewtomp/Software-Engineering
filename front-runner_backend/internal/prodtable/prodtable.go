@@ -256,35 +256,6 @@ func setProductReturn(product Product) ProductReturn {
 	return ret
 }
 
-func GetProductList(w http.ResponseWriter, r *http.Request) {
-	if !login.IsLoggedIn(r) {
-		http.Error(w, "User not authenticated", http.StatusUnauthorized)
-		return
-	}
-
-	userID, err := login.GetUserID(r)
-	if err != nil {
-		http.Error(w, "Error retrieving session: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	var products []Product
-	db.Where("user_id = ?", userID).Find(&products)
-
-	var productIDs []uint
-	for _, element := range products {
-		productIDs = append(productIDs, element.ID)
-	}
-
-	ret, _ := json.Marshal(productIDs)
-	w.WriteHeader(http.StatusOK)
-	if len(productIDs) == 0 {
-		w.Write([]byte("[]"))
-	} else {
-		w.Write([]byte(ret))
-	}
-}
-
 func GetProduct(w http.ResponseWriter, r *http.Request) {
 	if !login.IsLoggedIn(r) {
 		http.Error(w, "User not authenticated", http.StatusUnauthorized)
@@ -340,7 +311,11 @@ func GetProducts(w http.ResponseWriter, r *http.Request) {
 
 	ret, _ := json.Marshal(productsRet)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(ret))
+	if len(productsRet) == 0 {
+		w.Write([]byte("[]"))
+	} else {
+		w.Write([]byte(ret))
+	}
 }
 
 func GetProductImage(w http.ResponseWriter, r *http.Request) {
