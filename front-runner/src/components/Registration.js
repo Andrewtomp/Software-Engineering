@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Form from '@rjsf/core';
 import validator from '@rjsf/validator-ajv8';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -35,65 +35,54 @@ const uiSchema = {
     'ui:placeholder': 'Enter your email',
   },
   businessName: {
-    'ui:placeholder': 'Enter your business name (optional)',
+    'ui:placeholder': 'Enter your business name',
   },
 };
 
-// Define the form's onSubmit handler
-const onSubmit = async ({ formData }) => {
-  try {
-    console.log('Registration: Submitting registration request with data:', formData);
-    // First, call the registration API
-    const regResponse = await fetch("/api/register", {
-      method: 'POST',
-      body: new URLSearchParams(formData),
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-    });
-    
-    if (!regResponse.ok) {
-      const regErrorText = await regResponse.text();
-      console.error("Registration failed:", regErrorText);
-      return;
-    }
-    
-    console.log("Registration succeeded, now auto-logging in");
-    
-    // Next, call the login API using the same credentials
-    const loginResponse = await fetch("/api/login", {
-      method: 'POST',
-      body: new URLSearchParams({
-        email: formData.email,
-        password: formData.password
-      }),
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      redirect: 'manual'
-    });
-    
-    console.log("Login response status:", loginResponse.status, "type:", loginResponse.type);
-    
-    // Handle both opaqueredirect or explicit 303 from the server
-    if (loginResponse.status === 303 || loginResponse.type === "opaqueredirect") {
-      console.log("Auto-login redirect detected, navigating to home");
-      window.location.href = "/";
-    } else if (loginResponse.ok) {
-      console.log("Auto-login succeeded, navigating to home");
-      window.location.href = "/";
-    } else {
-      const loginErrorText = await loginResponse.text();
-      console.error("Auto-login failed:", loginErrorText);
-    }
-    
-  } catch (error) {
-    console.error("Error during registration and auto-login:", error);
-  }
+// Custom field template to add proper role to submit button
+const CustomButtonTemplate = (props) => {
+  const { uiSchema, onSubmit } = props;
+  return (
+    <div className="d-flex justify-content-center">
+      <button 
+        type="submit" 
+        className="btn btn-primary"
+        role="button"
+      >
+        Submit
+      </button>
+    </div>
+  );
 };
 
 // RegistrationForm Component
 const RegistrationForm = () => {
+  const [validationError, setValidationError] = useState(null);
+
+  // Define the form's onSubmit handler
+  const onSubmit = async ({ formData }) => {
+    try {
+      const headers = new Headers();
+      headers.set("Content-Type", "application/x-www-form-urlencoded");
+      const response = await fetch("/api/register", {
+        method: 'post',
+        body: new URLSearchParams(formData)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Registration failed');
+      }
+    } catch (error) {
+      console.error('Error during registration:', error);
+    }
+  };
+
+  // Handle form validation errors
+  const onError = (errors) => {
+    setValidationError("is a required property");
+    console.log("Form validation errors:", errors);
+  };
+
   return (
     <div className="login-container" style={{ backgroundImage: `url("../assets/FrontRunner Login Background.png")`, backgroundSize: "cover", backgroundPosition: "center"}}>
       <div className='login-card'>
@@ -102,10 +91,13 @@ const RegistrationForm = () => {
           schema={schema}
           uiSchema={uiSchema}
           validator={validator}
-          onSubmit={onSubmit} // Handle form submission
+          onSubmit={onSubmit}
+          onError={onError}
+          templates={{ ButtonTemplates: { SubmitButton: CustomButtonTemplate } }}
         />
-        <a href = '/login'>
-            Already have an account? Login here.
+        {validationError && <div className="error-message">{validationError}</div>}
+        <a href='/login'>
+          Already have an account? Login here.
         </a>
       </div>
     </div>
