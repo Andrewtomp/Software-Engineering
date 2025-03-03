@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import RegistrationForm from '../components/Registration'; // Adjust the import path
+import RegistrationForm from '../Registration'; // Adjust the import path
 
 describe('RegistrationForm', () => {
   test('renders the registration form', () => {

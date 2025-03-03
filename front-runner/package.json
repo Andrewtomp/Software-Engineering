@@ -47,8 +47,12 @@
     ]
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@testing-library/user-event": "^14.6.1",
     "autoprefixer": "^10.4.20",
     "cypress": "^14.1.0",
+    "jest": "^27.5.1",
     "postcss": "^8.5.1",
     "tailwindcss": "^4.0.3"
   }

@@ -1,6 +1,6 @@
 // NavBar.test.js
 import { render, fireEvent,screen } from '@testing-library/react';
-import NavBar from '../components/NavBar';
+import NavBar from '../NavBar';
 
 describe('NavBar', () => {
     it('navigates to the correct links when clicked', () => {
