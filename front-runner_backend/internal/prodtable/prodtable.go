@@ -16,7 +16,7 @@ import (
 )
 
 type Image struct {
-	ID  uint   `gorm:"primaryKey"`
+	ID  uint   `gorm:"primaryKey;autoIncrement;type:serial"`
 	URL string `gorm:"not null"`
 }
 
@@ -45,6 +45,7 @@ func init() {
 	}
 }
 
+// MigrateProdDB runs the database migrations for the product and image tables.
 func MigrateProdDB() {
 	if db == nil {
 		log.Fatal("Database connection is not initialized")
@@ -57,6 +58,8 @@ func MigrateProdDB() {
 	log.Println("Database migration complete")
 }
 
+// ClearProdTable removes all records from the product table.
+// Typically used for testing or resetting the database.
 func ClearProdTable(db *gorm.DB) error {
 	if err := db.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&Product{}).Error; err != nil {
 		return fmt.Errorf("error clearing product table: %w", err)
@@ -65,6 +68,26 @@ func ClearProdTable(db *gorm.DB) error {
 }
 
 // AddProduct creates a new product and associates it with the logged-in user.
+//
+// @Summary      Add a new product
+// @Description  Creates a new product with details including name, description, price, count, tags, and an associated image.
+//
+//	The product is linked to the authenticated user.
+//
+// @Tags         product
+// @Accept       multipart/form-data
+// @Produce      plain
+// @Param        productName   formData string  true "Product name"
+// @Param        description   formData string  true "Product description"
+// @Param        price         formData number  true "Product price"
+// @Param        count         formData integer true "Product stock count"
+// @Param        tags          formData string  false "Product tags"
+// @Param        image         formData file    true "Product image file"
+// @Success      201  {string}  string "Product added successfully"
+// @Failure      400  {string}  string "Error parsing form or uploading image"
+// @Failure      401  {string}  string "User not authenticated"
+// @Failure      500  {string}  string "Internal server error"
+// @Router       /api/add_product [post]
 func AddProduct(w http.ResponseWriter, r *http.Request) {
 	// Extract the logged in user's ID from the context.
 	if !login.IsLoggedIn(r) {
@@ -136,7 +159,16 @@ func AddProduct(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Product added successfully"))
 }
 
-// DeleteProduct removes a product but only if it belongs to the logged-in user.
+// DeleteProduct removes a product if it belongs to the logged-in user.
+//
+// @Summary      Delete a product
+// @Description  Deletes an existing product and its associated image if the product belongs to the authenticated user.
+// @Tags         product
+// @Produce      plain
+// @Param        id   query string true "Product ID"
+// @Success      200  {string}  string "Product deleted successfully"
+// @Failure      401  {string}  string "User not authenticated or unauthorized"
+// @Failure      404  {string}  string "Produ
 func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from context
 	if !login.IsLoggedIn(r) {
@@ -176,7 +208,24 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Product deleted successfully"))
 }
 
-// UpdateProduct allows updating a product if it belongs to the logged-in user.
+// UpdateProduct updates an existing product's details if it belongs to the logged-in user.
+//
+// @Summary      Update a product
+// @Description  Updates the details of an existing product (description, price, stock count) that belongs to the authenticated user.
+//
+//	Only non-empty fields will be updated.
+//
+// @Tags         product
+// @Accept       application/x-www-form-urlencoded
+// @Produce      plain
+// @Param        id                  query string true "Product ID"
+// @Param        product_description formData string false "New product description"
+// @Param        item_price          formData number false "New product price"
+// @Param        stock_amount        formData integer false "New product stock count"
+// @Success      200  {string}  string "Product updated successfully"
+// @Failure      401  {string}  string "User not authenticated or unauthorized"
+// @Failure      404  {string}  string "Product not found"
+// @Router       /api/update_product [put]
 func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from context
 	if !login.IsLoggedIn(r) {

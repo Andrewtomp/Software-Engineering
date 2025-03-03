@@ -11,6 +11,90 @@ info:
   title: Front Runner API
   version: "1.0"
 paths:
+  /api:
+    get:
+      consumes:
+      - application/json
+      description: Sets up all API endpoints and serves the frontend
+      parameters:
+      - description: Mux router instance
+        in: path
+        name: router
+        required: true
+        type: object
+      - description: Enable request logging
+        in: query
+        name: logging
+        type: boolean
+      produces:
+      - application/json
+      - text/html
+      responses:
+        "200":
+          description: Routes successfully registered
+          schema:
+            type: string
+      summary: Configure application routes
+      tags:
+      - setup
+  /api/add_product:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Creates a new product with details including name, description,
+        price, count, tags, and an associated image.
+      parameters:
+      - description: Product name
+        in: formData
+        name: productName
+        required: true
+        type: string
+      - description: Product description
+        in: formData
+        name: description
+        required: true
+        type: string
+      - description: Product price
+        in: formData
+        name: price
+        required: true
+        type: number
+      - description: Product stock count
+        in: formData
+        name: count
+        required: true
+        type: integer
+      - description: Product tags
+        in: formData
+        name: tags
+        type: string
+      - description: Product image file
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - text/plain
+      responses:
+        "201":
+          description: Product added successfully
+          schema:
+            type: string
+        "400":
+          description: Error parsing form or uploading image
+          schema:
+            type: string
+        "401":
+          description: User not authenticated
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Add a new product
+      tags:
+      - product
   /api/data/image/{filename}:
     get:
       description: Fetches an image if it exists and they are authorized.
@@ -175,6 +259,48 @@ paths:
       - authentication
       - user
       - dbtable
+  /api/update_product:
+    put:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Updates the details of an existing product (description, price,
+        stock count) that belongs to the authenticated user.
+      parameters:
+      - description: Product ID
+        in: query
+        name: id
+        required: true
+        type: string
+      - description: New product description
+        in: formData
+        name: product_description
+        type: string
+      - description: New product price
+        in: formData
+        name: item_price
+        type: number
+      - description: New product stock count
+        in: formData
+        name: stock_amount
+        type: integer
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Product updated successfully
+          schema:
+            type: string
+        "401":
+          description: User not authenticated or unauthorized
+          schema:
+            type: string
+        "404":
+          description: Product not found
+          schema:
+            type: string
+      summary: Update a product
+      tags:
+      - product
   /api/validemail:
     get:
       description: Checks if the provided email address is in a valid format. Returns

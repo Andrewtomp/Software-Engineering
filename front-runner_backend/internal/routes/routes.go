@@ -18,12 +18,15 @@ import (
 // 	sessionStore *sessions.CookieStore
 // )
 
+// spaHandler serves the static ReactJS site. It always serves the index.html
+// file to allow React Router to handle client-side routing.
 type spaHandler struct {
 	staticPath string
 	indexPath  string
 }
 
-// Serves the static ReactJS site. Continually serves index.html as a result of ReactJS internal routing.
+// ServeHTTP implements the http.Handler interface for spaHandler.
+// It checks if the requested file exists. If not, it falls back to serving index.html.
 func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Join internally call path.Clean to prevent directory traversal
 	path := filepath.Join(h.staticPath, r.URL.Path)
@@ -60,14 +63,27 @@ func authMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// RegisterRoutes sets up all the application routes including API endpoints, Swagger UI, and static file serving.
+// RegisterRoutes configures all application routes.
 //
-// @Summary      Register application routes
-// @Description  Registers API endpoints for user registration, login, and logout. REgisters API endpoints for adding, removing, and updateing a product Also sets up the Swagger UI on /swagger/* and serves static files for the frontend.
+// This function registers API endpoints for:
+//   - User management: registration (/api/register), login (/api/login), and logout (/api/logout).
+//   - Product operations: adding (/api/add_product), deleting (/api/delete_product), and updating (/api/update_product) products.
+//   - Image handling: retrieving (/api/data/image/{imagePath}) and uploading (/api/data/upload) images.
 //
-// @Tags         routes, router
-// @Accept       json
-// @Produce      html
+// It also sets up:
+//   - The Swagger documentation UI, accessible under /swagger/.
+//   - Static file serving for the ReactJS frontend, including protected routes that require authentication.
+//
+// @Summary     Configure application routes
+// @Description Sets up all API endpoints and serves the frontend
+// @Tags        setup
+// @Accept      json
+// @Produce     json
+// @Produce     html
+// @Param       router path object true "Mux router instance"
+// @Param       logging query boolean false "Enable request logging"
+// @Success     200 {string} string "Routes successfully registered"
+// @Router      /api [get]
 func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
 	// Subrouters
 	api := router.PathPrefix("/api").Subrouter()
