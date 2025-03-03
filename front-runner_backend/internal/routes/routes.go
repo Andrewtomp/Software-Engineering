@@ -103,7 +103,6 @@ func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
 	// node-specified routes will be routed directly to the spa
 	router.PathPrefix("/static").Handler(spa).Methods("GET")
 	router.PathPrefix("/assets").Handler(spa).Methods("GET")
-	router.PathPrefix("/manifest.json").Handler(spa).Methods("GET")
 	// Serve static files for webpage
 	// All other pages are wrapped with authMiddleware.
 	router.PathPrefix("/").Handler(authMiddleware(spa)).Methods("GET")
