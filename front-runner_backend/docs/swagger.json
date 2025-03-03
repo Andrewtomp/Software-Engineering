@@ -222,8 +222,7 @@
                     "text/plain"
                 ],
                 "tags": [
-                    "authentication",
-                    "login"
+                    "authentication"
                 ],
                 "summary": "User login",
                 "parameters": [
@@ -271,8 +270,7 @@
                     "text/plain"
                 ],
                 "tags": [
-                    "authentication",
-                    "logout"
+                    "authentication"
                 ],
                 "summary": "User logout",
                 "responses": {
@@ -295,9 +293,7 @@
                     "text/plain"
                 ],
                 "tags": [
-                    "authentication",
-                    "user",
-                    "dbtable"
+                    "authentication"
                 ],
                 "summary": "Register a new user",
                 "parameters": [

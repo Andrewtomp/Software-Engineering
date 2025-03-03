@@ -177,7 +177,6 @@ paths:
       summary: User login
       tags:
       - authentication
-      - login
   /api/logout:
     post:
       description: Logs out the current user by clearing the session.
@@ -191,7 +190,6 @@ paths:
       summary: User logout
       tags:
       - authentication
-      - logout
   /api/register:
     post:
       consumes:
@@ -231,8 +229,6 @@ paths:
       summary: Register a new user
       tags:
       - authentication
-      - user
-      - dbtable
   /api/update_product:
     put:
       consumes:

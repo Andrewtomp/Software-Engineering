@@ -228,8 +228,7 @@ const docTemplate = `{
                     "text/plain"
                 ],
                 "tags": [
-                    "authentication",
-                    "login"
+                    "authentication"
                 ],
                 "summary": "User login",
                 "parameters": [
@@ -277,8 +276,7 @@ const docTemplate = `{
                     "text/plain"
                 ],
                 "tags": [
-                    "authentication",
-                    "logout"
+                    "authentication"
                 ],
                 "summary": "User logout",
                 "responses": {
@@ -301,9 +299,7 @@ const docTemplate = `{
                     "text/plain"
                 ],
                 "tags": [
-                    "authentication",
-                    "user",
-                    "dbtable"
+                    "authentication"
                 ],
                 "summary": "Register a new user",
                 "parameters": [
