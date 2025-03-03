@@ -83,6 +83,7 @@ func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
 	api.HandleFunc("/add_product", prodtable.AddProduct).Methods("POST")
 	api.HandleFunc("/delete_product", prodtable.DeleteProduct).Methods("PUT")
 	api.HandleFunc("/update_product", prodtable.UpdateProduct).Methods("PUT")
+	api.HandleFunc("/get_product", prodtable.GetProduct).Methods("GET")
 
 	api.PathPrefix("/").HandlerFunc(InvalidAPI)
 

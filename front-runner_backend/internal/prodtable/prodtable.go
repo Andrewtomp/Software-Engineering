@@ -1,6 +1,7 @@
 package prodtable
 
 import (
+	"encoding/json"
 	"fmt"
 	"front-runner/internal/coredbutils"
 	"front-runner/internal/login"
@@ -225,4 +226,58 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Product updated successfully"))
+}
+
+func GetProduct(w http.ResponseWriter, r *http.Request) {
+	if !login.IsLoggedIn(r) {
+		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := login.GetUserID(r)
+	if err != nil {
+		http.Error(w, "Error retrieving session: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	productID := r.URL.Query().Get("id")
+	var product Product
+
+	if err := db.Where("id = ?", productID).First(&product).Error; err != nil {
+		http.Error(w, "No Product with specified ID", http.StatusNotFound)
+		return
+	}
+
+	if userID != product.UserID {
+		http.Error(w, "Permission denied", http.StatusForbidden)
+		return
+	}
+
+	var image Image
+
+	if err := db.Where("id = ?", product.ID).First(&image).Error; err != nil {
+		http.Error(w, "Could not find image", http.StatusInternalServerError)
+		return
+	}
+
+	type ProductReturn struct {
+		ProdName        string  `json:"prodName"`
+		ProdDescription string  `json:"prodDesc"`
+		ImgPath         string  `json:"image"`
+		ProdPrice       float64 `json:"prodPrice"`
+		ProdCount       uint    `json:"prodCount"`
+		ProdTags        string  `json:"prodTags"`
+	}
+
+	var retrieve ProductReturn
+	retrieve.ProdName = product.ProdName
+	retrieve.ProdDescription = product.ProdDescription
+	retrieve.ImgPath = image.URL
+	retrieve.ProdPrice = product.ProdPrice
+	retrieve.ProdCount = product.ProdCount
+	retrieve.ProdTags = product.ProdTags
+
+	ret, _ := json.Marshal(retrieve)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(ret))
 }
