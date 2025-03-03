@@ -22,6 +22,129 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api": {
+            "get": {
+                "description": "Sets up all API endpoints and serves the frontend",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json",
+                    "text/html"
+                ],
+                "tags": [
+                    "setup"
+                ],
+                "summary": "Configure application routes",
+                "parameters": [
+                    {
+                        "type": "object",
+                        "description": "Mux router instance",
+                        "name": "router",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Enable request logging",
+                        "name": "logging",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Routes successfully registered",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/add_product": {
+            "post": {
+                "description": "Creates a new product with details including name, description, price, count, tags, and an associated image.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "product"
+                ],
+                "summary": "Add a new product",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Product name",
+                        "name": "productName",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Product description",
+                        "name": "description",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Product price",
+                        "name": "price",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Product stock count",
+                        "name": "count",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Product tags",
+                        "name": "tags",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Product image file",
+                        "name": "image",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Product added successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Error parsing form or uploading image",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "User not authenticated",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/data/image/{filename}": {
             "get": {
                 "description": "Fetches an image if it exists and they are authorized.",
@@ -259,6 +382,68 @@ const docTemplate = `{
                     },
                     "409": {
                         "description": "Email already in use or database error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/update_product": {
+            "put": {
+                "description": "Updates the details of an existing product (description, price, stock count) that belongs to the authenticated user.",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "product"
+                ],
+                "summary": "Update a product",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "New product description",
+                        "name": "product_description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "number",
+                        "description": "New product price",
+                        "name": "item_price",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "New product stock count",
+                        "name": "stock_amount",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product updated successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "User not authenticated or unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found",
                         "schema": {
                             "type": "string"
                         }
