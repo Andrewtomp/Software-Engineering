@@ -26,13 +26,6 @@ const schema = {
       title: 'Stock Quantity',
       minimum: 0, // Ensure stock is non-negative
     },
-    tags: {
-      type: 'array',
-      title: 'Tags',
-      items: {
-        type: 'string',
-      },
-    },
   },
   required: ['productName', 'description', 'price', 'stock'], // Required fields
 };
@@ -53,10 +46,6 @@ const uiSchema = {
   stock: {
     'ui:widget': 'updown', // Numeric input
     'ui:placeholder': 'Enter available stock',
-  },
-  tags: {
-    'ui:widget': 'textarea', // Allows inputting multiple tags
-    'ui:placeholder': 'Enter tags separated by commas',
   },
 };
 
