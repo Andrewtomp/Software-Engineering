@@ -237,6 +237,7 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 type ProductReturn struct {
+	ProdID          uint    `json:"prodID"`
 	ProdName        string  `json:"prodName"`
 	ProdDescription string  `json:"prodDesc"`
 	ImgPath         string  `json:"image"`
@@ -247,6 +248,7 @@ type ProductReturn struct {
 
 func setProductReturn(product Product) ProductReturn {
 	var ret ProductReturn
+	ret.ProdID = product.ID
 	ret.ProdName = product.ProdName
 	ret.ProdDescription = product.ProdDescription
 	ret.ImgPath = product.Img.URL
