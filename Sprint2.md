@@ -37,6 +37,14 @@ Video: [insert link here]
 - Added unit tests for `imageStore`
 - Added migration functions for `user`, `product` and, `image` database tables so they are automatically made/ migrated
 
+## Incomplete Work
+### Front end
+
+### Back end
+- Need to implement back end product filter so only products added by a specific user appear when that user is authorized (logged in)
+- Need to connect the ability to edit values for each item to the front end
+- Need to connect the ability to delete an item to the front end
+
 ## Testing
 ### Front end
 _Cypress Test_
