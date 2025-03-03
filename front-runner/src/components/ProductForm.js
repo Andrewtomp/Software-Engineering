@@ -102,7 +102,7 @@ const onSubmit = async ({ formData }) => {
     // Send the product data to your API endpoint.
     var multipart = new FormData();
     for ( var key in formData ) {
-      if (key == "image"){
+      if (key === "image"){
         var filename = formData[key].split(',')[0].split(';')[1].split('=')[1]
         var test = dataURItoBlob(formData[key]);
         multipart.append(key, test, filename);
