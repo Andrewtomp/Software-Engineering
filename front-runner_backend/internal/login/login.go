@@ -76,11 +76,9 @@ func init() {
 // @Router       /api/login [post]
 func LoginUser(w http.ResponseWriter, r *http.Request) {
 	// Retrieve the session first.
-	log.Println("LoginUser: Received login request")
 	session, err := sessionStore.Get(r, "auth")
 	if err != nil {
 		if err.Error() == "securecookie: the value is not valid" {
-			log.Println("Detected invalid cookie, clearing it")
 			// Invalidate the current cookie
 			http.SetCookie(w, &http.Cookie{
 				Name:   "auth",
@@ -93,12 +91,10 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 			// Optionally, try to get a fresh session
 			session, err = sessionStore.New(r, "auth")
 			if err != nil {
-				log.Println("Error creating a new session:", err)
 				http.Error(w, "Error creating session", http.StatusInternalServerError)
 				return
 			}
 		} else {
-			log.Println("Error retrieving session:", err)
 			http.Error(w, "Error retrieving session: "+err.Error(), http.StatusInternalServerError)
 			return
 		}

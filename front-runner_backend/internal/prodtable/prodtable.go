@@ -57,12 +57,12 @@ func MigrateProdDB() {
 	if db == nil {
 		log.Fatal("Database connection is not initialized")
 	}
-	log.Println("Running database migrations...")
+	log.Println("Running product and image database migrations...")
 	err := db.AutoMigrate(&Product{}, &Image{})
 	if err != nil {
 		log.Fatalf("Migration failed: %v", err)
 	}
-	log.Println("Database migration complete")
+	log.Println("Product and Image database migration complete")
 }
 
 func ClearProdTable(db *gorm.DB) error {

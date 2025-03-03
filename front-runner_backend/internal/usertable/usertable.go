@@ -36,12 +36,12 @@ func MigrateUserDB() {
 	if db == nil {
 		log.Fatal("Database connection is not initialized")
 	}
-	log.Println("Running database migrations...")
+	log.Println("Running user database migrations...")
 	err := db.AutoMigrate(&User{})
 	if err != nil {
 		log.Fatalf("Migration failed: %v", err)
 	}
-	log.Println("Database migration complete")
+	log.Println("User database migration complete")
 }
 
 // ClearUserTable deletes all records from the users table.
