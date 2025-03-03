@@ -64,14 +64,46 @@ const CustomButtonTemplate = (props) => {
 
 // LoginForm Component
 const LoginForm = () => {
-  const onSubmit = ({ formData }) => {
-    const headers = new Headers();
-    headers.set("Content-Type", "application/x-www-form-urlencoded");
-    fetch("/api/login", {
-      method: 'post',
-      body: new URLSearchParams(formData)
-    });
+  const onSubmit = async ({ formData }) => {
+    try {
+      console.log('onSubmit: Submitting login request with data:', formData);
+      const response = await fetch("/api/login", {
+        method: 'POST',
+        body: new URLSearchParams(formData),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        redirect: 'manual' // Prevent automatic following of redirects
+      });
+      console.log('onSubmit: Response status:', response.status);
+  
+      // if (response.status === 303) {
+      if (response.type === "opaqueredirect") {
+        // If server returns a redirect, update the browser location manually
+        const redirectUrl = response.headers.get('Location');
+        console.log('onSubmit: Redirect URL from server:', redirectUrl);
+        window.location.href = redirectUrl ? redirectUrl : '/';
+      } else if (response.ok) {
+        console.log('onSubmit: Login succeeded without explicit redirect, navigating to home');
+        // If login is successful but no explicit redirect, navigate to home
+        window.location.href = '/';
+      } else {
+        const errorText = await response.text();
+        console.error('Login failed:', errorText);
+        // Optionally display an error message to the user
+      }
+    } catch (error) {
+      console.error('Error during login:', error);
+    }
   };
+  // const onSubmit = ({ formData }) => {
+  //   const headers = new Headers();
+  //   headers.set("Content-Type", "application/x-www-form-urlencoded");
+  //   fetch("/api/login", {
+  //     method: 'post',
+  //     body: new URLSearchParams(formData)
+  //   });
+  // };
 
   return (
     <div className="login-container" style={{ backgroundImage: `url("../assets/FrontRunner Login Background.png")`, backgroundSize: "cover", backgroundPosition: "center"}}>
