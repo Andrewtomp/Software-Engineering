@@ -33,6 +33,10 @@
     border: none;
   }
 
+  .login-card button:hover {
+    color: black;
+  }
+
   .login-card button:focus {
     box-shadow: none !important;
   }

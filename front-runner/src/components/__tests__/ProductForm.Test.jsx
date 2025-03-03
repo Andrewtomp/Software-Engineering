@@ -11,7 +11,7 @@ test('allows the user to input product details and submit the form', () => {
   const productNameInput = screen.getByLabelText(/Product Name/i);
   const descriptionInput = screen.getByLabelText(/Description/i);
   const priceInput = screen.getByLabelText(/Price/i);
-  const stockInput = screen.getByLabelText(/Stock Quantity/i);
+  const stockInput = screen.getByLabelText(/Count/i);
   const submitButton = screen.getByRole('button', { name: /Submit/i });
 
   // Simulate user input

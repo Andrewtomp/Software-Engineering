@@ -2,7 +2,6 @@
   "name": "front-runner",
   "version": "0.1.0",
   "private": true,
-  "proxy": "https://localhost:8080",
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
@@ -11,7 +10,7 @@
     "@rjsf/utils": "^5.24.3",
     "@rjsf/validator-ajv8": "^5.24.3",
     "ag-grid-community": "^33.1.1",
-    "ag-grid-react": "^33.0.4",
+    "ag-grid-react": "^33.1.1",
     "bootstrap": "^5.3.3",
     "cra-template": "1.2.0",
     "font-awesome": "^4.7.0",
