@@ -74,11 +74,7 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="login-container">
-      <div className='logo-header'>
-        <img src="../assets/Logo.svg" className="logo" alt="FR logo"/>
-        <h1>FrontRunner</h1>
-      </div>
+    <div className="login-container" style={{ backgroundImage: `url("../assets/FrontRunner Login Background.png")`, backgroundSize: "cover", backgroundPosition: "center"}}>
       <div className='login-card'>
         <h2 className="text-center mb-4">Login</h2>
         <Form
