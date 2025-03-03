@@ -22,45 +22,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api": {
-            "get": {
-                "description": "Sets up all API endpoints and serves the frontend",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json",
-                    "text/html"
-                ],
-                "tags": [
-                    "setup"
-                ],
-                "summary": "Configure application routes",
-                "parameters": [
-                    {
-                        "type": "object",
-                        "description": "Mux router instance",
-                        "name": "router",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "Enable request logging",
-                        "name": "logging",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Routes successfully registered",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
         "/api/add_product": {
             "post": {
                 "description": "Creates a new product with details including name, description, price, count, tags, and an associated image.",
@@ -446,34 +407,6 @@ const docTemplate = `{
                         "description": "Product not found",
                         "schema": {
                             "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/validemail": {
-            "get": {
-                "description": "Checks if the provided email address is in a valid format. Returns true if valid, false otherwise.",
-                "tags": [
-                    "utility",
-                    "email",
-                    "validate"
-                ],
-                "summary": "Validate email address",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Email address to validate",
-                        "name": "email",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "true if email is valid, false otherwise",
-                        "schema": {
-                            "type": "boolean"
                         }
                     }
                 }
