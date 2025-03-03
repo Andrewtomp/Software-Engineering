@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import LoginForm from '../components/Login'; // Adjust the path based on your project structure
+import LoginForm from '../Login'; // Adjust the path based on your project structure
 
 describe('LoginForm Component', () => {
   test('renders form and allows user input', () => {

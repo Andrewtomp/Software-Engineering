@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import AddProductForm from '../components/ProductForm';
+import AddProductForm from '../ProductForm';
 
 test('allows the user to input product details and submit the form', () => {
   // Mock alert before rendering
