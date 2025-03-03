@@ -19,6 +19,7 @@ Video: [insert link here]
 - Designed and created visually appealing Login/Register backgrounds for when users first land on the site
 - Created Cypress Test for opening the ProductForm modal
 - Created React unit tests
+- Completed interviews with potential end-users to validate the need for a product like this
    
 ### Back end
 - Merged all Sprint 1 content to main branch
@@ -39,6 +40,8 @@ Video: [insert link here]
 
 ## Incomplete Work
 ### Front end
+- Need to fix bug where product tags aren't being received correctly when submitting a new product
+- Need to connect Product page and preview on dashboard with back end to show users' products in real time
 
 ### Back end
 - Need to implement back end product filter so only products added by a specific user appear when that user is authorized (logged in)
@@ -56,6 +59,9 @@ Completed a simple Cypress Test testing the opening of a modal for product creat
 
 _Unit Tests_
 
+| Unit Test | Test Description |
+| --- | --- |
+| `Test Placeholder` | Placeholder for front end unit test |
 
 ### Back end
 Each internal package has an associated unit test that can be run by entering the following command from the `front-runner_backend` directory:
