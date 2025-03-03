@@ -195,7 +195,7 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	productID := r.URL.Query().Get("id")
 	var product Product
 
-	if err := db.Preload("Img").First(&product, productID).Error; err != nil {
+	if err := db.Preload("Img").First(&product, "id = ?", productID).Error; err != nil {
 		http.Error(w, "Product not found", http.StatusNotFound)
 		return
 	}
@@ -253,7 +253,7 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	productID := r.URL.Query().Get("id")
 	var product Product
 
-	if err := db.First(&product, productID).Error; err != nil {
+	if err := db.First(&product, "id = ?", productID).Error; err != nil {
 		http.Error(w, "Product not found", http.StatusNotFound)
 		return
 	}
