@@ -245,6 +245,17 @@ type ProductReturn struct {
 	ProdTags        string  `json:"prodTags"`
 }
 
+func setProductReturn(product Product) ProductReturn {
+	var ret ProductReturn
+	ret.ProdName = product.ProdName
+	ret.ProdDescription = product.ProdDescription
+	ret.ImgPath = product.Img.URL
+	ret.ProdPrice = product.ProdPrice
+	ret.ProdCount = product.ProdCount
+	ret.ProdTags = product.ProdTags
+	return ret
+}
+
 func GetProductList(w http.ResponseWriter, r *http.Request) {
 	if !login.IsLoggedIn(r) {
 		http.Error(w, "User not authenticated", http.StatusUnauthorized)
@@ -299,13 +310,7 @@ func GetProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var retrieve ProductReturn
-	retrieve.ProdName = product.ProdName
-	retrieve.ProdDescription = product.ProdDescription
-	retrieve.ImgPath = product.Img.URL
-	retrieve.ProdPrice = product.ProdPrice
-	retrieve.ProdCount = product.ProdCount
-	retrieve.ProdTags = product.ProdTags
+	retrieve := setProductReturn(product)
 
 	ret, _ := json.Marshal(retrieve)
 	w.WriteHeader(http.StatusOK)
@@ -329,13 +334,7 @@ func GetProducts(w http.ResponseWriter, r *http.Request) {
 
 	var productsRet []ProductReturn
 	for _, product := range products {
-		var retrieve ProductReturn
-		retrieve.ProdName = product.ProdName
-		retrieve.ProdDescription = product.ProdDescription
-		retrieve.ImgPath = product.Img.URL
-		retrieve.ProdPrice = product.ProdPrice
-		retrieve.ProdCount = product.ProdCount
-		retrieve.ProdTags = product.ProdTags
+		retrieve := setProductReturn(product)
 		productsRet = append(productsRet, retrieve)
 	}
 
