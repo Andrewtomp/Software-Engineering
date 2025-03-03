@@ -65,7 +65,7 @@ func init() {
 // @Summary      User login
 // @Description  Authenticates a user and creates a session.
 //
-// @Tags         authentication, login
+// @Tags         authentication
 // @Accept       application/x-www-form-urlencoded
 // @Produce      plain
 // @Param        email formData string true "User email"
@@ -148,7 +148,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 // @Summary      User logout
 // @Description  Logs out the current user by clearing the session.
 //
-// @Tags         authentication, logout
+// @Tags         authentication
 // @Produce      plain
 // @Success      200 {string} string "Logged out successfully"
 // @Router       /api/logout [post]
