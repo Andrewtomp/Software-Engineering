@@ -2,6 +2,7 @@ package prodtable
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"front-runner/internal/coredbutils"
 	"front-runner/internal/login"
@@ -18,7 +19,7 @@ import (
 
 type Image struct {
 	ID     uint   `gorm:"primaryKey"`
-	URL    string `gorm:"not null"`
+	URL    string `gorm:"unique;not null"`
 	UserID uint   `gorm:"not null;index"`
 }
 
@@ -280,4 +281,43 @@ func GetProduct(w http.ResponseWriter, r *http.Request) {
 	ret, _ := json.Marshal(retrieve)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(ret))
+}
+
+func doesFileExist(filepath string) bool {
+	_, err := os.Stat(filepath)
+	return !errors.Is(err, os.ErrNotExist)
+}
+
+func GetProductImage(w http.ResponseWriter, r *http.Request) {
+	if !login.IsLoggedIn(r) {
+		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := login.GetUserID(r)
+	if err != nil {
+		http.Error(w, "Error retrieving session: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	imagePath := r.URL.Query().Get("image")
+
+	var image Image
+
+	if err := db.Where("url = ?", imagePath).First(&image).Error; err != nil {
+		http.Error(w, "Could not find image", http.StatusInternalServerError)
+		return
+	}
+
+	if userID != image.UserID {
+		http.Error(w, "Permission denied", http.StatusForbidden)
+		return
+	}
+
+	if !doesFileExist(imagePath) {
+		http.Error(w, "Requested image does not exist", http.StatusNotFound)
+		return
+	}
+
+	http.ServeFile(w, r, imagePath)
 }
