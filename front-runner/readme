@@ -27,6 +27,10 @@ Follow these steps to set up the project:
 5. Install React JSON Schema Form:
     npm install @rjsf/core @rjsf/utils @rjsf/validator-ajv8 --save
 
+6. Insall React Jest for tests:
+    npm install --save-dev jest @testing-library/react @testing-library/jest-dom @testing-library/user-event
+
+
 ## Starting the Development Server
 
 To start the development server, run the following command:

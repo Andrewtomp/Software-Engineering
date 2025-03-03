@@ -32,18 +32,47 @@ const uiSchema = {
   },
 };
 
-// Define the login form's onSubmit handler
-const onSubmit = ({ formData }) => {
-  const headers = new Headers();
-  headers.set("Content-Type", "application/x-www-form-urlencoded")
-  fetch("/api/login", {
-      method: 'post',
-      body: new URLSearchParams(formData)
-  });
+// Custom templates for Form to ensure proper accessibility and test compatibility
+const CustomFieldTemplate = (props) => {
+  const { id, label, children, rawErrors, required } = props;
+  
+  return (
+    <div className="form-group mb-3">
+      <label htmlFor={id}>{label}{required ? "*" : ""}</label>
+      {children}
+      {rawErrors && rawErrors.length > 0 && (
+        <div className="text-danger">{rawErrors.join(', ')}</div>
+      )}
+    </div>
+  );
+};
+
+// Custom submit button template to add proper role
+const CustomButtonTemplate = (props) => {
+  return (
+    <div className="d-flex justify-content-center mb-3">
+      <button 
+        type="submit" 
+        className="btn btn-primary"
+        role="button"
+      >
+        Submit
+      </button>
+    </div>
+  );
 };
 
 // LoginForm Component
 const LoginForm = () => {
+  const onSubmit = ({ formData }) => {
+    const headers = new Headers();
+    headers.set("Content-Type", "application/x-www-form-urlencoded");
+    fetch("/api/login", {
+      method: 'post',
+      body: new URLSearchParams(formData)
+    });
+  };
+
   return (
     <div className="login-container">
       <div className='logo-header'>
@@ -56,11 +85,15 @@ const LoginForm = () => {
           schema={schema}
           uiSchema={uiSchema}
           validator={validator}
-          onSubmit={onSubmit} // Handle form submission
+          onSubmit={onSubmit}
+          templates={{
+            FieldTemplate: CustomFieldTemplate,
+            ButtonTemplates: { SubmitButton: CustomButtonTemplate }
+          }}
         />
-          <a href= '/register'>
+        <a href='/register'>
           New here? Create an account.
-          </a>
+        </a>
       </div>
     </div>
   );
