@@ -16,7 +16,7 @@ const Products = () => {
             <div className='my-products-content'>
                 <div className='products-header'>
                     <h1>My Products</h1>
-                    <div onClick={handleAddNewClick} className="nav-option">
+                    <div onClick={handleAddNewClick} className="add-new-button" style={{ cursor: 'pointer' }}>
                         <img src='../assets/Add new.svg' alt='add new' className='add-new-icon'/>
                     </div>
                 </div>
