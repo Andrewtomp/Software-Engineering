@@ -258,7 +258,11 @@ func GetProductList(w http.ResponseWriter, r *http.Request) {
 
 	ret, _ := json.Marshal(productIDs)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(ret))
+	if len(productIDs) == 0 {
+		w.Write([]byte("[]"))
+	} else {
+		w.Write([]byte(ret))
+	}
 }
 
 func GetProduct(w http.ResponseWriter, r *http.Request) {
