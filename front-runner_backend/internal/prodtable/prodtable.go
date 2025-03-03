@@ -236,6 +236,15 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Product updated successfully"))
 }
 
+type ProductReturn struct {
+	ProdName        string  `json:"prodName"`
+	ProdDescription string  `json:"prodDesc"`
+	ImgPath         string  `json:"image"`
+	ProdPrice       float64 `json:"prodPrice"`
+	ProdCount       uint    `json:"prodCount"`
+	ProdTags        string  `json:"prodTags"`
+}
+
 func GetProductList(w http.ResponseWriter, r *http.Request) {
 	if !login.IsLoggedIn(r) {
 		http.Error(w, "User not authenticated", http.StatusUnauthorized)
@@ -290,15 +299,6 @@ func GetProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type ProductReturn struct {
-		ProdName        string  `json:"prodName"`
-		ProdDescription string  `json:"prodDesc"`
-		ImgPath         string  `json:"image"`
-		ProdPrice       float64 `json:"prodPrice"`
-		ProdCount       uint    `json:"prodCount"`
-		ProdTags        string  `json:"prodTags"`
-	}
-
 	var retrieve ProductReturn
 	retrieve.ProdName = product.ProdName
 	retrieve.ProdDescription = product.ProdDescription
@@ -308,6 +308,38 @@ func GetProduct(w http.ResponseWriter, r *http.Request) {
 	retrieve.ProdTags = product.ProdTags
 
 	ret, _ := json.Marshal(retrieve)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(ret))
+}
+
+func GetProducts(w http.ResponseWriter, r *http.Request) {
+	if !login.IsLoggedIn(r) {
+		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := login.GetUserID(r)
+	if err != nil {
+		http.Error(w, "Error retrieving session: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var products []Product
+	db.Preload("Img").Where("user_id = ?", userID).Find(&products)
+
+	var productsRet []ProductReturn
+	for _, product := range products {
+		var retrieve ProductReturn
+		retrieve.ProdName = product.ProdName
+		retrieve.ProdDescription = product.ProdDescription
+		retrieve.ImgPath = product.Img.URL
+		retrieve.ProdPrice = product.ProdPrice
+		retrieve.ProdCount = product.ProdCount
+		retrieve.ProdTags = product.ProdTags
+		productsRet = append(productsRet, retrieve)
+	}
+
+	ret, _ := json.Marshal(productsRet)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(ret))
 }
