@@ -102,7 +102,8 @@ func AddProduct(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	// Save image to disk (or upload to cloud storage)
-	imagePath := fmt.Sprintf("uploads/%s%s", uuid.New().String(), filepath.Ext(handler.Filename))
+	imageFilename := uuid.New().String() + filepath.Ext(handler.Filename)
+	imagePath := filepath.Join("uploads", imageFilename)
 	dst, err := os.Create(imagePath)
 	if err != nil {
 		http.Error(w, "Error saving image", http.StatusInternalServerError)
@@ -123,7 +124,7 @@ func AddProduct(w http.ResponseWriter, r *http.Request) {
 
 	// Save Image record
 	image := Image{
-		URL:    imagePath, // Store path instead of image data
+		URL:    imageFilename, // Store path instead of image data
 		UserID: userID,
 	}
 	db.Create(&image)
@@ -169,7 +170,8 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Delete image file
-	if err := os.Remove(product.Img.URL); err != nil {
+	imagePath := filepath.Join("uploads", product.Img.URL)
+	if err := os.Remove(imagePath); err != nil {
 		fmt.Println("Error deleting image:", err)
 	}
 
@@ -300,11 +302,11 @@ func GetProductImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	imagePath := r.URL.Query().Get("image")
+	imageFilename := r.URL.Query().Get("image")
 
 	var image Image
 
-	if err := db.Where("url = ?", imagePath).First(&image).Error; err != nil {
+	if err := db.Where("url = ?", imageFilename).First(&image).Error; err != nil {
 		http.Error(w, "Could not find image", http.StatusInternalServerError)
 		return
 	}
@@ -313,6 +315,8 @@ func GetProductImage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Permission denied", http.StatusForbidden)
 		return
 	}
+
+	imagePath := filepath.Join("uploads", imageFilename)
 
 	if !doesFileExist(imagePath) {
 		http.Error(w, "Requested image does not exist", http.StatusNotFound)
