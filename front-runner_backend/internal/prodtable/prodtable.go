@@ -48,6 +48,11 @@ func init() {
 	}
 }
 
+func doesFileExist(filepath string) bool {
+	_, err := os.Stat(filepath)
+	return !errors.Is(err, os.ErrNotExist)
+}
+
 func MigrateProdDB() {
 	if db == nil {
 		log.Fatal("Database connection is not initialized")
@@ -231,6 +236,31 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Product updated successfully"))
 }
 
+func GetProductList(w http.ResponseWriter, r *http.Request) {
+	if !login.IsLoggedIn(r) {
+		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := login.GetUserID(r)
+	if err != nil {
+		http.Error(w, "Error retrieving session: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var products []Product
+	db.Where("user_id = ?", userID).Find(&products)
+
+	var productIDs []uint
+	for _, element := range products {
+		productIDs = append(productIDs, element.ID)
+	}
+
+	ret, _ := json.Marshal(productIDs)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(ret))
+}
+
 func GetProduct(w http.ResponseWriter, r *http.Request) {
 	if !login.IsLoggedIn(r) {
 		http.Error(w, "User not authenticated", http.StatusUnauthorized)
@@ -276,11 +306,6 @@ func GetProduct(w http.ResponseWriter, r *http.Request) {
 	ret, _ := json.Marshal(retrieve)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(ret))
-}
-
-func doesFileExist(filepath string) bool {
-	_, err := os.Stat(filepath)
-	return !errors.Is(err, os.ErrNotExist)
 }
 
 func GetProductImage(w http.ResponseWriter, r *http.Request) {
