@@ -303,6 +303,12 @@ func GetProducts(w http.ResponseWriter, r *http.Request) {
 	var products []Product
 	db.Preload("Img").Where("user_id = ?", userID).Find(&products)
 
+	if len(products) == 0 {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("[]"))
+		return
+	}
+
 	var productsRet []ProductReturn
 	for _, product := range products {
 		retrieve := setProductReturn(product)
@@ -311,11 +317,7 @@ func GetProducts(w http.ResponseWriter, r *http.Request) {
 
 	ret, _ := json.Marshal(productsRet)
 	w.WriteHeader(http.StatusOK)
-	if len(productsRet) == 0 {
-		w.Write([]byte("[]"))
-	} else {
-		w.Write([]byte(ret))
-	}
+	w.Write([]byte(ret))
 }
 
 func GetProductImage(w http.ResponseWriter, r *http.Request) {
