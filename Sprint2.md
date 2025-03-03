@@ -66,6 +66,11 @@ _Unit Tests_
 | `NavBar.Test` | Tests the routing from the nav bar to the home, products, storefronts, and orders pages |
 | `ProductForm.Test` | Tests that the Product Form popup allows user input, validates the input, and submits the form |
 
+Tests passing:
+
+![image](https://github.com/user-attachments/assets/9a3be6b0-f1d4-4c70-915a-b72c9c46a4f1)
+
+
 ### Back end
 Each internal package has an associated unit test that can be run by entering the following command from the `front-runner_backend` directory:
 
