@@ -178,7 +178,8 @@ func AddProduct(w http.ResponseWriter, r *http.Request) {
 // @Param        id   query string true "Product ID"
 // @Success      200  {string}  string "Product deleted successfully"
 // @Failure      401  {string}  string "User not authenticated or unauthorized"
-// @Failure      404  {string}  string "Produ
+// @Failure      404  {string}  string "Product not found"
+// @Router       /api/delete_product [put]
 func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from context
 	if !login.IsLoggedIn(r) {

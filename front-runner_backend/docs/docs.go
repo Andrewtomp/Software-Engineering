@@ -218,6 +218,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/delete_product": {
+            "put": {
+                "description": "Deletes an existing product and its associated image if the product belongs to the authenticated user.",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "product"
+                ],
+                "summary": "Delete a product",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product deleted successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "User not authenticated or unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/login": {
             "post": {
                 "description": "Authenticates a user and creates a session.",

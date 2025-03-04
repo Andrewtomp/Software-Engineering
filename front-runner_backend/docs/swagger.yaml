@@ -143,6 +143,34 @@ paths:
       summary: Upload an image
       tags:
       - images
+  /api/delete_product:
+    put:
+      description: Deletes an existing product and its associated image if the product
+        belongs to the authenticated user.
+      parameters:
+      - description: Product ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Product deleted successfully
+          schema:
+            type: string
+        "401":
+          description: User not authenticated or unauthorized
+          schema:
+            type: string
+        "404":
+          description: Product not found
+          schema:
+            type: string
+      summary: Delete a product
+      tags:
+      - product
   /api/login:
     post:
       consumes:
