@@ -32,50 +32,79 @@ const uiSchema = {
   },
 };
 
-// Define the login form's onSubmit handler
-// const onSubmit = ({ formData }) => {
-//   const headers = new Headers();
-//   headers.set("Content-Type", "application/x-www-form-urlencoded")
-//   fetch("/api/login", {
-//       method: 'post',
-//       body: new URLSearchParams(formData)
-//   });
-// };
-const onSubmit = async ({ formData }) => {
-  try {
-    console.log('onSubmit: Submitting login request with data:', formData);
-    const response = await fetch("/api/login", {
-      method: 'POST',
-      body: new URLSearchParams(formData),
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      redirect: 'manual' // Prevent automatic following of redirects
-    });
-    console.log('onSubmit: Response status:', response.status);
+// Custom templates for Form to ensure proper accessibility and test compatibility
+const CustomFieldTemplate = (props) => {
+  const { id, label, children, rawErrors, required } = props;
+  
+  return (
+    <div className="form-group mb-3">
+      <label htmlFor={id}>{label}{required ? "*" : ""}</label>
+      {children}
+      {rawErrors && rawErrors.length > 0 && (
+        <div className="text-danger">{rawErrors.join(', ')}</div>
+      )}
+    </div>
+  );
+};
 
-    // if (response.status === 303) {
-    if (response.type === "opaqueredirect") {
-      // If server returns a redirect, update the browser location manually
-      const redirectUrl = response.headers.get('Location');
-      console.log('onSubmit: Redirect URL from server:', redirectUrl);
-      window.location.href = redirectUrl ? redirectUrl : '/';
-    } else if (response.ok) {
-      console.log('onSubmit: Login succeeded without explicit redirect, navigating to home');
-      // If login is successful but no explicit redirect, navigate to home
-      window.location.href = '/';
-    } else {
-      const errorText = await response.text();
-      console.error('Login failed:', errorText);
-      // Optionally display an error message to the user
-    }
-  } catch (error) {
-    console.error('Error during login:', error);
-  }
+// Custom submit button template to add proper role
+const CustomButtonTemplate = (props) => {
+  return (
+    <div className="d-flex justify-content-center mb-3">
+      <button 
+        type="submit" 
+        className="btn btn-primary"
+        role="button"
+      >
+        Submit
+      </button>
+    </div>
+  );
 };
 
 // LoginForm Component
 const LoginForm = () => {
+  const onSubmit = async ({ formData }) => {
+    try {
+      console.log('onSubmit: Submitting login request with data:', formData);
+      const response = await fetch("/api/login", {
+        method: 'POST',
+        body: new URLSearchParams(formData),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        redirect: 'manual' // Prevent automatic following of redirects
+      });
+      console.log('onSubmit: Response status:', response.status);
+  
+      // if (response.status === 303) {
+      if (response.type === "opaqueredirect") {
+        // If server returns a redirect, update the browser location manually
+        const redirectUrl = response.headers.get('Location');
+        console.log('onSubmit: Redirect URL from server:', redirectUrl);
+        window.location.href = redirectUrl ? redirectUrl : '/';
+      } else if (response.ok) {
+        console.log('onSubmit: Login succeeded without explicit redirect, navigating to home');
+        // If login is successful but no explicit redirect, navigate to home
+        window.location.href = '/';
+      } else {
+        const errorText = await response.text();
+        console.error('Login failed:', errorText);
+        // Optionally display an error message to the user
+      }
+    } catch (error) {
+      console.error('Error during login:', error);
+    }
+  };
+  // const onSubmit = ({ formData }) => {
+  //   const headers = new Headers();
+  //   headers.set("Content-Type", "application/x-www-form-urlencoded");
+  //   fetch("/api/login", {
+  //     method: 'post',
+  //     body: new URLSearchParams(formData)
+  //   });
+  // };
+
   return (
     <div className="login-container" style={{ backgroundImage: `url("../assets/FrontRunner Login Background.png")`, backgroundSize: "cover", backgroundPosition: "center"}}>
       <div className='login-card'>
@@ -84,11 +113,15 @@ const LoginForm = () => {
           schema={schema}
           uiSchema={uiSchema}
           validator={validator}
-          onSubmit={onSubmit} // Handle form submission
+          onSubmit={onSubmit}
+          templates={{
+            FieldTemplate: CustomFieldTemplate,
+            ButtonTemplates: { SubmitButton: CustomButtonTemplate }
+          }}
         />
-          <a href= '/register'>
+        <a href='/register'>
           New here? Create an account.
-          </a>
+        </a>
       </div>
     </div>
   );

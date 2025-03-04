@@ -18,7 +18,7 @@ import (
 )
 
 type Image struct {
-	ID     uint   `gorm:"primaryKey;autoIncrement;type:serial"`
+	ID     uint   `gorm:"primaryKey;autoIncrement"`
 	URL    string `gorm:"unique;not null"`
 	UserID uint   `gorm:"not null;index"`
 }

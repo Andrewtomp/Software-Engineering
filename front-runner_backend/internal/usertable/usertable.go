@@ -65,7 +65,7 @@ func ClearUserTable(db *gorm.DB) error {
 // @Summary      Register a new user
 // @Description  Registers a new user using email, password, and an optional business name.
 //
-// @Tags         authentication, user, dbtable
+// @Tags         authentication
 // @Accept       application/x-www-form-urlencoded
 // @Produce      plain
 // @Param        email formData string true "User email"

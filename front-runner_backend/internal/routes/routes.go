@@ -73,17 +73,6 @@ func authMiddleware(next http.Handler) http.Handler {
 // It also sets up:
 //   - The Swagger documentation UI, accessible under /swagger/.
 //   - Static file serving for the ReactJS frontend, including protected routes that require authentication.
-//
-// @Summary     Configure application routes
-// @Description Sets up all API endpoints and serves the frontend
-// @Tags        setup
-// @Accept      json
-// @Produce     json
-// @Produce     html
-// @Param       router path object true "Mux router instance"
-// @Param       logging query boolean false "Enable request logging"
-// @Success     200 {string} string "Routes successfully registered"
-// @Router      /api [get]
 func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
 	// Subrouters
 	api := router.PathPrefix("/api").Subrouter()

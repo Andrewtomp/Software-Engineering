@@ -11,32 +11,6 @@ info:
   title: Front Runner API
   version: "1.0"
 paths:
-  /api:
-    get:
-      consumes:
-      - application/json
-      description: Sets up all API endpoints and serves the frontend
-      parameters:
-      - description: Mux router instance
-        in: path
-        name: router
-        required: true
-        type: object
-      - description: Enable request logging
-        in: query
-        name: logging
-        type: boolean
-      produces:
-      - application/json
-      - text/html
-      responses:
-        "200":
-          description: Routes successfully registered
-          schema:
-            type: string
-      summary: Configure application routes
-      tags:
-      - setup
   /api/add_product:
     post:
       consumes:
@@ -203,7 +177,6 @@ paths:
       summary: User login
       tags:
       - authentication
-      - login
   /api/logout:
     post:
       description: Logs out the current user by clearing the session.
@@ -217,7 +190,6 @@ paths:
       summary: User logout
       tags:
       - authentication
-      - logout
   /api/register:
     post:
       consumes:
@@ -257,8 +229,6 @@ paths:
       summary: Register a new user
       tags:
       - authentication
-      - user
-      - dbtable
   /api/update_product:
     put:
       consumes:
@@ -301,24 +271,4 @@ paths:
       summary: Update a product
       tags:
       - product
-  /api/validemail:
-    get:
-      description: Checks if the provided email address is in a valid format. Returns
-        true if valid, false otherwise.
-      parameters:
-      - description: Email address to validate
-        in: query
-        name: email
-        required: true
-        type: string
-      responses:
-        "200":
-          description: true if email is valid, false otherwise
-          schema:
-            type: boolean
-      summary: Validate email address
-      tags:
-      - utility
-      - email
-      - validate
 swagger: "2.0"
