@@ -1,3 +1,5 @@
 data
 uploads
 node_modules
+*.crt
+*.key
