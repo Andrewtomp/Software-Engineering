@@ -78,7 +78,7 @@ func ClearUserTable(db *gorm.DB) error {
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
-	businessName := r.FormValue("business_name")
+	businessName := r.FormValue("businessName")
 
 	if email == "" || password == "" {
 		http.Error(w, "Email and password are required", http.StatusBadRequest)
