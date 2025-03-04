@@ -212,8 +212,9 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error deleting image:", err)
 	}
 
-	// Delete product (Image gets deleted due to CASCADE)
+	// TODO: Figure out how to get image to delete via CASCADE
 	db.Delete(&product)
+	db.Delete(&product.Img)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Product deleted successfully"))
