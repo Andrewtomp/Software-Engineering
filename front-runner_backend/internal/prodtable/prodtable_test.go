@@ -2,6 +2,7 @@ package prodtable
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"log"
 	"mime/multipart"
@@ -200,6 +201,8 @@ func TestAddProduct(t *testing.T) {
 	os.Remove(imagePath)
 	// Clear products.
 	db.Exec("DELETE FROM products")
+	db.Exec("DELETE FROM images")
+	db.Exec("DELETE FROM users")
 	// Cleanup created uploads dir
 	os.Remove("uploads")
 }
@@ -228,7 +231,7 @@ func TestDeleteProduct(t *testing.T) {
 	tmpFile.Close()
 
 	// Insert dummy image record.
-	image := Image{URL: imageFilename}
+	image := Image{URL: imageFilename, UserID: user.ID}
 	if err := db.Create(&image).Error; err != nil {
 		t.Fatalf("failed to create image record: %v", err)
 	}
@@ -253,8 +256,8 @@ func TestDeleteProduct(t *testing.T) {
 	}
 
 	// Create a deletion request with query parameter "id" set to the product's ID.
-	// Using GET method since the DeleteProduct handler appears to use GET based on its Swagger annotations
-	req := httptest.NewRequest("GET", "/api/delete_product?id="+strconv.Itoa(int(product.ID)), nil)
+	// Using DELETE method since the DeleteProduct handler appears to use DELETE based on its Swagger annotations
+	req := httptest.NewRequest("DELETE", "/api/delete_product?id="+strconv.Itoa(int(product.ID)), nil)
 	req.AddCookie(cookie)
 
 	rr := httptest.NewRecorder()
@@ -284,6 +287,7 @@ func TestDeleteProduct(t *testing.T) {
 
 	// Clear products.
 	db.Exec("DELETE FROM products")
+	db.Exec("DELETE FROM images")
 	// Cleanup created uploads dir
 	os.Remove("uploads")
 }
@@ -315,7 +319,7 @@ func TestUpdateProduct(t *testing.T) {
 	tmpFile.Close()
 
 	// Insert dummy image record first
-	image := Image{URL: imageFilename}
+	image := Image{URL: imageFilename, UserID: user.ID}
 	if err := db.Create(&image).Error; err != nil {
 		t.Fatalf("failed to create image record: %v", err)
 	}
@@ -371,6 +375,239 @@ func TestUpdateProduct(t *testing.T) {
 		t.Errorf("expected count %d, got %d", 5, updated.ProdCount)
 	}
 
+	// Clean up the image file
+	os.Remove(imagePath)
+	// Cleanup created uploads dir
+	os.Remove("uploads")
+
+	// Clear products and users.
+	db.Exec("DELETE FROM products")
+	db.Exec("DELETE FROM users")
+	db.Exec("DELETE FROM images")
+}
+
+// TestGetProduct tests the GetProduct endpoint by creating a dummy product for the fake user,
+// then simulating a get request with the product ID number.
+// It verifies that the product retrieved is the one that was provided.
+//
+// @Summary      Test GetProduct endpoint with PostgreSQL
+// @Description  Creates a fake user and dummy product, then sends an get request to fetch product details.
+//
+//	Checks that the database record is retrieved accordingly.
+//
+// @Tags         testing, prodtable
+func TestGetProduct(t *testing.T) {
+	createUploadsDir()
+	db := setupTestDB(t)
+	// Create and log in fake user.
+	user := createFakeUser(t)
+	cookie := loginFakeUser(t)
+
+	// Create a temporary dummy image file.
+	imageFilename := uuid.New().String() + ".png"
+	imagePath := filepath.Join("uploads", imageFilename)
+	tmpFile, err := os.Create(imagePath)
+	if err != nil {
+		t.Fatalf("failed to create temporary image file: %v", err)
+	}
+	tmpFile.Close()
+
+	// Insert dummy image record first
+	image := Image{URL: imageFilename, UserID: user.ID}
+	if err := db.Create(&image).Error; err != nil {
+		t.Fatalf("failed to create image record: %v", err)
+	}
+
+	// Insert a dummy product with the image ID.
+	product := Product{
+		UserID:          user.ID,
+		ProdName:        "Get Product",
+		ProdDescription: "Get description",
+		ProdPrice:       10.00,
+		ProdCount:       2,
+		ProdTags:        "getProduct,test",
+		ImgID:           image.ID, // Set the ImgID to reference the created image
+	}
+	if err := db.Create(&product).Error; err != nil {
+		t.Fatalf("failed to create product: %v", err)
+	}
+
+	// Using GET method as indicated in the UpdateProduct Swagger annotation
+	req := httptest.NewRequest("GET", "/api/get_product?id="+strconv.Itoa(int(product.ID)), nil)
+	req.AddCookie(cookie)
+
+	rr := httptest.NewRecorder()
+
+	GetProduct(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("expected status %d, got %d: %s", http.StatusOK, rr.Code, rr.Body.String())
+	}
+
+	var retrievedProduct Product
+	if err := db.Preload("Img").Find(&retrievedProduct, product.ID).Error; err != nil {
+		t.Fatalf("failed to retrieve product: %v", err)
+	}
+
+	jsonRetrieved, _ := json.Marshal(setProductReturn(retrievedProduct))
+
+	if strings.TrimSpace(rr.Body.String()) != string(jsonRetrieved[:]) {
+		t.Errorf("unexpected response body: %s", rr.Body.String())
+	}
+	// Clean up the image file
+	os.Remove(imagePath)
+	// Cleanup created uploads dir
+	os.Remove("uploads")
+
+	// Clear products and users.
+	db.Exec("DELETE FROM products")
+	db.Exec("DELETE FROM users")
+	db.Exec("DELETE FROM images")
+}
+
+// TestGetProductImage tests the GetProductImage endpoint by creating a dummy product for the fake user,
+// then simulating a get request with the image name.
+// It verifies that the no errors occured while retrieving the image.
+//
+// @Summary      Test GetProductImage endpoint with PostgreSQL
+// @Description  Creates a fake user and dummy product, then sends an get request to fetch product image.
+//
+//	Checks that the image is retrieved accordingly.
+//
+// @Tags         testing, prodtable
+func TestGetProductImage(t *testing.T) {
+	createUploadsDir()
+	db := setupTestDB(t)
+	// Create and log in fake user.
+	user := createFakeUser(t)
+	cookie := loginFakeUser(t)
+
+	// Create a temporary dummy image file.
+	imageFilename := uuid.New().String() + ".png"
+	imagePath := filepath.Join("uploads", imageFilename)
+	tmpFile, err := os.Create(imagePath)
+	if err != nil {
+		t.Fatalf("failed to create temporary image file: %v", err)
+	}
+	tmpFile.Close()
+
+	// Insert dummy image record first
+	image := Image{URL: imageFilename, UserID: user.ID}
+	if err := db.Create(&image).Error; err != nil {
+		t.Fatalf("failed to create image record: %v", err)
+	}
+
+	// Insert a dummy product with the image ID.
+	product := Product{
+		UserID:          user.ID,
+		ProdName:        "Get Products",
+		ProdDescription: "Get descriptions",
+		ProdPrice:       10.00,
+		ProdCount:       2,
+		ProdTags:        "getProducts,test",
+		ImgID:           image.ID, // Set the ImgID to reference the created image
+	}
+	if err := db.Create(&product).Error; err != nil {
+		t.Fatalf("failed to create product: %v", err)
+	}
+
+	// Using GET method as indicated in the UpdateProduct Swagger annotation
+	req := httptest.NewRequest("GET", "/api/get_product_image?image="+image.URL, nil)
+	req.AddCookie(cookie)
+
+	rr := httptest.NewRecorder()
+
+	GetProductImage(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("expected status %d, got %d: %s", http.StatusOK, rr.Code, rr.Body.String())
+	}
+
+	// Clean up the image file
+	os.Remove(imagePath)
+	// Cleanup created uploads dir
+	os.Remove("uploads")
+
+	// Clear products and users.
+	db.Exec("DELETE FROM products")
+	db.Exec("DELETE FROM users")
+	db.Exec("DELETE FROM images")
+}
+
+// TestGetProducts tests the GetProducts endpoint by creating a dummy product for the fake user,
+// then simulating a get request.
+// It verifies that the products retrieved are the ones that were provided.
+//
+// @Summary      Test GetProducts endpoint with PostgreSQL
+// @Description  Creates a fake user and dummy product, then sends an get request to fetch product details.
+//
+//	Checks that the database records are retrieved accordingly.
+//
+// @Tags         testing, prodtable
+func TestGetProducts(t *testing.T) {
+	createUploadsDir()
+	db := setupTestDB(t)
+	// Create and log in fake user.
+	user := createFakeUser(t)
+	cookie := loginFakeUser(t)
+
+	// Create a temporary dummy image file.
+	imageFilename := uuid.New().String() + ".png"
+	imagePath := filepath.Join("uploads", imageFilename)
+	tmpFile, err := os.Create(imagePath)
+	if err != nil {
+		t.Fatalf("failed to create temporary image file: %v", err)
+	}
+	tmpFile.Close()
+
+	// Insert dummy image record first
+	image := Image{URL: imageFilename, UserID: user.ID}
+	if err := db.Create(&image).Error; err != nil {
+		t.Fatalf("failed to create image record: %v", err)
+	}
+
+	// Insert a dummy product with the image ID.
+	product := Product{
+		UserID:          user.ID,
+		ProdName:        "Get Products",
+		ProdDescription: "Get descriptions",
+		ProdPrice:       10.00,
+		ProdCount:       2,
+		ProdTags:        "getProducts,test",
+		ImgID:           image.ID, // Set the ImgID to reference the created image
+	}
+	if err := db.Create(&product).Error; err != nil {
+		t.Fatalf("failed to create product: %v", err)
+	}
+
+	// Using GET method as indicated in the UpdateProduct Swagger annotation
+	req := httptest.NewRequest("GET", "/api/get_products", nil)
+	req.AddCookie(cookie)
+
+	rr := httptest.NewRecorder()
+
+	GetProducts(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("expected status %d, got %d: %s", http.StatusOK, rr.Code, rr.Body.String())
+	}
+
+	var retrievedProducts []Product
+	if err := db.Preload("Img").Find(&retrievedProducts, product.ID).Error; err != nil {
+		t.Fatalf("failed to retrieve product: %v", err)
+	}
+
+	var productsRet []ProductReturn
+	for _, product := range retrievedProducts {
+		retrieve := setProductReturn(product)
+		productsRet = append(productsRet, retrieve)
+	}
+
+	jsonRetrieved, _ := json.Marshal(productsRet)
+
+	if strings.TrimSpace(rr.Body.String()) != string(jsonRetrieved[:]) {
+		t.Errorf("unexpected response body: %s", rr.Body.String())
+	}
 	// Clean up the image file
 	os.Remove(imagePath)
 	// Cleanup created uploads dir
