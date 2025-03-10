@@ -42,6 +42,14 @@ func init() {
 	Setup()
 }
 
+// createUploadsDir initializes the uploads directory. Each test should call this at the
+// beginning of the test. At the end, each test should delete the uploads directory.
+func createUploadsDir() {
+	if _, err := os.Stat("uploads"); os.IsNotExist(err) {
+		os.Mkdir("uploads", 0755)
+	}
+}
+
 // setupTestDB initializes the database connection via coredbutils and runs migrations for the product, image,
 // and user tables. It assumes that your test environment is configured to use a dedicated PostgreSQL test database.
 //
@@ -140,6 +148,7 @@ func TestMain(m *testing.M) {
 //
 // @Tags         testing, prodtable
 func TestAddProduct(t *testing.T) {
+	createUploadsDir()
 	db := setupTestDB(t)
 	// Create and log in fake user.
 	_ = createFakeUser(t)
@@ -203,6 +212,7 @@ func TestAddProduct(t *testing.T) {
 // @Description  Creates a fake user and dummy product, then simulates a deletion request. Checks that the product and its image are removed.
 // @Tags         testing, prodtable
 func TestDeleteProduct(t *testing.T) {
+	createUploadsDir()
 	db := setupTestDB(t)
 	// Create and log in fake user.
 	user := createFakeUser(t)
@@ -289,6 +299,7 @@ func TestDeleteProduct(t *testing.T) {
 //
 // @Tags         testing, prodtable
 func TestUpdateProduct(t *testing.T) {
+	createUploadsDir()
 	db := setupTestDB(t)
 	// Create and log in fake user.
 	user := createFakeUser(t)
