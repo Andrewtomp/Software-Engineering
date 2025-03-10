@@ -49,8 +49,8 @@ func LoadEnv() {
 		// Build the DSN (Data Source Name) for PostgreSQL.
 		// Adjust the parameters (host, user, password, dbname, port, sslmode, TimeZone) as needed.
 		dsn = fmt.Sprintf(
-			"host=%s port=%s user=%s dbname=%s sslmode=disable TimeZone=UTC",
-			host, port, user, name)
+			"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=UTC",
+			host, port, user, password, name)
 	})
 }
 
