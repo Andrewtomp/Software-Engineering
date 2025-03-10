@@ -36,6 +36,12 @@ type Product struct {
 	ProdTags        string
 }
 
+// Deletion hook to ensure that if a product is deleted, it's associated image is also deleted from the database
+func (p *Product) AfterDelete(tx *gorm.DB) (err error) {
+	tx.Delete(&Image{}, "id = ?", p.ImgID)
+	return nil
+}
+
 var (
 	// db will hold the GORM DB instance
 	db        *gorm.DB
@@ -219,9 +225,8 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error deleting image:", err)
 	}
 
-	// TODO: Figure out how to get image to delete via CASCADE
+	// Delete the product (also deletes the image record through cascade deletion hook)
 	db.Delete(&product)
-	db.Delete(&product.Img)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Product deleted successfully"))
