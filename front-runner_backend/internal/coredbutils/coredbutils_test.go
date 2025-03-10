@@ -1,6 +1,27 @@
 package coredbutils
 
-import "testing"
+import (
+	"log"
+	"os"
+	"regexp"
+	"testing"
+
+	"github.com/joho/godotenv"
+)
+
+const projectDirName = "front-runner_backend"
+
+func init() {
+	re := regexp.MustCompile(`^(.*` + projectDirName + `)`)
+	cwd, _ := os.Getwd()
+	rootPath := re.Find([]byte(cwd))
+
+	err := godotenv.Load(string(rootPath) + `/.env`)
+	if err != nil {
+		log.Fatalf("Problem loading .env file. cwd:%s; cause: %s", cwd, err)
+	}
+	LoadEnv()
+}
 
 // TestGetDB tests the GetDB function for initializing a database connection and
 // verifies that the connection can be pinged successfully.

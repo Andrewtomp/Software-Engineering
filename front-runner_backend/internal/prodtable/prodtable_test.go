@@ -3,15 +3,20 @@ package prodtable
 import (
 	"bytes"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
@@ -19,6 +24,23 @@ import (
 	"front-runner/internal/login"
 	"front-runner/internal/usertable"
 )
+
+const projectDirName = "front-runner_backend"
+
+func init() {
+	re := regexp.MustCompile(`^(.*` + projectDirName + `)`)
+	cwd, _ := os.Getwd()
+	rootPath := re.Find([]byte(cwd))
+
+	err := godotenv.Load(string(rootPath) + `/.env`)
+	if err != nil {
+		log.Fatalf("Problem loading .env file. cwd:%s; cause: %s", cwd, err)
+	}
+	coredbutils.LoadEnv()
+	usertable.Setup()
+	login.Setup()
+	Setup()
+}
 
 // setupTestDB initializes the database connection via coredbutils and runs migrations for the product, image,
 // and user tables. It assumes that your test environment is configured to use a dedicated PostgreSQL test database.
@@ -184,15 +206,16 @@ func TestDeleteProduct(t *testing.T) {
 	cookie := loginFakeUser(t)
 
 	// Create a temporary dummy image file.
-	tmpFile, err := os.CreateTemp("", "test_image_*.png")
+	imageFilename := uuid.New().String() + ".png"
+	imagePath := filepath.Join("uploads", imageFilename)
+	tmpFile, err := os.Create(imagePath)
 	if err != nil {
 		t.Fatalf("failed to create temporary image file: %v", err)
 	}
-	tmpFilePath := tmpFile.Name()
 	tmpFile.Close()
 
 	// Insert dummy image record.
-	image := Image{URL: tmpFilePath}
+	image := Image{URL: imageFilename}
 	if err := db.Create(&image).Error; err != nil {
 		t.Fatalf("failed to create image record: %v", err)
 	}
@@ -212,7 +235,7 @@ func TestDeleteProduct(t *testing.T) {
 	}
 
 	// Ensure the dummy image file exists.
-	if _, err := os.Stat(tmpFilePath); os.IsNotExist(err) {
+	if _, err := os.Stat(imagePath); os.IsNotExist(err) {
 		t.Fatalf("dummy image file does not exist")
 	}
 
@@ -241,9 +264,9 @@ func TestDeleteProduct(t *testing.T) {
 
 	// Verify that the image file was deleted.
 	// Note: If the file doesn't exist anymore, that's actually what we want
-	if _, err := os.Stat(tmpFilePath); !os.IsNotExist(err) {
+	if _, err := os.Stat(imagePath); !os.IsNotExist(err) {
 		t.Errorf("expected image file to be removed, but it exists")
-		os.Remove(tmpFilePath)
+		os.Remove(imagePath)
 	}
 
 	// Clear products.
