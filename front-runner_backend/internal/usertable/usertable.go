@@ -28,7 +28,8 @@ var (
 	db *gorm.DB
 )
 
-func init() {
+func Setup() {
+	coredbutils.LoadEnv()
 	db = coredbutils.GetDB()
 }
 

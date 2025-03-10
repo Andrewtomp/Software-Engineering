@@ -40,8 +40,10 @@ var (
 	db *gorm.DB
 )
 
-func init() {
+func Setup() {
+	coredbutils.LoadEnv()
 	db = coredbutils.GetDB()
+	login.Setup()
 
 	if _, err := os.Stat("uploads"); os.IsNotExist(err) {
 		os.Mkdir("uploads", 0755)

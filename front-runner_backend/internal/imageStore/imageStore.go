@@ -25,8 +25,11 @@ type ProductImage struct {
 	ID       uint   `gorm:"not null"`
 }
 
-func init() {
+// Loads the database and creates the data/images folder if it does not exist
+func Setup() {
+	coredbutils.LoadEnv()
 	db = coredbutils.GetDB()
+	login.Setup()
 
 	if _, err := os.Stat("data"); os.IsNotExist(err) {
 		os.Mkdir("data", 0755)

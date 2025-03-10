@@ -31,7 +31,7 @@ var (
 )
 
 // Init sets up the session store and connects to the PostgreSQL database using GORM.
-func init() {
+func Setup() {
 	secret := os.Getenv("SESSION_SECRET")
 	if secret == "" {
 		// Initialize the session store with a random key.
@@ -56,7 +56,9 @@ func init() {
 		HttpOnly: true,
 	}
 
+	coredbutils.LoadEnv()
 	db = coredbutils.GetDB()
+	usertable.Setup()
 	log.Println("login package init: sessionStore initialized")
 }
 
