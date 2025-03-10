@@ -66,8 +66,7 @@ func authMiddleware(next http.Handler) http.Handler {
 //
 // This function registers API endpoints for:
 //   - User management: registration (/api/register), login (/api/login), and logout (/api/logout).
-//   - Product operations: adding (/api/add_product), deleting (/api/delete_product), and updating (/api/update_product) products.
-//   - Image handling: retrieving (/api/data/image/{imagePath}) and uploading (/api/data/upload) images.
+//   - Product operations: adding (/api/add_product), deleting (/api/delete_product), updating (/api/update_product), and retrieving (/get_product, /get_products, /get_product_image) products.
 //
 // It also sets up:
 //   - The Swagger documentation UI, accessible under /swagger/.
