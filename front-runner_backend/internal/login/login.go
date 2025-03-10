@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 
 	"github.com/gorilla/sessions"
 	"golang.org/x/crypto/bcrypt"
@@ -28,36 +29,41 @@ var (
 
 	// sessionStore is used to manage sessions
 	sessionStore *sessions.CookieStore
+	setupOnce    sync.Once
 )
 
 // Init sets up the session store and connects to the PostgreSQL database using GORM.
-func init() {
-	secret := os.Getenv("SESSION_SECRET")
-	if secret == "" {
-		// Initialize the session store with a random key.
-		key := make([]byte, 64)
-		_, err := rand.Read(key)
-		if err != nil {
-			panic(err)
+func Setup() {
+	setupOnce.Do(func() {
+		secret := os.Getenv("SESSION_SECRET")
+		if secret == "" {
+			// Initialize the session store with a random key.
+			key := make([]byte, 64)
+			_, err := rand.Read(key)
+			if err != nil {
+				panic(err)
+			}
+			sessionStore = sessions.NewCookieStore(key)
+		} else {
+			// Optionally, hash the secret to ensure it has the desired length.
+			hash := sha256.Sum256([]byte(secret))
+			key, _ := hex.DecodeString(hex.EncodeToString(hash[:]))
+			sessionStore = sessions.NewCookieStore(key)
 		}
-		sessionStore = sessions.NewCookieStore(key)
-	} else {
-		// Optionally, hash the secret to ensure it has the desired length.
-		hash := sha256.Sum256([]byte(secret))
-		key, _ := hex.DecodeString(hex.EncodeToString(hash[:]))
-		sessionStore = sessions.NewCookieStore(key)
-	}
 
-	// Setting the auth cookie to ba available through the whole domain
-	// sessionStore = sessions.NewCookieStore(key)
-	sessionStore.Options = &sessions.Options{
-		Path:     "/",
-		MaxAge:   86400 * 7, // e.g. valid for 7 days by default
-		HttpOnly: true,
-	}
+		// Setting the auth cookie to ba available through the whole domain
+		// sessionStore = sessions.NewCookieStore(key)
+		sessionStore.Options = &sessions.Options{
+			Path:     "/",
+			MaxAge:   86400 * 7, // e.g. valid for 7 days by default
+			HttpOnly: true,
+		}
 
-	db = coredbutils.GetDB()
-	log.Println("login package init: sessionStore initialized")
+		coredbutils.LoadEnv()
+		db = coredbutils.GetDB()
+		usertable.Setup()
+		log.Println("login package init: sessionStore initialized")
+	})
 }
 
 // LoginUser authenticates a user and creates a session.

@@ -6,6 +6,7 @@ import (
 	"front-runner/internal/validemail"
 	"log"
 	"net/http"
+	"sync"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -25,11 +26,15 @@ type User struct {
 
 var (
 	// db will hold the GORM DB instance
-	db *gorm.DB
+	db        *gorm.DB
+	setupOnce sync.Once
 )
 
-func init() {
-	db = coredbutils.GetDB()
+func Setup() {
+	setupOnce.Do(func() {
+		coredbutils.LoadEnv()
+		db = coredbutils.GetDB()
+	})
 }
 
 func MigrateUserDB() {

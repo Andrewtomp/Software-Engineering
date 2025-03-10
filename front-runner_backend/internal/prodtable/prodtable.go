@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -37,11 +38,16 @@ type Product struct {
 
 var (
 	// db will hold the GORM DB instance
-	db *gorm.DB
+	db        *gorm.DB
+	setupOnce sync.Once
 )
 
-func init() {
-	db = coredbutils.GetDB()
+func Setup() {
+	setupOnce.Do(func() {
+		coredbutils.LoadEnv()
+		db = coredbutils.GetDB()
+		login.Setup()
+	})
 
 	if _, err := os.Stat("uploads"); os.IsNotExist(err) {
 		os.Mkdir("uploads", 0755)

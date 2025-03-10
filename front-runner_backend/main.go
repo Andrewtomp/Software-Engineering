@@ -17,11 +17,14 @@ import (
 
 	_ "front-runner/docs" // This is important for swagger to find your docs!
 	"front-runner/internal/coredbutils"
+	"front-runner/internal/imageStore"
+	"front-runner/internal/login"
 	"front-runner/internal/prodtable"
 	"front-runner/internal/routes"
 	"front-runner/internal/usertable"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	"github.com/pborman/getopt/v2"
 	"gorm.io/gorm"
 )
@@ -30,8 +33,29 @@ var (
 	port         = "8080"
 	local   bool = false
 	verbose bool = false
+	envFile string
 	db      *gorm.DB
 )
+
+func setupModules() {
+	// Database
+	coredbutils.LoadEnv()
+	db = coredbutils.GetDB()
+
+	// Users table
+	usertable.Setup()
+	usertable.MigrateUserDB()
+
+	// Login information
+	login.Setup()
+
+	// Product Table
+	prodtable.Setup()
+	prodtable.MigrateProdDB()
+
+	// Image Store
+	imageStore.Setup()
+}
 
 func main() {
 	cert, err := tls.LoadX509KeyPair("server.crt", "server.key")
@@ -46,12 +70,21 @@ func main() {
 	getopt.FlagLong(&verbose, "verbose", 'v', "Enable logging of incomming HTTP requests")
 	getopt.FlagLong(&port, "port", 'p', "Specify port to listen for connnections")
 	getopt.FlagLong(&local, "local", 'l', "Only listen for connnections over localhost")
+	getopt.FlagLong(&envFile, "env", 'e', "Specify enviroment variable file to load from")
 
 	getopt.Parse()
 
-	db = coredbutils.GetDB()
-	prodtable.MigrateProdDB()
-	usertable.MigrateUserDB()
+	if envFile == "" {
+		err = godotenv.Load()
+	} else {
+		err = godotenv.Load(envFile)
+	}
+
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	setupModules()
 
 	router := mux.NewRouter()
 

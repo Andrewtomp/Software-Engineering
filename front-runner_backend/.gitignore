@@ -3,3 +3,4 @@ uploads
 node_modules
 *.crt
 *.key
+.env
