@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	db            *gorm.DB
+	db            *gorm.DB = nil
 	dsn           string
 	dbLoadEnvOnce sync.Once
 	dbConnOnce    sync.Once
@@ -67,7 +67,7 @@ func GetDB() *gorm.DB {
 		// Open a connection to the PostgreSQL database using GORM.
 		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err != nil {
-			panic(fmt.Sprintf("failed to connect to database: %v", err))
+			log.Fatalf("failed to connect to database: %v", err)
 		}
 	})
 
