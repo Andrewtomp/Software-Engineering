@@ -70,7 +70,7 @@ func main() {
 	getopt.FlagLong(&verbose, "verbose", 'v', "Enable logging of incomming HTTP requests")
 	getopt.FlagLong(&port, "port", 'p', "Specify port to listen for connnections")
 	getopt.FlagLong(&local, "local", 'l', "Only listen for connnections over localhost")
-	getopt.FlagLong(&envFile, "env", 'e', "Specify enviroment variable file to load from")
+	getopt.FlagLong(&envFile, "env", 0, "Specify enviroment variable file to load from")
 
 	getopt.Parse()
 
