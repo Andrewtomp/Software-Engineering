@@ -187,9 +187,12 @@ func TestAddProduct(t *testing.T) {
 		t.Errorf("failed to find associated image: %v", result.Error)
 	}
 	// Cleanup the uploaded file.
-	os.Remove(image.URL)
+	imagePath := filepath.Join("uploads", image.URL)
+	os.Remove(imagePath)
 	// Clear products.
 	db.Exec("DELETE FROM products")
+	// Cleanup created uploads dir
+	os.Remove("uploads")
 }
 
 // TestDeleteProduct tests the DeleteProduct endpoint by inserting a dummy product (with an associated image file)
@@ -271,6 +274,8 @@ func TestDeleteProduct(t *testing.T) {
 
 	// Clear products.
 	db.Exec("DELETE FROM products")
+	// Cleanup created uploads dir
+	os.Remove("uploads")
 }
 
 // TestUpdateProduct tests the UpdateProduct endpoint by creating a dummy product for the fake user,
@@ -290,15 +295,16 @@ func TestUpdateProduct(t *testing.T) {
 	cookie := loginFakeUser(t)
 
 	// Create a temporary dummy image file.
-	tmpFile, err := os.CreateTemp("", "test_image_*.png")
+	imageFilename := uuid.New().String() + ".png"
+	imagePath := filepath.Join("uploads", imageFilename)
+	tmpFile, err := os.Create(imagePath)
 	if err != nil {
 		t.Fatalf("failed to create temporary image file: %v", err)
 	}
-	tmpFilePath := tmpFile.Name()
 	tmpFile.Close()
 
 	// Insert dummy image record first
-	image := Image{URL: tmpFilePath}
+	image := Image{URL: imageFilename}
 	if err := db.Create(&image).Error; err != nil {
 		t.Fatalf("failed to create image record: %v", err)
 	}
@@ -355,7 +361,9 @@ func TestUpdateProduct(t *testing.T) {
 	}
 
 	// Clean up the image file
-	os.Remove(tmpFilePath)
+	os.Remove(imagePath)
+	// Cleanup created uploads dir
+	os.Remove("uploads")
 
 	// Clear products and users.
 	db.Exec("DELETE FROM products")
