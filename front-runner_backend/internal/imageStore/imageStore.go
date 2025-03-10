@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -17,7 +18,8 @@ import (
 )
 
 var (
-	db *gorm.DB
+	db        *gorm.DB
+	setupOnce sync.Once
 )
 
 type ProductImage struct {
@@ -27,9 +29,11 @@ type ProductImage struct {
 
 // Loads the database and creates the data/images folder if it does not exist
 func Setup() {
-	coredbutils.LoadEnv()
-	db = coredbutils.GetDB()
-	login.Setup()
+	setupOnce.Do(func() {
+		coredbutils.LoadEnv()
+		db = coredbutils.GetDB()
+		login.Setup()
+	})
 
 	if _, err := os.Stat("data"); os.IsNotExist(err) {
 		os.Mkdir("data", 0755)
