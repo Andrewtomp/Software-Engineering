@@ -293,6 +293,7 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Product updated successfully"))
 }
 
+// Struct to store product information to transmitt to the cliet. Omits some unneccesary fields.
 type ProductReturn struct {
 	ProdID          uint    `json:"prodID"`
 	ProdName        string  `json:"prodName"`
@@ -303,6 +304,8 @@ type ProductReturn struct {
 	ProdTags        string  `json:"prodTags"`
 }
 
+// Creates a ProductReturn object given a product.
+// Not all values of product struct need to be transmitted, requiring a custom struct
 func setProductReturn(product Product) ProductReturn {
 	var ret ProductReturn
 	ret.ProdID = product.ID
@@ -315,6 +318,18 @@ func setProductReturn(product Product) ProductReturn {
 	return ret
 }
 
+// GetProduct retrieves the information about a specified product if it belongs to the logged-in user.
+//
+// @Summary      Retrieve a product
+// @Description  Retreives an existing product and its associated metadata if the product belongs to the authenticated user.
+// @Tags         product
+// @Produce      json
+// @Param        id   query integer true "Product ID"
+// @Success      200  {string}  string "JSON representation of a product's information"
+// @Failure      401  {string}  string "User not authenticated or unauthorized"
+// @Failure      403  {string}  string "Permission denied"
+// @Failure      404  {string}  string "No Product with specified ID"
+// @Router       /api/get_product [get]
 func GetProduct(w http.ResponseWriter, r *http.Request) {
 	if !login.IsLoggedIn(r) {
 		http.Error(w, "User not authenticated", http.StatusUnauthorized)
@@ -347,6 +362,15 @@ func GetProduct(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(ret))
 }
 
+// GetProducts retrieves the information about all products belonging to the logged-in user.
+//
+// @Summary      Retrieves all product information for authenticated user.
+// @Description  Retreives existing products and their associated metadata for the authenticated user.
+// @Tags         product
+// @Produce      json
+// @Success      200  {string}  string "JSON representation of a user's product information"
+// @Failure      401  {string}  string "User not authenticated or unauthorized"
+// @Router       /api/get_products [get]
 func GetProducts(w http.ResponseWriter, r *http.Request) {
 	if !login.IsLoggedIn(r) {
 		http.Error(w, "User not authenticated", http.StatusUnauthorized)
@@ -379,6 +403,18 @@ func GetProducts(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(ret))
 }
 
+// GetProductImage retrieves a product image if it belongs to the logged-in user.
+//
+// @Summary      Retrieve a product image
+// @Description  Retreives an existing product image if it exists and belongs to the authenticated user.
+// @Tags         product,images
+// @Produce      image/*
+// @Param		 image  query   string true "Filepath of image"
+// @Success      200  {string}  binary "Image's data"
+// @Failure      401  {string}  string "User not authenticated or unauthorized"
+// @Failure      403  {string}  string "Permission denied"
+// @Failure      404  {string}  string "Requested image does not exist"
+// @Router       /api/get_product_image [get]
 func GetProductImage(w http.ResponseWriter, r *http.Request) {
 	if !login.IsLoggedIn(r) {
 		http.Error(w, "User not authenticated", http.StatusUnauthorized)
