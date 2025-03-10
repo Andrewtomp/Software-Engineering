@@ -26,7 +26,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/pborman/getopt/v2"
-	"gorm.io/gorm"
 )
 
 var (
@@ -34,13 +33,11 @@ var (
 	local   bool = false
 	verbose bool = false
 	envFile string
-	db      *gorm.DB
 )
 
 func setupModules() {
 	// Database
 	coredbutils.LoadEnv()
-	db = coredbutils.GetDB()
 
 	// Users table
 	usertable.Setup()
