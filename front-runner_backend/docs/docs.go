@@ -219,7 +219,7 @@ const docTemplate = `{
             }
         },
         "/api/delete_product": {
-            "put": {
+            "delete": {
                 "description": "Deletes an existing product and its associated image if the product belongs to the authenticated user.",
                 "produces": [
                     "text/plain"

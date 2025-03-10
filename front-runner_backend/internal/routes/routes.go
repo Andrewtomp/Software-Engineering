@@ -86,7 +86,7 @@ func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
 	api.HandleFunc("/logout", login.LogoutUser).Methods("POST")
 	// Product Table
 	api.HandleFunc("/add_product", prodtable.AddProduct).Methods("POST")
-	api.HandleFunc("/delete_product", prodtable.DeleteProduct).Methods("PUT")
+	api.HandleFunc("/delete_product", prodtable.DeleteProduct).Methods("DELETE")
 	api.HandleFunc("/update_product", prodtable.UpdateProduct).Methods("PUT")
 	api.HandleFunc("/get_product", prodtable.GetProduct).Methods("GET")
 	api.HandleFunc("/get_products", prodtable.GetProducts).Methods("GET")
