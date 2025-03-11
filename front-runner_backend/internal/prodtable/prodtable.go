@@ -1,6 +1,8 @@
 package prodtable
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"front-runner/internal/coredbutils"
 	"front-runner/internal/login"
@@ -10,14 +12,16 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type Image struct {
-	ID  uint   `gorm:"primaryKey;autoIncrement"`
-	URL string `gorm:"not null"`
+	ID     uint   `gorm:"primaryKey;autoIncrement"`
+	URL    string `gorm:"unique;not null"`
+	UserID uint   `gorm:"not null;index"`
 }
 
 type Product struct {
@@ -32,17 +36,33 @@ type Product struct {
 	ProdTags        string
 }
 
+// Deletion hook to ensure that if a product is deleted, it's associated image is also deleted from the database
+func (p *Product) AfterDelete(tx *gorm.DB) (err error) {
+	tx.Delete(&Image{}, "id = ?", p.ImgID)
+	return nil
+}
+
 var (
 	// db will hold the GORM DB instance
-	db *gorm.DB
+	db        *gorm.DB
+	setupOnce sync.Once
 )
 
-func init() {
-	db = coredbutils.GetDB()
+func Setup() {
+	setupOnce.Do(func() {
+		coredbutils.LoadEnv()
+		db = coredbutils.GetDB()
+		login.Setup()
+	})
 
 	if _, err := os.Stat("uploads"); os.IsNotExist(err) {
 		os.Mkdir("uploads", 0755)
 	}
+}
+
+func doesFileExist(filepath string) bool {
+	_, err := os.Stat(filepath)
+	return !errors.Is(err, os.ErrNotExist)
 }
 
 // MigrateProdDB runs the database migrations for the product and image tables.
@@ -50,12 +70,12 @@ func MigrateProdDB() {
 	if db == nil {
 		log.Fatal("Database connection is not initialized")
 	}
-	log.Println("Running database migrations...")
+	log.Println("Running product and image database migrations...")
 	err := db.AutoMigrate(&Product{}, &Image{})
 	if err != nil {
 		log.Fatalf("Migration failed: %v", err)
 	}
-	log.Println("Database migration complete")
+	log.Println("Product and Image database migration complete")
 }
 
 // ClearProdTable removes all records from the product table.
@@ -122,7 +142,8 @@ func AddProduct(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	// Save image to disk (or upload to cloud storage)
-	imagePath := fmt.Sprintf("uploads/%s%s", uuid.New().String(), filepath.Ext(handler.Filename))
+	imageFilename := uuid.New().String() + filepath.Ext(handler.Filename)
+	imagePath := filepath.Join("uploads", imageFilename)
 	dst, err := os.Create(imagePath)
 	if err != nil {
 		http.Error(w, "Error saving image", http.StatusInternalServerError)
@@ -143,7 +164,8 @@ func AddProduct(w http.ResponseWriter, r *http.Request) {
 
 	// Save Image record
 	image := Image{
-		URL: imagePath, // Store path instead of image data
+		URL:    imageFilename, // Store path instead of image data
+		UserID: userID,
 	}
 	db.Create(&image)
 
@@ -168,7 +190,8 @@ func AddProduct(w http.ResponseWriter, r *http.Request) {
 // @Param        id   query string true "Product ID"
 // @Success      200  {string}  string "Product deleted successfully"
 // @Failure      401  {string}  string "User not authenticated or unauthorized"
-// @Failure      404  {string}  string "Produ
+// @Failure      404  {string}  string "Product not found"
+// @Router       /api/delete_product [delete]
 func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	// Extract user ID from context
 	if !login.IsLoggedIn(r) {
@@ -185,7 +208,7 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	productID := r.URL.Query().Get("id")
 	var product Product
 
-	if err := db.Preload("Img").First(&product, productID).Error; err != nil {
+	if err := db.Preload("Img").First(&product, "id = ?", productID).Error; err != nil {
 		http.Error(w, "Product not found", http.StatusNotFound)
 		return
 	}
@@ -197,11 +220,12 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Delete image file
-	if err := os.Remove(product.Img.URL); err != nil {
+	imagePath := filepath.Join("uploads", product.Img.URL)
+	if err := os.Remove(imagePath); err != nil {
 		fmt.Println("Error deleting image:", err)
 	}
 
-	// Delete product (Image gets deleted due to CASCADE)
+	// Delete the product (also deletes the image record through cascade deletion hook)
 	db.Delete(&product)
 
 	w.WriteHeader(http.StatusOK)
@@ -242,7 +266,7 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	productID := r.URL.Query().Get("id")
 	var product Product
 
-	if err := db.First(&product, productID).Error; err != nil {
+	if err := db.First(&product, "id = ?", productID).Error; err != nil {
 		http.Error(w, "Product not found", http.StatusNotFound)
 		return
 	}
@@ -272,4 +296,162 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Product updated successfully"))
+}
+
+// Struct to store product information to transmitt to the cliet. Omits some unneccesary fields.
+type ProductReturn struct {
+	ProdID          uint    `json:"prodID"`
+	ProdName        string  `json:"prodName"`
+	ProdDescription string  `json:"prodDesc"`
+	ImgPath         string  `json:"image"`
+	ProdPrice       float64 `json:"prodPrice"`
+	ProdCount       uint    `json:"prodCount"`
+	ProdTags        string  `json:"prodTags"`
+}
+
+// Creates a ProductReturn object given a product.
+// Not all values of product struct need to be transmitted, requiring a custom struct
+func setProductReturn(product Product) ProductReturn {
+	var ret ProductReturn
+	ret.ProdID = product.ID
+	ret.ProdName = product.ProdName
+	ret.ProdDescription = product.ProdDescription
+	ret.ImgPath = product.Img.URL
+	ret.ProdPrice = product.ProdPrice
+	ret.ProdCount = product.ProdCount
+	ret.ProdTags = product.ProdTags
+	return ret
+}
+
+// GetProduct retrieves the information about a specified product if it belongs to the logged-in user.
+//
+// @Summary      Retrieve a product
+// @Description  Retreives an existing product and its associated metadata if the product belongs to the authenticated user.
+// @Tags         product
+// @Produce      json
+// @Param        id   query integer true "Product ID"
+// @Success      200  {string}  string "JSON representation of a product's information"
+// @Failure      401  {string}  string "User not authenticated or unauthorized"
+// @Failure      403  {string}  string "Permission denied"
+// @Failure      404  {string}  string "No Product with specified ID"
+// @Router       /api/get_product [get]
+func GetProduct(w http.ResponseWriter, r *http.Request) {
+	if !login.IsLoggedIn(r) {
+		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := login.GetUserID(r)
+	if err != nil {
+		http.Error(w, "Error retrieving session: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	productID := r.URL.Query().Get("id")
+	var product Product
+
+	if err := db.Preload("Img").Where("id = ?", productID).First(&product).Error; err != nil {
+		http.Error(w, "No Product with specified ID", http.StatusNotFound)
+		return
+	}
+
+	if userID != product.UserID {
+		http.Error(w, "Permission denied", http.StatusForbidden)
+		return
+	}
+
+	retrieve := setProductReturn(product)
+
+	ret, _ := json.Marshal(retrieve)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(ret))
+}
+
+// GetProducts retrieves the information about all products belonging to the logged-in user.
+//
+// @Summary      Retrieves all product information for authenticated user.
+// @Description  Retreives existing products and their associated metadata for the authenticated user.
+// @Tags         product
+// @Produce      json
+// @Success      200  {string}  string "JSON representation of a user's product information"
+// @Failure      401  {string}  string "User not authenticated or unauthorized"
+// @Router       /api/get_products [get]
+func GetProducts(w http.ResponseWriter, r *http.Request) {
+	if !login.IsLoggedIn(r) {
+		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := login.GetUserID(r)
+	if err != nil {
+		http.Error(w, "Error retrieving session: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var products []Product
+	db.Preload("Img").Where("user_id = ?", userID).Find(&products)
+
+	if len(products) == 0 {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("[]"))
+		return
+	}
+
+	var productsRet []ProductReturn
+	for _, product := range products {
+		retrieve := setProductReturn(product)
+		productsRet = append(productsRet, retrieve)
+	}
+
+	ret, _ := json.Marshal(productsRet)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(ret))
+}
+
+// GetProductImage retrieves a product image if it belongs to the logged-in user.
+//
+// @Summary      Retrieve a product image
+// @Description  Retreives an existing product image if it exists and belongs to the authenticated user.
+// @Tags         product,images
+// @Produce      image/*
+// @Param		 image  query   string true "Filepath of image"
+// @Success      200  {string}  binary "Image's data"
+// @Failure      401  {string}  string "User not authenticated or unauthorized"
+// @Failure      403  {string}  string "Permission denied"
+// @Failure      404  {string}  string "Requested image does not exist"
+// @Router       /api/get_product_image [get]
+func GetProductImage(w http.ResponseWriter, r *http.Request) {
+	if !login.IsLoggedIn(r) {
+		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := login.GetUserID(r)
+	if err != nil {
+		http.Error(w, "Error retrieving session: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	imageFilename := r.URL.Query().Get("image")
+
+	var image Image
+
+	if err := db.Where("url = ?", imageFilename).First(&image).Error; err != nil {
+		http.Error(w, "Could not find image", http.StatusInternalServerError)
+		return
+	}
+
+	if userID != image.UserID {
+		http.Error(w, "Permission denied", http.StatusForbidden)
+		return
+	}
+
+	imagePath := filepath.Join("uploads", imageFilename)
+
+	if !doesFileExist(imagePath) {
+		http.Error(w, "Requested image does not exist", http.StatusNotFound)
+		return
+	}
+
+	http.ServeFile(w, r, imagePath)
 }

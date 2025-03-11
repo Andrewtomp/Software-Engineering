@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"front-runner/internal/imageStore"
 	"front-runner/internal/login"
 	"front-runner/internal/prodtable"
 	"front-runner/internal/usertable"
@@ -67,8 +66,7 @@ func authMiddleware(next http.Handler) http.Handler {
 //
 // This function registers API endpoints for:
 //   - User management: registration (/api/register), login (/api/login), and logout (/api/logout).
-//   - Product operations: adding (/api/add_product), deleting (/api/delete_product), and updating (/api/update_product) products.
-//   - Image handling: retrieving (/api/data/image/{imagePath}) and uploading (/api/data/upload) images.
+//   - Product operations: adding (/api/add_product), deleting (/api/delete_product), updating (/api/update_product), and retrieving (/get_product, /get_products, /get_product_image) products.
 //
 // It also sets up:
 //   - The Swagger documentation UI, accessible under /swagger/.
@@ -76,7 +74,6 @@ func authMiddleware(next http.Handler) http.Handler {
 func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
 	// Subrouters
 	api := router.PathPrefix("/api").Subrouter()
-	data := api.PathPrefix("/data").Subrouter()
 
 	// API endpoints
 	// User Table
@@ -86,13 +83,13 @@ func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
 	api.HandleFunc("/logout", login.LogoutUser).Methods("POST")
 	// Product Table
 	api.HandleFunc("/add_product", prodtable.AddProduct).Methods("POST")
-	api.HandleFunc("/delete_product", prodtable.DeleteProduct).Methods("PUT")
+	api.HandleFunc("/delete_product", prodtable.DeleteProduct).Methods("DELETE")
 	api.HandleFunc("/update_product", prodtable.UpdateProduct).Methods("PUT")
+	api.HandleFunc("/get_product", prodtable.GetProduct).Methods("GET")
+	api.HandleFunc("/get_products", prodtable.GetProducts).Methods("GET")
+	api.HandleFunc("/get_product_image", prodtable.GetProductImage).Methods("GET")
 
 	api.PathPrefix("/").HandlerFunc(InvalidAPI)
-
-	data.HandleFunc("/image/{imagePath}", imageStore.LoadImage).Methods("GET")
-	data.HandleFunc("/upload", imageStore.UploadImage).Methods("POST")
 
 	// Serve Swagger UI on /swagger/*
 	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
@@ -105,7 +102,6 @@ func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
 	// node-specified routes will be routed directly to the spa
 	router.PathPrefix("/static").Handler(spa).Methods("GET")
 	router.PathPrefix("/assets").Handler(spa).Methods("GET")
-	router.PathPrefix("/manifest.json").Handler(spa).Methods("GET")
 	// Serve static files for webpage
 	// All other pages are wrapped with authMiddleware.
 	router.PathPrefix("/").Handler(authMiddleware(spa)).Methods("GET")

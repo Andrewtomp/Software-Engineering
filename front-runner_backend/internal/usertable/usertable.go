@@ -6,6 +6,7 @@ import (
 	"front-runner/internal/validemail"
 	"log"
 	"net/http"
+	"sync"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -25,23 +26,27 @@ type User struct {
 
 var (
 	// db will hold the GORM DB instance
-	db *gorm.DB
+	db        *gorm.DB
+	setupOnce sync.Once
 )
 
-func init() {
-	db = coredbutils.GetDB()
+func Setup() {
+	setupOnce.Do(func() {
+		coredbutils.LoadEnv()
+		db = coredbutils.GetDB()
+	})
 }
 
 func MigrateUserDB() {
 	if db == nil {
 		log.Fatal("Database connection is not initialized")
 	}
-	log.Println("Running database migrations...")
+	log.Println("Running user database migrations...")
 	err := db.AutoMigrate(&User{})
 	if err != nil {
 		log.Fatalf("Migration failed: %v", err)
 	}
-	log.Println("Database migration complete")
+	log.Println("User database migration complete")
 }
 
 // ClearUserTable deletes all records from the users table.
@@ -78,7 +83,7 @@ func ClearUserTable(db *gorm.DB) error {
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
-	businessName := r.FormValue("business_name")
+	businessName := r.FormValue("businessName")
 
 	if email == "" || password == "" {
 		http.Error(w, "Email and password are required", http.StatusBadRequest)

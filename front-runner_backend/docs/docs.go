@@ -106,52 +106,40 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/data/image/{filename}": {
-            "get": {
-                "description": "Fetches an image if it exists and they are authorized.",
+        "/api/delete_product": {
+            "delete": {
+                "description": "Deletes an existing product and its associated image if the product belongs to the authenticated user.",
                 "produces": [
-                    "image/*"
+                    "text/plain"
                 ],
                 "tags": [
-                    "images"
+                    "product"
                 ],
-                "summary": "Retrive an image",
+                "summary": "Delete a product",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Filepath of image",
-                        "name": "filename",
-                        "in": "path",
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "query",
                         "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Product deleted successfully",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "401": {
-                        "description": "User is not logged in",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Permission denied",
+                        "description": "User not authenticated or unauthorized",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "404": {
-                        "description": "Requested image does not exist",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Unable to retrieve User ID",
+                        "description": "Product not found",
                         "schema": {
                             "type": "string"
                         }
@@ -159,34 +147,82 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/data/upload": {
-            "post": {
-                "description": "Uploads an image if the user is authorized.",
-                "consumes": [
-                    "multipart/form-data"
+        "/api/get_product": {
+            "get": {
+                "description": "Retreives an existing product and its associated metadata if the product belongs to the authenticated user.",
+                "produces": [
+                    "application/json"
                 ],
                 "tags": [
-                    "images"
+                    "product"
                 ],
-                "summary": "Upload an image",
+                "summary": "Retrieve a product",
                 "parameters": [
                     {
-                        "type": "file",
-                        "description": "Filepath of image",
-                        "name": "filename",
-                        "in": "formData",
+                        "type": "integer",
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "query",
                         "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Filename of uploaded image",
+                        "description": "JSON representation of a product's information",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "401": {
-                        "description": "User is not logged in",
+                        "description": "User not authenticated or unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Permission denied",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "No Product with specified ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/get_product_image": {
+            "get": {
+                "description": "Retreives an existing product image if it exists and belongs to the authenticated user.",
+                "produces": [
+                    "image/*"
+                ],
+                "tags": [
+                    "product",
+                    "images"
+                ],
+                "summary": "Retrieve a product image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filepath of image",
+                        "name": "image",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Image's data",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "User not authenticated or unauthorized",
                         "schema": {
                             "type": "string"
                         }
@@ -202,15 +238,29 @@ const docTemplate = `{
                         "schema": {
                             "type": "string"
                         }
-                    },
-                    "415": {
-                        "description": "Invalid file type",
+                    }
+                }
+            }
+        },
+        "/api/get_products": {
+            "get": {
+                "description": "Retreives existing products and their associated metadata for the authenticated user.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "product"
+                ],
+                "summary": "Retrieves all product information for authenticated user.",
+                "responses": {
+                    "200": {
+                        "description": "JSON representation of a user's product information",
                         "schema": {
                             "type": "string"
                         }
                     },
-                    "500": {
-                        "description": "File already exists",
+                    "401": {
+                        "description": "User not authenticated or unauthorized",
                         "schema": {
                             "type": "string"
                         }

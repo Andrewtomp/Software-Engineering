@@ -5,13 +5,33 @@ import (
 	"fmt"
 	"front-runner/internal/coredbutils"
 	"front-runner/internal/usertable"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/joho/godotenv"
 )
+
+const projectDirName = "front-runner_backend"
+
+func init() {
+	re := regexp.MustCompile(`^(.*` + projectDirName + `)`)
+	cwd, _ := os.Getwd()
+	rootPath := re.Find([]byte(cwd))
+
+	err := godotenv.Load(string(rootPath) + `/.env`)
+	if err != nil {
+		log.Fatalf("Problem loading .env file. cwd:%s; cause: %s", cwd, err)
+	}
+	coredbutils.LoadEnv()
+	usertable.Setup()
+	Setup()
+}
 
 // TestMain sets up the test database environment before tests run.
 //

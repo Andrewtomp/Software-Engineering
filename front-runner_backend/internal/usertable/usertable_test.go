@@ -3,15 +3,33 @@ package usertable
 import (
 	"fmt"
 	"front-runner/internal/coredbutils"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 )
+
+const projectDirName = "front-runner_backend"
+
+func init() {
+	re := regexp.MustCompile(`^(.*` + projectDirName + `)`)
+	cwd, _ := os.Getwd()
+	rootPath := re.Find([]byte(cwd))
+
+	err := godotenv.Load(string(rootPath) + `/.env`)
+	if err != nil {
+		log.Fatalf("Problem loading .env file. cwd:%s; cause: %s", cwd, err)
+	}
+	coredbutils.LoadEnv()
+	Setup()
+}
 
 // TestMain sets up the test database environment for user table tests.
 //

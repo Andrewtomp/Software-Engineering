@@ -69,24 +69,85 @@ paths:
       summary: Add a new product
       tags:
       - product
-  /api/data/image/{filename}:
+  /api/delete_product:
+    delete:
+      description: Deletes an existing product and its associated image if the product
+        belongs to the authenticated user.
+      parameters:
+      - description: Product ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Product deleted successfully
+          schema:
+            type: string
+        "401":
+          description: User not authenticated or unauthorized
+          schema:
+            type: string
+        "404":
+          description: Product not found
+          schema:
+            type: string
+      summary: Delete a product
+      tags:
+      - product
+  /api/get_product:
     get:
-      description: Fetches an image if it exists and they are authorized.
+      description: Retreives an existing product and its associated metadata if the
+        product belongs to the authenticated user.
+      parameters:
+      - description: Product ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: JSON representation of a product's information
+          schema:
+            type: string
+        "401":
+          description: User not authenticated or unauthorized
+          schema:
+            type: string
+        "403":
+          description: Permission denied
+          schema:
+            type: string
+        "404":
+          description: No Product with specified ID
+          schema:
+            type: string
+      summary: Retrieve a product
+      tags:
+      - product
+  /api/get_product_image:
+    get:
+      description: Retreives an existing product image if it exists and belongs to
+        the authenticated user.
       parameters:
       - description: Filepath of image
-        in: path
-        name: filename
+        in: query
+        name: image
         required: true
         type: string
       produces:
       - image/*
       responses:
         "200":
-          description: OK
+          description: Image's data
           schema:
             type: string
         "401":
-          description: User is not logged in
+          description: User not authenticated or unauthorized
           schema:
             type: string
         "403":
@@ -97,52 +158,28 @@ paths:
           description: Requested image does not exist
           schema:
             type: string
-        "500":
-          description: Unable to retrieve User ID
-          schema:
-            type: string
-      summary: Retrive an image
+      summary: Retrieve a product image
       tags:
+      - product
       - images
-  /api/data/upload:
-    post:
-      consumes:
-      - multipart/form-data
-      description: Uploads an image if the user is authorized.
-      parameters:
-      - description: Filepath of image
-        in: formData
-        name: filename
-        required: true
-        type: file
+  /api/get_products:
+    get:
+      description: Retreives existing products and their associated metadata for the
+        authenticated user.
+      produces:
+      - application/json
       responses:
         "200":
-          description: Filename of uploaded image
+          description: JSON representation of a user's product information
           schema:
             type: string
         "401":
-          description: User is not logged in
+          description: User not authenticated or unauthorized
           schema:
             type: string
-        "403":
-          description: Permission denied
-          schema:
-            type: string
-        "404":
-          description: Requested image does not exist
-          schema:
-            type: string
-        "415":
-          description: Invalid file type
-          schema:
-            type: string
-        "500":
-          description: File already exists
-          schema:
-            type: string
-      summary: Upload an image
+      summary: Retrieves all product information for authenticated user.
       tags:
-      - images
+      - product
   /api/login:
     post:
       consumes:
