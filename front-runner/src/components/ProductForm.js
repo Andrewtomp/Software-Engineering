@@ -149,7 +149,7 @@ const onSubmit = async ({ formData }, product) => {
       }
     }
 
-    const endpoint = product ? `/api/update_product/${product.id}` : "/api/add_product";
+    const endpoint = product ? `/api/update_product?id=${product.id}` : "/api/add_product";
     const method = product ? 'PUT' : 'POST';
 
     const response = await fetch(endpoint, {
