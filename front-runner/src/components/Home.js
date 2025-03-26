@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community'; 
 import NavBar from './NavBar';
@@ -21,6 +21,22 @@ const Home = () => {
         { order: "0007", product: "Product 7", quantity: 1, total: "$15.75", customer: "Customer 7" },
     ]);
 
+    const [products, setProducts] = useState([]);
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                const response = await fetch('/api/products');
+                const data = await response.json();
+                // Take only the first 3 products
+                setProducts(data.slice(0, 3));
+            } catch (error) {
+                console.error('Error fetching products:', error);
+            }
+        };
+        fetchProducts();
+    }, []);
+
     const [colDefs, setColDefs] = useState([
         { field: "order" },
         { field: "product" },
@@ -31,7 +47,7 @@ const Home = () => {
 
     return (
         <div className='home'>
-                        <NavBar />  
+            <NavBar />  
             <div className='home-content'>
                 <h1>Home</h1>
                 <div className='home-tiles'>
@@ -46,7 +62,8 @@ const Home = () => {
                             </div>
                         </div>
                         <div className='home-products'>
-                            <div className='home-product' style={{ backgroundImage: `url("../images/image-1.png")` }}>
+                            
+                            {/* <div className='home-product' style={{ backgroundImage: `url("../images/image-1.png")` }}>
                                 <div className='product-info'>
                                     <h2>Product 1</h2>
                                     <p>Product 1 is a great product that people should buy</p>
@@ -66,8 +83,40 @@ const Home = () => {
                                     <p>Product 3 is a great product that people should buy</p>
                                 </div>
                                 <img src='../images/image-3.png' alt='product-image' className='product-image-preview'/>
-                            </div>
-                            
+                            </div> */}
+                            {products.length === 0 ? (
+                                <p style={{ 
+                                    position: 'absolute', 
+                                    top: '50%', 
+                                    left: '50%', 
+                                    transform: 'translate(-50%, -50%)', 
+                                    fontStyle: 'italic', 
+                                    color: 'gray'
+                                }}>
+                                    Nothing to see here yet. <a href='/products?openModal=true' style={{
+                                        textDecoration: 'underline',
+                                        background: 'linear-gradient(to right, #FF4949, #FF8000)',
+                                        backgroundClip: 'text',
+                                        WebkitBackgroundClip: 'text',
+                                        WebkitTextFillColor: 'transparent',
+                                        borderBottom: '1px solid #FF4949'
+                                    }}>Add a product to get started</a>
+                                </p>
+                            ) : (
+                                products.map((product) => (
+                                    <div 
+                                        key={product.id} 
+                                        className='home-product' 
+                                        style={{ backgroundImage: `url(${product.image})` }}
+                                    >
+                                        <div className='product-info'>
+                                            <h2>{product.name}</h2>
+                                            <p>{product.description}</p>
+                                        </div>
+                                        <img src={product.image} alt='product-image' className='product-image-preview'/>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
                     <div className='small-home-tiles'>

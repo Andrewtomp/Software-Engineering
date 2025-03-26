@@ -22,6 +22,16 @@ const Products = () => {
     //     setProducts(prevProducts => [...prevProducts, testProduct]);
     // }, []);
 
+    useEffect(() => {
+        // Check URL parameters when component mounts
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('openModal') === 'true') {
+            setIsModalOpen(true);
+            // Remove the parameter from the URL without refreshing the page
+            window.history.replaceState({}, '', '/products');
+        }
+    }, []);
+
     const handleAddNewClick = () => {
         setSelectedProduct(null);
         setIsModalOpen(true);
