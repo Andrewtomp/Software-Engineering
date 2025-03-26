@@ -47,6 +47,14 @@
     width: 100%;
   }
 
+  .add-product-card img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 10px;
+  }
+
   .add-product-card .field-description {
     color: rgba(255, 255, 255, 0.5) !important;
     font-size: 0.9rem;
