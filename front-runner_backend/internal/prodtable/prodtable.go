@@ -26,8 +26,8 @@ type Image struct {
 
 type Product struct {
 	ID              uint   `gorm:"primaryKey"`
-	UserID          uint   `gorm:"not null;index"`
-	ProdName        string `gorm:"unique;not null"`
+	UserID          uint   `gorm:"not null;index:idx_product,unique"`
+	ProdName        string `gorm:"not null;index:idx_product,unique"`
 	ProdDescription string `gorm:"not null"`
 	ImgID           uint
 	Img             Image `gorm:"foreignKey:ImgID"`
