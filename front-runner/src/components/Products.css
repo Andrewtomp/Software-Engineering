@@ -14,7 +14,7 @@
 
 .my-products-content {
     margin-left: 140px;
-    margin-right: 40px;
+    margin-right: 5px;
     width: 100%;
 }
 
@@ -27,11 +27,34 @@
 
 .products-container {
     display: flex;
+
     flex-direction: row;
     flex-wrap: wrap;
-    /* max-height: calc(100% - 72.4px - 20px); */
     gap: 20px;
+    flex-grow: 1;
+    max-height: calc(100vh - 72.4px - 20px); /* Adjust the height so it takes up the remaining space */
+    overflow-y: auto;  /* Enable vertical scrolling when content overflows */
+    padding: 10px; /* Optional, add some padding to the container */
+    position: relative; /* To position the gradient */
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.1) 100%);
 }
+
+/* Hide the scrollbar track */
+.products-container::-webkit-scrollbar {
+    width: 10px;  /* Hide the scrollbar */
+    background: transparent; /* Make the background transparent */
+}
+
+.products-container::-webkit-scrollbar-track {
+    background: transparent;  /* Hide the track */
+}
+
+.products-container::-webkit-scrollbar-thumb {
+    background: #181818; /* Optional: Adjust the scrollbar thumb color */
+    border-radius: 10px;  /* Optional: round the thumb */
+    border: 1px solid rgba(255, 255, 255, .25);
+}
+
 
 .product-tile:hover {
     cursor: pointer;
@@ -60,7 +83,7 @@
 }
 
 .product-tile {
-    width: calc(50% - 48px);
+    width: calc(50% - 10px);
     height: 225px;
     padding: 10px;
     padding-left: 15px;
