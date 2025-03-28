@@ -108,8 +108,8 @@ const Home = () => {
                                 products.map((product) => (
                                     <div 
                                         key={product.prodID} 
-                                        className='home-product' 
-                                        style={{ backgroundImage: `url(/api/get_product_image?image=${product.image})` }}
+                                        className='product-tile' 
+                                        style={{ width: "100%", backgroundImage: `url(/api/get_product_image?image=${product.image})` }}
                                     >
                                         <div className='product-info'>
                                             <h2>{product.prodName}</h2>

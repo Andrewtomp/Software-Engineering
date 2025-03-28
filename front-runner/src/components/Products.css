@@ -98,8 +98,10 @@
 .product-image-preview {
     z-index: 1;
     margin-left: auto;
-    height: 200px;
-    width: 200px; /* Maintain aspect ratio */
+    max-height: 200px;
+    max-width: 200px; /* Maintain aspect ratio */
+    height: 100%;
+    width: auto;
     object-fit: cover;
     border-radius: 15px;
     border: 1px white solid;
