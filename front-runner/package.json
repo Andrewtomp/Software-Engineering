@@ -1,7 +1,6 @@
 {
   "name": "front-runner",
   "version": "0.1.0",
-  "proxy": "https://localhost:8080",
   "private": true,
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.7.2",

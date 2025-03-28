@@ -3,7 +3,6 @@ import './Products.css';
 import NavBar from './NavBar';
 import ProductForm from './ProductForm';
 import { useState, useEffect } from 'react';
-import { addNewIcon } from '../assets/icons';
 
 const Products = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -68,7 +67,7 @@ const Products = () => {
                 <div className='products-header'>
                     <h1>My Products</h1>
                     <div onClick={handleAddNewClick} className="add-new-button" style={{ cursor: 'pointer' }}>
-                        <img src={addNewIcon.default} alt='add new' className='add-new-icon'/>
+                        <img src={'../assets/Add new.svg'} alt='add new' className='add-new-icon'/>
                     </div>
                 </div>
                 
