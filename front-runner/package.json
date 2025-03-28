@@ -1,6 +1,7 @@
 {
   "name": "front-runner",
   "version": "0.1.0",
+  "proxy": "https://localhost:8080",
   "private": true,
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
@@ -22,7 +23,7 @@
     "react-scripts": "5.0.1"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "set NODE_TLS_REJECT_UNAUTHORIZED=0 && react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

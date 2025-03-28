@@ -3,6 +3,7 @@ import './Products.css';
 import NavBar from './NavBar';
 import ProductForm from './ProductForm';
 import { useState, useEffect } from 'react';
+import { addNewIcon } from '../assets/icons';
 
 const Products = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -38,13 +39,22 @@ const Products = () => {
     };
 
     const handleProductClick = (product) => {
-        setSelectedProduct(product);
+        const formattedProduct = {
+            id: product.prodID,
+            name: product.prodName,
+            description: product.prodDesc,
+            price: product.prodPrice,
+            count: product.prodCount,
+            tags: product.prodTags,
+            image: product.image
+        };
+        setSelectedProduct(formattedProduct);
         setIsModalOpen(true);
     };
 
     useEffect(() => {
         const fetchProducts = async () => {
-            const response = await fetch('/api/products');
+            const response = await fetch('/api/get_products');
             const data = await response.json();
             setProducts(data);
         };
@@ -58,23 +68,27 @@ const Products = () => {
                 <div className='products-header'>
                     <h1>My Products</h1>
                     <div onClick={handleAddNewClick} className="add-new-button" style={{ cursor: 'pointer' }}>
-                        <img src='./assets/Add new.svg' alt='add new' className='add-new-icon'/>
+                        <img src={addNewIcon.default} alt='add new' className='add-new-icon'/>
                     </div>
                 </div>
                 
                 <div className='products-container'>
                     {products.map((product) => (
                         <div 
-                            key={product.id} 
+                            key={product.prodID} 
                             className='product-tile' 
-                            style={{ backgroundImage: `url(${product.image})` }}
+                            style={{ backgroundImage: `url(/api/get_product_image?image=${product.image})` }}
                             onClick={() => handleProductClick(product)}
                         >
                             <div className='product-info'>
-                                <h2>{product.name}</h2>
-                                <p>{product.description}</p>
+                                <h2>{product.prodName}</h2>
+                                <p>{product.prodDesc}</p>
                             </div>
-                            <img src={product.image} alt='product-image' className='product-image-preview'/>
+                            <img 
+                                src={`/api/get_product_image?image=${product.image}`} 
+                                alt='product-image' 
+                                className='product-image-preview'
+                            />
                         </div>
                     ))}
                     

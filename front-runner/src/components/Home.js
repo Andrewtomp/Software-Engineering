@@ -26,7 +26,7 @@ const Home = () => {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const response = await fetch('/api/products');
+                const response = await fetch('/api/get_products');
                 const data = await response.json();
                 // Take only the first 3 products
                 setProducts(data.slice(0, 3));
@@ -105,15 +105,19 @@ const Home = () => {
                             ) : (
                                 products.map((product) => (
                                     <div 
-                                        key={product.id} 
+                                        key={product.prodID} 
                                         className='home-product' 
-                                        style={{ backgroundImage: `url(${product.image})` }}
+                                        style={{ backgroundImage: `url(/api/get_product_image?image=${product.image})` }}
                                     >
                                         <div className='product-info'>
-                                            <h2>{product.name}</h2>
-                                            <p>{product.description}</p>
+                                            <h2>{product.prodName}</h2>
+                                            <p>{product.prodDesc}</p>
                                         </div>
-                                        <img src={product.image} alt='product-image' className='product-image-preview'/>
+                                        <img 
+                                            src={`/api/get_product_image?image=${product.image}`} 
+                                            alt='product-image' 
+                                            className='product-image-preview'
+                                        />
                                     </div>
                                 ))
                             )}

@@ -20,6 +20,8 @@ const ImageWidget = ({ value, onChange, options, schema }) => {
     }
   };
 
+  const imageSource = value?.startsWith('/api/') ? value : value;
+
   return (
     <div className="image-widget">
       <input
@@ -31,7 +33,7 @@ const ImageWidget = ({ value, onChange, options, schema }) => {
       {value && (
         <div className="image-preview">
           <img 
-            src={value} 
+            src={imageSource} 
             alt="Product preview" 
             style={{ maxWidth: '200px', maxHeight: '200px', marginTop: '10px' }}
           />
@@ -131,25 +133,43 @@ function dataURItoBlob(dataURI) {
 const onSubmit = async ({ formData }, product) => {
   console.log('Product data submitted:', formData);
   try {
-    // Send the product data to your API endpoint.
     var multipart = new FormData();
-    for (var key in formData) {
-      if (key === "image") {
-        // Only process the image if it's a new upload (starts with data:)
-        if (formData[key].startsWith('data:')) {
-          var filename = formData[key].split(',')[0].split(';')[1].split('=')[1];
-          var test = dataURItoBlob(formData[key]);
-          multipart.append(key, test, filename);
-        } else {
-          // If it's an existing image URL, just send it as is
-          multipart.append(key, formData[key]);
+    
+    // Map the form fields to what the backend expects
+    if (product) {
+      // For update endpoint
+      multipart.append('productName', formData.productName);
+      multipart.append('product_description', formData.description);
+      multipart.append('item_price', formData.price.replace('$', ''));
+      multipart.append('stock_amount', formData.count);
+      multipart.append('tags', formData.tags || '');
+
+      // Handle image updates for existing products
+      if (formData.image) {
+        if (formData.image.startsWith('data:')) {
+          // New image uploaded
+          const blob = dataURItoBlob(formData.image);
+          multipart.append('image', blob, 'image.jpg');
+        } else if (!formData.image.startsWith('/api/')) {
+          // Existing image path
+          multipart.append('image', formData.image);
         }
-      } else {
-        multipart.append(key, formData[key]);
+      }
+    } else {
+      // For add endpoint
+      multipart.append('productName', formData.productName);
+      multipart.append('description', formData.description);
+      multipart.append('price', formData.price.replace('$', ''));
+      multipart.append('count', formData.count);
+      multipart.append('tags', formData.tags || '');
+      
+      if (formData.image && formData.image.startsWith('data:')) {
+        const blob = dataURItoBlob(formData.image);
+        multipart.append('image', blob, 'image.jpg');
       }
     }
 
-    const endpoint = product ? `/api/update_product?id=${product.id}` : "/api/add_product";
+    const endpoint = product ? `/api/update_product?id=${product.id || product.prodID}` : "/api/add_product";
     const method = product ? 'PUT' : 'POST';
 
     const response = await fetch(endpoint, {
@@ -159,7 +179,6 @@ const onSubmit = async ({ formData }, product) => {
     });
 
     if (response.ok) {
-      alert(product ? 'Product updated successfully!' : 'Product added successfully!');
       window.location.reload();
     } else {
       const errorText = await response.text();
@@ -170,23 +189,39 @@ const onSubmit = async ({ formData }, product) => {
     console.error('Error with product:', error);
     alert(`Error ${product ? 'updating' : 'adding'} product: ${error.message}`);
   }
-  
 };
 
 // ProductForm Component
 const ProductForm = ({ onClose, product }) => {
+  // Create a dummy data URL for existing images to satisfy the format requirement
+  const getInitialImageValue = (product) => {
+    if (!product) return undefined;
+    return `/api/get_product_image?image=${product.image}`;
+  };
+
   const formData = product ? {
-    productName: product.name,
-    description: product.description,
-    price: product.price,
-    count: product.count,
-    tags: product.tags,
-    image: product.image
+    productName: product.name || product.prodName,
+    description: product.description || product.prodDesc,
+    price: `$${product.price || product.prodPrice}`,
+    count: product.count || product.prodCount,
+    tags: product.tags || product.prodTags,
+    image: getInitialImageValue(product)
   } : undefined;
 
   const widgets = {
     image: ImageWidget
   };
+
+  const currentSchema = product ? {
+    ...schema,
+    properties: {
+      ...schema.properties,
+      image: {
+        ...schema.properties.image,
+        format: undefined // Remove the data-url format requirement for editing
+      }
+    }
+  } : schema;
 
   return (
     <div className="add-product-container" style={{backgroundColor: "rgba(0,0,0,0.8)"}}>
@@ -198,7 +233,7 @@ const ProductForm = ({ onClose, product }) => {
           style={{position: "absolute", top: "10", right: "10", width: "32px", height:"32px", cursor: "pointer"}}
         />
         <Form
-          schema={schema}
+          schema={currentSchema}
           uiSchema={uiSchema}
           validator={validator}
           onSubmit={(e) => onSubmit(e, product)}
