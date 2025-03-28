@@ -193,24 +193,24 @@ const onSubmit = async ({ formData }, product) => {
 };
 
 const handleDeleteProduct = async (product) => {
-  const isConfirmed = window.confirm(`Are you sure you want to delete ${product.prodName}?`);
+  const isConfirmed = window.confirm(`Are you sure you want to delete ${product.name}?`);
 
   if (!isConfirmed) return;
 
   try {
     // Perform the delete operation here
-    console.log(`Deleting product: ${product.prodName}`);
+    console.log(`Deleting product: ${product.name}`);
     const endpoint = `/api/delete_product?id=${product.id || product.prodID}`;
     const response = await fetch(endpoint, {
       method: 'DELETE',
       redirect: 'manual'
     });
     if (response.ok){
-      console.log(`Deleted product: ${product.prodName}`);
+      console.log(`Deleted product: ${product.name}`);
       window.location.reload();
     }
     else {
-      console.log(`Failed to delete product: ${product.prodName}`);
+      console.log(`Failed to delete product: ${product.name}`);
     }
   } catch (error) {
     console.error("Error deleting product:", error);
