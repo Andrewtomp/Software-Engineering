@@ -86,7 +86,9 @@ const Home = () => {
                             </div> */}
                             {products.length === 0 ? (
                                 <p style={{ 
+                                    width: '90%',
                                     position: 'absolute', 
+                                    textAlign: 'center',
                                     top: '50%', 
                                     left: '50%', 
                                     transform: 'translate(-50%, -50%)', 

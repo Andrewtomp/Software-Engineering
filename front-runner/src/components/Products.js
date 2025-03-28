@@ -73,24 +73,47 @@ const Products = () => {
                 </div>
                 
                 <div className='products-container'>
-                    {products.map((product) => (
-                        <div 
-                            key={product.prodID} 
-                            className='product-tile' 
-                            style={{ backgroundImage: `url(/api/get_product_image?image=${product.image})` }}
-                            onClick={() => handleProductClick(product)}
-                        >
-                            <div className='product-info'>
-                                <h2>{product.prodName}</h2>
-                                <p>{product.prodDesc}</p>
-                            </div>
-                            <img 
-                                src={`/api/get_product_image?image=${product.image}`} 
-                                alt='product-image' 
-                                className='product-image-preview'
-                            />
-                        </div>
-                    ))}
+
+                    {products.length === 0 ? (
+                                    <p style={{ 
+                                        width: '90%',
+                                        position: 'absolute', 
+                                        textAlign: 'center',
+                                        top: '50%', 
+                                        left: '50%', 
+                                        transform: 'translate(-50%, -50%)', 
+                                        fontStyle: 'italic', 
+                                        color: 'gray'
+                                    }}>
+                                        Nothing to see here yet. <a href='/products?openModal=true' style={{
+                                            textDecoration: 'underline',
+                                            background: 'linear-gradient(to right, #FF4949, #FF8000)',
+                                            backgroundClip: 'text',
+                                            WebkitBackgroundClip: 'text',
+                                            WebkitTextFillColor: 'transparent',
+                                            borderBottom: '1px solid #FF4949'
+                                        }}>Add a product to get started</a>
+                                    </p>
+                                ) : (
+                            products.map((product) => (
+                                <div 
+                                    key={product.prodID} 
+                                    className='product-tile' 
+                                    style={{ backgroundImage: `url(/api/get_product_image?image=${product.image})` }}
+                                    onClick={() => handleProductClick(product)}
+                                >
+                                    <div className='product-info'>
+                                        <h2>{product.prodName}</h2>
+                                        <p>{product.prodDesc}</p>
+                                    </div>
+                                    <img 
+                                        src={`/api/get_product_image?image=${product.image}`} 
+                                        alt='product-image' 
+                                        className='product-image-preview'
+                                    />
+                                </div>
+                            )))
+                        }
                     
                     {/* <div className='product-tile' style={{ backgroundImage: `url("../images/image-1.png")` }}>
                         <div className='product-info'>

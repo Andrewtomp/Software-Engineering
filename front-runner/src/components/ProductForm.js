@@ -5,7 +5,8 @@ import validator from '@rjsf/validator-ajv8';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './ProductForm.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faTimes, faTrash} from '@fortawesome/free-solid-svg-icons';
+
 
 // Custom Image Widget
 const ImageWidget = ({ value, onChange, options, schema }) => {
@@ -35,7 +36,7 @@ const ImageWidget = ({ value, onChange, options, schema }) => {
           <img 
             src={imageSource} 
             alt="Product preview" 
-            style={{ maxWidth: '200px', maxHeight: '200px', marginTop: '10px' }}
+            style={{ maxWidth: '200px', maxHeight: '200px'}}
           />
         </div>
       )}
@@ -87,7 +88,7 @@ const uiSchema = {
     'ui:placeholder': 'Enter the product name',
   },
   description: {
-    'ui:widget': 'textarea',
+    'ui:widget': 'text',
     'ui:placeholder': 'Enter a brief product description',
   },
   image: {
@@ -104,7 +105,7 @@ const uiSchema = {
     "ui:widget": "updown"
   },
   tags: {
-    "ui:widget": "textarea",
+    "ui:widget": "text",
     "ui:placeholder": "#tag1, #tag2, ..."
   }
 };
@@ -191,6 +192,31 @@ const onSubmit = async ({ formData }, product) => {
   }
 };
 
+const handleDeleteProduct = async (product) => {
+  const isConfirmed = window.confirm(`Are you sure you want to delete ${product.prodName}?`);
+
+  if (!isConfirmed) return;
+
+  try {
+    // Perform the delete operation here
+    console.log(`Deleting product: ${product.prodName}`);
+    const endpoint = `/api/delete_product?id=${product.id || product.prodID}`;
+    const response = await fetch(endpoint, {
+      method: 'DELETE',
+      redirect: 'manual'
+    });
+    if (response.ok){
+      console.log(`Deleted product: ${product.prodName}`);
+      window.location.reload();
+    }
+    else {
+      console.log(`Failed to delete product: ${product.prodName}`);
+    }
+  } catch (error) {
+    console.error("Error deleting product:", error);
+  }
+}
+
 // ProductForm Component
 const ProductForm = ({ onClose, product }) => {
   // Create a dummy data URL for existing images to satisfy the format requirement
@@ -226,7 +252,17 @@ const ProductForm = ({ onClose, product }) => {
   return (
     <div className="add-product-container" style={{backgroundColor: "rgba(0,0,0,0.8)"}}>
       <div className='add-product-card'>
-        <h2>{product ? 'Edit Product' : 'Add Product'}</h2>
+        <div className='product-form-header'>
+          <h2>{product ? 'Edit Product' : 'Add Product'}</h2>
+          {product && (
+            <FontAwesomeIcon 
+              icon={faTrash} 
+              onClick={() => handleDeleteProduct(product)} 
+              className='delete-icon'
+            />
+          )}
+        </div>
+        
         <FontAwesomeIcon 
           icon={faTimes} 
           onClick={onClose} 
