@@ -277,22 +277,68 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	productDescription := r.FormValue("product_description")
-	productPrice, _ := strconv.ParseFloat(r.FormValue("item_price"), 64)
-	productCount, _ := strconv.Atoi(r.FormValue("stock_amount"))
+	// Parse the multipart form
+	err = r.ParseMultipartForm(10 << 20) // 10 MB limit
+	if err != nil {
+		http.Error(w, "Error parsing form", http.StatusBadRequest)
+		return
+	}
 
-	// Update only non-empty values
-	if productDescription != "" {
+	// Update all fields if provided
+	if productName := r.FormValue("productName"); productName != "" {
+		product.ProdName = productName
+	}
+	if productDescription := r.FormValue("product_description"); productDescription != "" {
 		product.ProdDescription = productDescription
 	}
-	if productPrice > 0 {
+	if productPrice, err := strconv.ParseFloat(r.FormValue("item_price"), 64); err == nil && productPrice > 0 {
 		product.ProdPrice = productPrice
 	}
-	if productCount >= 0 {
+	if productCount, err := strconv.Atoi(r.FormValue("stock_amount")); err == nil && productCount >= 0 {
 		product.ProdCount = uint(productCount)
 	}
+	if productTags := r.FormValue("tags"); productTags != "" {
+		product.ProdTags = productTags
+	}
 
-	db.Save(&product)
+	// Handle image update if provided
+	file, handler, err := r.FormFile("image")
+	if err == nil {
+		defer file.Close()
+
+		// Save new image
+		imageFilename := uuid.New().String() + filepath.Ext(handler.Filename)
+		imagePath := filepath.Join("uploads", imageFilename)
+		dst, err := os.Create(imagePath)
+		if err != nil {
+			http.Error(w, "Error saving image", http.StatusInternalServerError)
+			return
+		}
+		defer dst.Close()
+		io.Copy(dst, file)
+
+		// Create new image record
+		image := Image{
+			URL:    imageFilename,
+			UserID: userID,
+		}
+		db.Create(&image)
+
+		// Delete old image file
+		if product.Img.URL != "" {
+			oldImagePath := filepath.Join("uploads", product.Img.URL)
+			os.Remove(oldImagePath)
+		}
+
+		// Update product's image ID
+		product.ImgID = image.ID
+	}
+
+	// Save all updates
+	if err := db.Save(&product).Error; err != nil {
+		http.Error(w, "Error updating product: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Product updated successfully"))

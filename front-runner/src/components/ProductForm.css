@@ -16,6 +16,7 @@
   
   /* Style the card */
   .add-product-card {
+
     width: 40%;
     min-width: 400px; /* Set a max width */
     padding: 20px;
@@ -28,6 +29,30 @@
     flex-direction: column;
     position: relative;
   }
+
+  .product-form-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 10px;
+  }
+
+  .product-form-header h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0;
+  }
+
+  .delete-icon {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .delete-icon:hover {
+    color: #FF4949;
+  }
   
   /* Customize the submit button */
   .add-product-card .btn-info {
@@ -35,7 +60,7 @@
     font-size: 1.1rem;
     background: linear-gradient(to right, #FF4949, #FF8000);
     color: white;
-    margin-top: 20px;
+    margin-top: 10px;
     border: none;
   }
 
@@ -45,6 +70,14 @@
 
   .add-product-card .rjsf {
     width: 100%;
+  }
+
+  .add-product-card img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 10px;
+
   }
 
   .add-product-card .field-description {

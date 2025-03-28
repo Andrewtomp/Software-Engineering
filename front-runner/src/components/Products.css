@@ -55,8 +55,8 @@
 .add-new-icon {
     margin-top: 16px;
     margin-left: 12px;
-    height: 2.5rem;
-    width: 2.5rem;
+    height: 2rem;
+    width: 2rem;
 }
 
 .product-tile {
@@ -64,7 +64,6 @@
     height: 225px;
     padding: 10px;
     padding-left: 15px;
-    border: 1px rgba(255, 255, 255, .25) solid;
     border-radius: 25px;
     background-size: cover;
     background-position: center;
@@ -87,6 +86,8 @@
     background: rgba(24, 24, 24, 0.5); /* Semi-transparent dark overlay */
     backdrop-filter: blur(7px); /* Apply blur effect */
     z-index: 0; /* Ensure the overlay is beneath the text */
+    border: 1px rgba(255, 255, 255, .25) solid;
+    
 }
 
 .product-info {
@@ -97,8 +98,9 @@
 .product-image-preview {
     z-index: 1;
     margin-left: auto;
-    height: 100%;
-    width: auto; /* Maintain aspect ratio */
+    height: 200px;
+    width: 200px; /* Maintain aspect ratio */
+    object-fit: cover;
     border-radius: 15px;
     border: 1px white solid;
 }
