@@ -20,7 +20,7 @@ describe('Product Form', () => {
       }).as('getProductImage');
   
       // Visit the page with the product form
-      cy.visit('/');
+      cy.visit('http://localhost:3000/');
     });
   
     it('should open the Add Product form', () => {

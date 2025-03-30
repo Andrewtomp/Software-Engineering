@@ -2,7 +2,7 @@
 describe('Login Form', () => {
     beforeEach(() => {
       // Visit the page with the login form
-      cy.visit('/login');
+      cy.visit('http://localhost:3000/login');
       
       // Mock the login API endpoint
       cy.intercept('POST', '/api/login', {
