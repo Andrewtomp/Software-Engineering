@@ -120,4 +120,45 @@ describe('ProductForm', () => {
     expect(screen.getByText(/price is required/i)).toBeInTheDocument();
     expect(screen.getByText(/image is required/i)).toBeInTheDocument();
   });
+
+  // Test case: Edit an existing product
+  test('edits an existing product', async () => {
+    const mockProduct = {
+      id: 1,
+      name: 'Product 1',
+      description: 'Product Description',
+      price: '12.99',
+      count: 10,
+      tags: '#tag1',
+      image: 'image.jpg',
+    };
+
+    render(<ProductForm onClose={() => {}} product={mockProduct} />);
+
+    // Check if the form is populated with existing product data
+    expect(screen.getByDisplayValue('Product 1')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Product Description')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('$12.99')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('10')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('#tag1')).toBeInTheDocument();
+
+    // Simulate editing the product name
+    fireEvent.change(screen.getByLabelText(/Product Name/i), {
+      target: { value: 'Updated Product 1' },
+    });
+
+    // Simulate submitting the form
+    const submitButton = screen.getByText(/submit/i);
+    fireEvent.click(submitButton);
+
+    // Check if the correct API call is made (PUT request for updating)
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/update_product'),
+      expect.objectContaining({
+        method: 'PUT',
+        body: expect.any(FormData),
+      })
+    );
+  });
 });
