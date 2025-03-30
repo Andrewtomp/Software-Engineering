@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import ProductForm from './AddProductForm';
+import ProductForm from '../ProductForm';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 // Mock the fetch API to avoid actual HTTP requests during tests
