@@ -8,29 +8,34 @@ To create the database first you must get access to the postgresql shell:
 psql -U johnny -d postgres
 ```
 
-Replace `johnny` with the host system user (also need to change in the `.go` files).
+Replace `johnny` with the host system user (make sure to update in the `.env` file).
 
 Once in the shell run the following commands:
 
 ```
 CREATE DATABASE frontrunner;
 
-\c frontrunner
-
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    email VARCHAR(50) UNIQUE NOT NULL,
-    password_hash VARCHAR(100) NOT NULL,
-    business_name VARCHAR(100)
-);
-
-CREATE TABLE product_images (
-    filename VARCHAR(50) PRIMARY KEY,
-    id int NOT NULL,
-    FOREIGN KEY (id) REFERENCES users(id)
-);
-
 quit
+```
+
+gorm will create all the necessary tables for you.
+
+## Build the Static Web Page
+
+```bash
+cd front-runner/
+
+npm run build
+
+cd ..
+```
+
+## Generate the Server Cert and the Storefront Encryption Key
+
+```bash
+cd front-runner_backend
+
+bash ./generateCert.sh
 ```
 
 ## Start GO Server
@@ -38,8 +43,12 @@ quit
 Start the go server by running:
 
 ```golang
-go run front-runner_backend/main.go
+go run .
 ```
+
+## To Access Page
+
+go to this webpage: https://localhost:8080/
 
 ## To Generate docs
 
