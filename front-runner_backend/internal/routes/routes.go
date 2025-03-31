@@ -92,6 +92,7 @@ func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
 	// Storefront Table
 	api.HandleFunc("/add_storefront", storefronttable.AddStorefront).Methods("POST")
 	api.HandleFunc("/get_storefronts", storefronttable.GetStorefronts).Methods("GET")
+	api.HandleFunc("/update_storefront", storefronttable.UpdateStorefront).Methods("PUT")
 	api.HandleFunc("/delete_storefront", storefronttable.DeleteStorefront).Methods("DELETE")
 
 	api.PathPrefix("/").HandlerFunc(InvalidAPI)
