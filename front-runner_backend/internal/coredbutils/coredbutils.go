@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"sync"
 
 	"gorm.io/driver/postgres"
@@ -16,6 +17,10 @@ var (
 	dbLoadEnvOnce sync.Once
 	dbConnOnce    sync.Once
 )
+
+func isLocalHost(host string) bool {
+	return host == "localhost" || host == "127.0.0.1"
+}
 
 // Grabs the relevant enviroment variables and constructs the DSN for the postgres database
 func LoadEnv() {
@@ -42,15 +47,31 @@ func LoadEnv() {
 			log.Fatal("No provided DB_USER value.")
 		}
 
-		if password == "" {
-			log.Fatal("No provided DB_PASSWORD value.")
+		local := isLocalHost(host)
+
+		if password == "" && !local {
+			// Require password *only* if not connecting to localhost/127.0.0.1
+			log.Fatal("DB_PASSWORD environment variable must be set for non-local database connections.")
 		}
 
-		// Build the DSN (Data Source Name) for PostgreSQL.
-		// Adjust the parameters (host, user, password, dbname, port, sslmode, TimeZone) as needed.
-		dsn = fmt.Sprintf(
-			"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=UTC",
-			host, port, user, password, name)
+		dsnParts := []string{
+			fmt.Sprintf("host=%s", host),
+			fmt.Sprintf("port=%s", port),
+			fmt.Sprintf("user=%s", user),
+			fmt.Sprintf("dbname=%s", name),
+			"sslmode=disable", // Adjust sslmode as needed for your setup
+			"TimeZone=UTC",
+		}
+
+		// Conditionally add the password part
+		if password != "" {
+			dsnParts = append(dsnParts, fmt.Sprintf("password=%s", password))
+		}
+		// If password is empty, we simply don't add the password part.
+		// The database driver will attempt connection without a password.
+
+		// Join the parts into the final DSN string
+		dsn = strings.Join(dsnParts, " ")
 	})
 }
 
