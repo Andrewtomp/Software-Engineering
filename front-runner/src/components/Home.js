@@ -21,6 +21,14 @@ const Home = () => {
         { order: "0007", product: "Product 7", quantity: 1, total: "$15.75", customer: "Customer 7" },
     ]);
 
+    const [colDefs, setColDefs] = useState([
+        { field: "order" },
+        { field: "product" },
+        { field: "quantity" },
+        { field: "total" },
+        { field: "customer" }
+    ]);
+
     const [products, setProducts] = useState([]);
 
     useEffect(() => {
@@ -37,13 +45,30 @@ const Home = () => {
         fetchProducts();
     }, []);
 
-    const [colDefs, setColDefs] = useState([
-        { field: "order" },
-        { field: "product" },
-        { field: "quantity" },
-        { field: "total" },
-        { field: "customer" }
-    ]);
+    const [storefronts, setStorefronts] = useState([]);
+
+    useEffect(() => {
+        const fetchStorefronts = async () => {
+            try {
+                const response = await fetch('/api/get_storefronts'); // API endpoint
+                if (!response.ok) {
+                     if (response.status === 401) {
+                        console.log("User not authenticated to fetch storefronts.");
+                        setStorefronts([]);
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                // Slice to first 3 to match existing CSS layout for now
+                setStorefronts(data ? data.slice(0, 3) : []);
+            } catch (error) {
+                console.error('Error fetching storefronts:', error);
+                setStorefronts([]);
+            }
+        };
+        fetchStorefronts();
+    }, []);
 
     return (
         <div className='home'>
@@ -150,7 +175,7 @@ const Home = () => {
                             </div>
 
                         </div>
-                        <div className='small-home-tile storefronts-small-home-tile'>
+                        {/* <div className='small-home-tile storefronts-small-home-tile'>
                             <div className='tile-header'>
                                 <h2>My Storefronts</h2>
                                 <div className='view-all-products' onClick={() => window.location.href='/storefronts'}>
@@ -170,6 +195,45 @@ const Home = () => {
                                 <div className='home-storefront'>
                                     <h3>Storefront 2</h3>
                                 </div>
+                            </div>
+                        </div> */}
+                        {/* --- Storefronts Tile (MODIFIED) --- */}
+                        <div className='small-home-tile storefronts-small-home-tile'>
+                            <div className='tile-header'>
+                                <h2>My Storefronts</h2>
+                                <div className='view-all-products' onClick={() => window.location.href = '/storefronts'}>
+                                    <p>View all</p>
+                                     {/* Arrow SVG */}
+                                    <svg width="26" height="24" viewBox="0 0 26 24" fill="none" xmlns="http://www.w3.org/2000/svg" className='arrow-right'>
+                                        <path d="M25.0607 13.0607C25.6464 12.4749 25.6464 11.5251 25.0607 10.9393L15.5147 1.3934C14.9289 0.807612 13.9792 0.807612 13.3934 1.3934C12.8076 1.97918 12.8076 2.92893 13.3934 3.51472L21.8787 12L13.3934 20.4853C12.8076 21.0711 12.8076 22.0208 13.3934 22.6066C13.9792 23.1924 14.9289 23.1924 15.5147 22.6066L25.0607 13.0607ZM0 13.5H24V10.5H0L0 13.5Z" fill="white" />
+                                    </svg>
+                                </div>
+                            </div>
+                            {/* --- Dynamic Storefront Rendering --- */}
+                            <div className='storefront-tiles'>
+                                {storefronts.length === 0 ? (
+                                    // Placeholder when no storefronts are linked
+                                     <p style={{ /* Placeholder styles */
+                                        width: '90%', position: 'absolute', textAlign: 'center',
+                                        top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                                        fontStyle: 'italic', color: 'gray'
+                                    }}>
+                                        No storefronts linked yet. <a href='/storefronts' style={{ /* Link styles */
+                                            textDecoration: 'underline', background: 'linear-gradient(to right, #FF4949, #FF8000)',
+                                            backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                                            borderBottom: '1px solid #FF4949'
+                                        }}>Link one</a>.
+                                    </p>
+                                ) : (
+                                    // Map over the fetched storefronts
+                                    storefronts.map((storefront) => (
+                                        <div className='home-storefront' key={storefront.id}>
+                                            {/* Display the storefront name or type */}
+                                            {/* Make sure 'storeName' and 'storeType' match your API response fields */}
+                                            <h3>{storefront.storeName || storefront.storeType}</h3>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </div>
                     </div>
