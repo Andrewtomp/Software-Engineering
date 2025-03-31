@@ -49,12 +49,10 @@ Video: [Sprint 3 VIDEO]()
 ### Front end
 _Cypress Tests_
 
-For this sprint, we moved to a full Cypress test suite rather than React Unit Tests.
-
 | Unit Test | Test Description |
 | --- | --- |
 | `Sprint 2 Test` | Tests that the add new button opens the Add Product modal |
-| `Render Login` | Tests the redering of login form |
+| `Render Login` | Tests the rendering of login form |
 | `Login Input` | Tests that the login form allows input |
 | `Login Submission` | Tests login submission with valid information |
 | `Login Error` | Tests that login submission fails with invalid information |
@@ -85,12 +83,10 @@ Tests passing:
 
 _Unit Tests_
 
-These are the tests previously made that still work.
-
 | Unit Test | Test Description |
 | --- | --- |
-| `LoginForm.Test` | Tests the redering of login form, allowing user input, and submitting the form |
-| `RegistrationForm.Test` | Tests the redering of login form, allowing user input, validating the input, and submitting the form |
+| `LoginForm.Test` | Tests the rendering of login form, allowing user input, and submitting the form |
+| `RegistrationForm.Test` | Tests the rendering of login form, allowing user input, validating the input, and submitting the form |
 | `NavBar.Test` | Tests the routing from the nav bar to the home, products, storefronts, and orders pages |
 | `ProductForm.Test` | Tests that the Product Form popup allows user input, validates the input, and submits the form |
 
