@@ -17,8 +17,7 @@ Video: [Sprint 3 VIDEO]()
 - Made home page products more responsive
 - *Incomplete Sprint2 Issue:* Fixed bug where product tags aren't being received correctly when submitting a new product
 - *Incomplete Sprint2 Issue:* Connected Product page and preview on dashboard with back end to show users' products in real time
-- Created Cypress Test for opening the ProductForm modal [CHANGE THIS]
-- Created React unit tests
+- Created Cypress Tests for this sprint's functionality
    
 ### Back end
 - Merged all Sprint 1 content to main branch
@@ -48,14 +47,45 @@ Video: [Sprint 3 VIDEO]()
 
 ## Testing
 ### Front end
-_Cypress Test_
+_Cypress Tests_
 
-Completed a simple Cypress Test testing the opening of a modal for product creation. This test starts by opening the products page, then checks to see if the modal exists in the html yet, clicks the button to open the modal, and verifies that it is now there.
+For this sprint, we moved to a full Cypress test suite rather than React Unit Tests.
 
-![image](https://github.com/user-attachments/assets/7d3a070d-7cc6-4daa-8223-69a139b3b4d6)
+| Unit Test | Test Description |
+| --- | --- |
+| `Sprint 2 Test` | Tests that the add new button opens the Add Product modal |
+| `Render Login` | Tests the redering of login form |
+| `Login Input` | Tests that the login form allows input |
+| `Login Submission` | Tests login submission with valid information |
+| `Login Error` | Tests that login submission fails with invalid information |
+| `Navbar Navigation` | Tests that the Navbar navigates to the Products, Storefronts, Orders, and Settings pages |
+| `Navbar Logout` | Tests that the Navbar logout button logs the user out and redirects them to the login page |
+| `Navbar Visibility` | Tests that all navbar elements are visible |
+| `Navbar Responsiveness` | Tests that the Navbar is responsive with a different screen size |
+| `Order Label Download` | Tests that the download button in the orders table downloads a shipping label for that item |
+| `Open Add Product` | Tests that the add new button opens the Add Product modal |
+| `Product Form Validation` | Tests the validation of required fields in the Add Product form |
+| `Add New Product` | Tests that a new product is added after the necessary, correct information is inputted |
+| `Select Existing Product` | Tests that an existing product can be clicked and its information is populated in the form |
+| `Update Product` | Tests that existing products can be edited and the changes are upheld |
+| `Delete Product` | Tests that a product can be deleted |
+| `Cancel Product Deletion` | Tests that deleting a product can be aborted after clicking the delete button |
+| `Close Product Form` | Tests that clicking the close button on the product form closes the form |
+
+Tests passing:
+
+![image](https://github.com/user-attachments/assets/fdfc2e8a-f08a-415b-9ed6-96dd560ea00a)
+![image](https://github.com/user-attachments/assets/f13d9d21-5ee9-43b4-9e1b-b4f01d011d35)
+![image](https://github.com/user-attachments/assets/e8cba87d-5fda-4dcf-8f9f-7f20f6178d51)
+![image](https://github.com/user-attachments/assets/0ed22aae-86a3-420f-b765-ae444db0142c)
+![image](https://github.com/user-attachments/assets/b3b4d064-66a0-48df-9caf-0afef86c35d9)
+
+
 
 
 _Unit Tests_
+
+These are the tests previously made that still work.
 
 | Unit Test | Test Description |
 | --- | --- |
