@@ -170,3 +170,46 @@
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end; /* Align main buttons to the right */
+    gap: 10px;
+    margin-top: 20px;
+    width: 100%;
+}
+
+/* Style for the delete button */
+.delete-button {
+    /* Position delete button on the left */
+    margin-right: auto;
+
+    /* Styling for destructive action */
+    background-color: transparent; /* Or a subtle dark red background */
+    color: #FF4949; /* Theme red color */
+    border: 1px solid #FF4949;
+    padding: 10px 20px; /* Match other buttons */
+    border-radius: 4px; /* Match other buttons */
+    cursor: pointer;
+    font-weight: bold; /* Match other buttons */
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.delete-button:hover {
+    background-color: rgba(255, 73, 73, 0.1); /* Subtle red background on hover */
+    color: #ff6f6f; /* Lighter red on hover */
+}
+
+.delete-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: transparent; /* Keep transparent */
+    color: #a53232; /* Darker red when disabled */
+    border-color: #a53232;
+}
+
+/* Ensure other buttons stay on the right */
+/* .form-actions button[type="button"]:not(.delete-button),
+.form-actions button[type="submit"] {
+     /* No changes needed if using justify-content: flex-end and margin-right: auto on delete */
+/* } */ 
