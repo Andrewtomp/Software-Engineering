@@ -3,6 +3,7 @@ package routes
 import (
 	"front-runner/internal/login"
 	"front-runner/internal/prodtable"
+	"front-runner/internal/storefronttable"
 	"front-runner/internal/usertable"
 	"net/http"
 	"os"
@@ -88,6 +89,10 @@ func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
 	api.HandleFunc("/get_product", prodtable.GetProduct).Methods("GET")
 	api.HandleFunc("/get_products", prodtable.GetProducts).Methods("GET")
 	api.HandleFunc("/get_product_image", prodtable.GetProductImage).Methods("GET")
+	// Storefront Table
+	api.HandleFunc("/add_storefront", storefronttable.AddStorefront).Methods("POST")
+	api.HandleFunc("/get_storefronts", storefronttable.GetStorefronts).Methods("GET")
+	api.HandleFunc("/delete_storefront", storefronttable.DeleteStorefront).Methods("DELETE")
 
 	api.PathPrefix("/").HandlerFunc(InvalidAPI)
 

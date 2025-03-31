@@ -20,6 +20,7 @@ import (
 	"front-runner/internal/login"
 	"front-runner/internal/prodtable"
 	"front-runner/internal/routes"
+	"front-runner/internal/storefronttable"
 	"front-runner/internal/usertable"
 
 	"github.com/gorilla/mux"
@@ -48,6 +49,10 @@ func setupModules() {
 	// Product Table
 	prodtable.Setup()
 	prodtable.MigrateProdDB()
+
+	// Storefront Table
+	storefronttable.Setup()
+	storefronttable.MigrateStorefrontDB()
 }
 
 func main() {
