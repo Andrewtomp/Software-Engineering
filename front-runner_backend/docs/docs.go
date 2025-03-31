@@ -106,6 +106,69 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/add_storefront": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Links a new external storefront (e.g., Amazon, Pinterest) to the user's account, storing credentials securely. Requires authentication.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefronts"
+                ],
+                "summary": "Link a new storefront",
+                "parameters": [
+                    {
+                        "description": "Storefront Link Details (including credentials like apiKey, apiSecret)",
+                        "name": "storefrontLink",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/storefronttable.StorefrontLinkAddPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Successfully linked storefront (credentials omitted)",
+                        "schema": {
+                            "$ref": "#/definitions/storefronttable.StorefrontLinkReturn"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Invalid input, missing fields, or JSON parsing error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - User session invalid or expired",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - A link with this name/type already exists for the user",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error - E.g., failed to encrypt, database error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/delete_product": {
             "delete": {
                 "description": "Deletes an existing product and its associated image if the product belongs to the authenticated user.",
@@ -140,6 +203,78 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Product not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/delete_storefront": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Removes the link to an external storefront specified by its unique ID. User must own the link. Requires authentication.",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "storefronts"
+                ],
+                "summary": "Unlink a storefront",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "uint",
+                        "example": 123,
+                        "description": "ID of the Storefront Link to delete",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Storefront unlinked successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "204": {
+                        "description": "Storefront unlinked successfully (No Content)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Invalid or missing 'id' query parameter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - User session invalid or expired",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - User does not own this storefront link",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found - Storefront link with the specified ID not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error - Database deletion failed",
                         "schema": {
                             "type": "string"
                         }
@@ -261,6 +396,46 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "User not authenticated or unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/get_storefronts": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a list of all external storefronts linked by the currently authenticated user. Credentials are *never* included. Requires authentication.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefronts"
+                ],
+                "summary": "Get linked storefronts",
+                "responses": {
+                    "200": {
+                        "description": "List of linked storefronts (empty array if none)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/storefronttable.StorefrontLinkReturn"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - User session invalid or expired",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error - Database query failed",
                         "schema": {
                             "type": "string"
                         }
@@ -455,6 +630,158 @@ const docTemplate = `{
                             "type": "string"
                         }
                     }
+                }
+            }
+        },
+        "/api/update_storefront": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Updates the name, store ID, or store URL of an existing storefront link belonging to the authenticated user. Store type and credentials cannot be updated via this endpoint.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefronts"
+                ],
+                "summary": "Update a storefront link",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "uint",
+                        "example": 123,
+                        "description": "ID of the Storefront Link to update",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "Fields to update (storeName, storeId, storeUrl)",
+                        "name": "storefrontUpdate",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/storefronttable.StorefrontLinkUpdatePayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully updated storefront link details",
+                        "schema": {
+                            "$ref": "#/definitions/storefronttable.StorefrontLinkReturn"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Invalid input, missing ID, or JSON parsing error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - User session invalid or expired",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - User does not own this storefront link",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found - Storefront link with the specified ID not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - Update would violate a unique constraint (e.g., duplicate name)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error - Database update failed",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "storefronttable.StorefrontLinkAddPayload": {
+            "type": "object",
+            "properties": {
+                "apiKey": {
+                    "description": "Example credential field",
+                    "type": "string"
+                },
+                "apiSecret": {
+                    "description": "Example credential field",
+                    "type": "string"
+                },
+                "storeId": {
+                    "description": "Platform-specific ID",
+                    "type": "string"
+                },
+                "storeName": {
+                    "description": "User-defined nickname",
+                    "type": "string"
+                },
+                "storeType": {
+                    "type": "string"
+                },
+                "storeUrl": {
+                    "description": "Storefront URL",
+                    "type": "string"
+                }
+            }
+        },
+        "storefronttable.StorefrontLinkReturn": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "storeId": {
+                    "description": "Match frontend JSON keys",
+                    "type": "string"
+                },
+                "storeName": {
+                    "type": "string"
+                },
+                "storeType": {
+                    "type": "string"
+                },
+                "storeUrl": {
+                    "type": "string"
+                }
+            }
+        },
+        "storefronttable.StorefrontLinkUpdatePayload": {
+            "type": "object",
+            "properties": {
+                "storeId": {
+                    "description": "Platform-specific ID",
+                    "type": "string"
+                },
+                "storeName": {
+                    "description": "User-defined nickname",
+                    "type": "string"
+                },
+                "storeUrl": {
+                    "description": "Storefront URL",
+                    "type": "string"
                 }
             }
         }

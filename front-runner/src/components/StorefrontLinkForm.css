@@ -1,0 +1,215 @@
+/* StorefrontLinkForm.css - Dark Theme Adaptation */
+
+/* Style the modal backdrop - equivalent to add-product-container */
+.modal-backdrop {
+    z-index: 1000; /* Ensure it's on top */
+    position: fixed; /* Use fixed to cover viewport */
+    top: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white; /* Default text color for anything directly in backdrop (unlikely) */
+    background-color: rgba(11, 11, 11, 0.85); /* Dark semi-transparent background like #0b0b0b */
+    height: 100%;
+    width: 100%; /* Use 100% instead of 100vw for fixed positioning */
+    overflow-y: auto; /* Allow backdrop scrolling if modal is very tall */
+}
+
+/* Style the modal content area - equivalent to add-product-card */
+.modal-content.storefront-form {
+    width: 40%; /* Match product card width */
+    min-width: 400px; /* Match product card min-width */
+    max-width: 600px; /* Added max-width for larger screens */
+    padding: 25px; /* Slightly adjust padding */
+    border: 1px solid rgba(255, 255, 255, 0.25); /* Match product card border */
+    border-radius: 10px; /* Match product card border-radius */
+    color: white; /* Match product card text color */
+    background-color: #181818; /* Match product card background */
+    display: flex; /* Use flex for internal layout */
+    flex-direction: column; /* Stack elements vertically */
+    position: relative; /* For positioning the close button */
+    max-height: 90vh; /* Limit height */
+    /* Removed overflow-y: auto; from here, handled by backdrop if needed */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* Optional shadow for depth */
+}
+
+/* --- Header --- */
+.modal-content.storefront-form h2 {
+    font-size: 1.5rem; /* Match product form header */
+    margin-top: 0;
+    margin-bottom: 25px; /* Increased spacing */
+    text-align: left; /* Align title left */
+    /* Optional: Add flex if you want something next to the title */
+}
+
+.modal-close-button {
+    position: absolute;
+    top: 15px; /* Adjust position */
+    right: 15px; /* Adjust position */
+    background: none;
+    border: none;
+    font-size: 1.5rem; /* Make it easily clickable */
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.7); /* Lighter gray for visibility */
+    padding: 5px;
+    line-height: 1; /* Ensure consistent alignment */
+}
+.modal-close-button:hover {
+    color: white; /* Brighten on hover */
+}
+
+
+/* --- Form Styling --- */
+.storefront-form .form-group {
+    margin-bottom: 15px;
+}
+
+.storefront-form label {
+    display: block;
+    margin-bottom: 8px; /* Slightly more space */
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.8); /* Slightly softer white */
+    font-size: 0.95rem;
+}
+
+/* Style inputs and select like .form-control */
+.storefront-form input[type="text"],
+.storefront-form input[type="password"],
+.storefront-form input[type="url"],
+.storefront-form select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.25); /* Subtle border */
+    border-radius: 5px; /* Slightly rounded */
+    box-sizing: border-box;
+    background-color: #2a2a2a; /* Darker input background */
+    color: white; /* White text in inputs */
+    font-size: 1rem;
+}
+
+.storefront-form input::placeholder { /* Style placeholder text */
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.storefront-form select {
+    /* Specific styling for select dropdown arrow might be needed */
+    appearance: none; /* Basic reset */
+     /* Add custom arrow background image if desired */
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23BBB%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 10px top 50%;
+    background-size: 10px auto;
+    padding-right: 30px; /* Make space for arrow */
+}
+
+/* Focus styles */
+.storefront-form input:focus,
+.storefront-form select:focus {
+    outline: none;
+    border-color: rgba(255, 128, 0, 0.7); /* Highlight with theme color */
+    box-shadow: 0 0 0 2px rgba(255, 128, 0, 0.3); /* Subtle glow */
+}
+
+/* --- Error Message --- */
+.storefront-form .form-error {
+    color: #FF4949; /* Use theme red */
+    background-color: rgba(255, 73, 73, 0.1); /* Subtle red background */
+    border: 1px solid rgba(255, 73, 73, 0.5);
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 0.9em;
+}
+
+/* --- Form Actions / Buttons --- */
+.storefront-form .form-actions {
+    display: flex;
+    justify-content: flex-end; /* Align buttons right */
+    gap: 15px; /* Space between buttons */
+    margin-top: 25px; /* Space above buttons */
+    width: 100%; /* Ensure it takes full width */
+}
+
+.storefront-form button {
+    padding: 10px 25px; /* Adjust padding */
+    border: none;
+    border-radius: 5px; /* Match input radius */
+    cursor: pointer;
+    font-size: 1rem; /* Match input font size */
+    font-weight: bold;
+    transition: background 0.3s ease, opacity 0.3s ease;
+}
+
+/* Submit Button - Style like .btn-info */
+.storefront-form button[type="submit"] {
+    background: linear-gradient(to right, #FF4949, #FF8000); /* Match gradient */
+    color: white;
+}
+.storefront-form button[type="submit"]:hover {
+    opacity: 0.9; /* Slight fade on hover */
+}
+.storefront-form button[type="submit"]:disabled {
+    background: linear-gradient(to right, #a53232, #a05300); /* Darker gradient when disabled */
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Cancel Button - Subtle style */
+.storefront-form button[type="button"] {
+    background-color: #444; /* Dark grey */
+    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle border */
+}
+.storefront-form button[type="button"]:hover {
+    background-color: #555; /* Slightly lighter grey on hover */
+}
+.storefront-form button[type="button"]:disabled {
+    background-color: #333;
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end; /* Align main buttons to the right */
+    gap: 10px;
+    margin-top: 20px;
+    width: 100%;
+}
+
+/* Style for the delete button */
+.delete-button {
+    /* Position delete button on the left */
+    margin-right: auto;
+
+    /* Styling for destructive action */
+    background-color: transparent; /* Or a subtle dark red background */
+    color: #FF4949; /* Theme red color */
+    border: 1px solid #FF4949;
+    padding: 10px 20px; /* Match other buttons */
+    border-radius: 4px; /* Match other buttons */
+    cursor: pointer;
+    font-weight: bold; /* Match other buttons */
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.delete-button:hover {
+    background-color: rgba(255, 73, 73, 0.1); /* Subtle red background on hover */
+    color: #ff6f6f; /* Lighter red on hover */
+}
+
+.delete-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: transparent; /* Keep transparent */
+    color: #a53232; /* Darker red when disabled */
+    border-color: #a53232;
+}
+
+/* Ensure other buttons stay on the right */
+/* .form-actions button[type="button"]:not(.delete-button),
+.form-actions button[type="submit"] {
+     /* No changes needed if using justify-content: flex-end and margin-right: auto on delete */
+/* } */ 

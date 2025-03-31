@@ -338,16 +338,40 @@ func TestUpdateProduct(t *testing.T) {
 		t.Fatalf("failed to create product: %v", err)
 	}
 
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	writer.WriteField("product_description", "New description")
+	writer.WriteField("item_price", "15.50")
+	writer.WriteField("stock_amount", "5")
+
+	err = writer.Close()
+	if err != nil {
+		t.Fatalf("failed to create multipart form: %v", err)
+	}
+
 	// Prepare form data for updating the product.
-	form := url.Values{}
-	form.Set("product_description", "New description")
-	form.Set("item_price", "15.50")
-	form.Set("stock_amount", "5")
+	// form := url.Values{}
+	// form.Set("product_description", "New description")
+	// form.Set("item_price", "15.50")
+	// form.Set("stock_amount", "5")
+	// values := map[string]interface{}{
+	// 	"ProdDescription": "New description",
+	// 	"ProdPrice":       15.50,
+	// 	"ProdCount":       5,
+	// }
+
+	// if err := db.Model(&product).Updates(values).Error; err != nil {
+	// 	t.Fatalf("failed to update product: %v", err)
+	// }
 
 	// Using PUT method as indicated in the UpdateProduct Swagger annotation
-	req := httptest.NewRequest("PUT", "/api/update_product?id="+strconv.Itoa(int(product.ID)), strings.NewReader(form.Encode()))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req := httptest.NewRequest("PUT", "/api/update_product?id="+strconv.Itoa(int(product.ID)), body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.AddCookie(cookie)
+	// req := httptest.NewRequest("PUT", "/api/update_product?id="+strconv.Itoa(int(product.ID)), strings.NewReader(form.Encode()))
+	// req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	// req.AddCookie(cookie)
 
 	rr := httptest.NewRecorder()
 
