@@ -285,20 +285,37 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update all fields if provided
+	// if productName := r.FormValue("productName"); productName != "" {
+	// 	product.ProdName = productName
+	// }
+	// if productDescription := r.FormValue("product_description"); productDescription != "" {
+	// 	product.ProdDescription = productDescription
+	// }
+	// if productPrice, err := strconv.ParseFloat(r.FormValue("item_price"), 64); err == nil && productPrice > 0 {
+	// 	product.ProdPrice = productPrice
+	// }
+	// if productCount, err := strconv.Atoi(r.FormValue("stock_amount")); err == nil && productCount >= 0 {
+	// 	product.ProdCount = uint(productCount)
+	// }
+	// if productTags := r.FormValue("tags"); productTags != "" {
+	// 	product.ProdTags = productTags
+	// }
+
+	values := map[string]interface{}{}
 	if productName := r.FormValue("productName"); productName != "" {
-		product.ProdName = productName
+		values["ProdName"] = productName
 	}
 	if productDescription := r.FormValue("product_description"); productDescription != "" {
-		product.ProdDescription = productDescription
+		values["ProdDescription"] = productDescription
 	}
 	if productPrice, err := strconv.ParseFloat(r.FormValue("item_price"), 64); err == nil && productPrice > 0 {
-		product.ProdPrice = productPrice
+		values["ProdPrice"] = productPrice
 	}
 	if productCount, err := strconv.Atoi(r.FormValue("stock_amount")); err == nil && productCount >= 0 {
-		product.ProdCount = uint(productCount)
+		values["ProdCount"] = uint(productCount)
 	}
 	if productTags := r.FormValue("tags"); productTags != "" {
-		product.ProdTags = productTags
+		values["ProdTags"] = productTags
 	}
 
 	// Handle image update if provided
@@ -331,11 +348,13 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Update product's image ID
-		product.ImgID = image.ID
+		values["ImgID"] = image.ID
+		// product.ImgID = image.ID
 	}
 
 	// Save all updates
-	if err := db.Save(&product).Error; err != nil {
+	// if err := db.Save(&product).Error
+	if err := db.Model(&product).Updates(values).Error; err != nil {
 		http.Error(w, "Error updating product: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
