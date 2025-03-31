@@ -39,8 +39,7 @@ Video: [Sprint 3 VIDEO]()
 
 ## Incomplete Work
 ### Front end
-- Need to fix bug where product tags aren't being received correctly when submitting a new product
-- Need to connect Product page and preview on dashboard with back end to show users' products in real time
+- Need to complete Storefronts Figma pages so development can start
 
 ### Back end
 - Need to implement back end product filter so only products added by a specific user appear when that user is authorized (logged in)
