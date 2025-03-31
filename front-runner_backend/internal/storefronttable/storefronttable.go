@@ -53,6 +53,12 @@ type StorefrontLinkReturn struct {
 	StoreURL  string `json:"storeUrl"`
 }
 
+type StorefrontLinkUpdatePayload struct {
+	StoreName string `json:"storeName"` // User-defined nickname
+	StoreId   string `json:"storeId"`   // Platform-specific ID
+	StoreUrl  string `json:"storeUrl"`  // Storefront URL
+}
+
 // --- Package Variables ---
 var (
 	db        *gorm.DB
@@ -264,6 +270,111 @@ func GetStorefronts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Return the array (it will be `[]` if no links were found, which is correct)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK) // 200 OK
+	json.NewEncoder(w).Encode(returnData)
+}
+
+// Add this function within storefronttable.go
+
+// UpdateStorefront handles updating non-sensitive details of an existing storefront link.
+// @Summary      Update a storefront link
+// @Description  Updates the name, store ID, or store URL of an existing storefront link belonging to the authenticated user. Store type and credentials cannot be updated via this endpoint.
+// @Tags         storefronts
+// @Accept       json
+// @Produce      json
+// @Param        id query integer true "ID of the Storefront Link to update" Format(uint) example(123)
+// @Param        storefrontUpdate body StorefrontLinkUpdatePayload true "Fields to update (storeName, storeId, storeUrl)"
+// @Success      200 {object} StorefrontLinkReturn "Successfully updated storefront link details"
+// @Failure      400 {string} string "Bad Request - Invalid input, missing ID, or JSON parsing error"
+// @Failure      401 {string} string "Unauthorized - User session invalid or expired"
+// @Failure      403 {string} string "Forbidden - User does not own this storefront link"
+// @Failure      404 {string} string "Not Found - Storefront link with the specified ID not found"
+// @Failure      409 {string} string "Conflict - Update would violate a unique constraint (e.g., duplicate name)"
+// @Failure      500 {string} string "Internal Server Error - Database update failed"
+// @Security     ApiKeyAuth
+// @Router       /api/update_storefront [put]
+func UpdateStorefront(w http.ResponseWriter, r *http.Request) {
+	userID, ok := checkAuth(w, r) // Check authentication
+	if !ok {
+		return
+	}
+
+	// --- Get and Validate ID from Query Parameter ---
+	idStr := r.URL.Query().Get("id")
+	if idStr == "" {
+		http.Error(w, "Missing required query parameter: id", http.StatusBadRequest)
+		return
+	}
+	linkID64, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		http.Error(w, "Invalid ID format: must be a positive integer", http.StatusBadRequest)
+		return
+	}
+	linkID := uint(linkID64)
+
+	// --- Decode Request Body ---
+	var payload StorefrontLinkUpdatePayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	// --- Find Existing Record ---
+	var link StorefrontLink
+	result := db.First(&link, linkID)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			http.Error(w, fmt.Sprintf("Storefront link with ID %d not found", linkID), http.StatusNotFound)
+		} else {
+			log.Printf("Error finding storefront link ID %d for update: %v", linkID, result.Error)
+			http.Error(w, "Internal server error while searching for link", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// --- Verify Ownership ---
+	if link.UserID != userID {
+		log.Printf("Security violation: User %d attempted to update storefront link ID %d owned by user %d", userID, linkID, link.UserID)
+		http.Error(w, "Forbidden: You do not have permission to update this storefront link", http.StatusForbidden)
+		return
+	}
+
+	// --- Update Fields (Apply changes from payload) ---
+	// We update the fields based on the payload.
+	// Handle empty StoreName: If user sends empty name, default it like in AddStorefront.
+	link.StoreName = strings.TrimSpace(payload.StoreName)
+	if link.StoreName == "" {
+		link.StoreName = fmt.Sprintf("%s Link", link.StoreType) // Default name based on existing type
+	}
+	link.StoreID = payload.StoreId   // Allow empty StoreId if desired
+	link.StoreURL = payload.StoreUrl // Allow empty StoreUrl if desired
+
+	// Note: StoreType and Credentials are NOT updated here.
+
+	// --- Save Changes to Database ---
+	saveResult := db.Save(&link)
+	if saveResult.Error != nil {
+		// Check for unique constraint violation on update
+		if strings.Contains(saveResult.Error.Error(), "unique constraint") || strings.Contains(saveResult.Error.Error(), "idx_user_store_unique") {
+			http.Error(w, "Update failed: A storefront link with the new name already exists for this type.", http.StatusConflict) // 409 Conflict
+		} else {
+			log.Printf("Error updating storefront link ID %d for user %d: %v", linkID, userID, saveResult.Error)
+			http.Error(w, "Failed to update storefront link due to a database error", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// --- Return Success Response (Updated, Safe Data) ---
+	returnData := StorefrontLinkReturn{
+		ID:        link.ID,        // ID doesn't change
+		StoreType: link.StoreType, // Type doesn't change
+		StoreName: link.StoreName, // Updated name
+		StoreID:   link.StoreID,   // Updated Store ID
+		StoreURL:  link.StoreURL,  // Updated URL
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK) // 200 OK
 	json.NewEncoder(w).Encode(returnData)
