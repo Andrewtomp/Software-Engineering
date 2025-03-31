@@ -151,13 +151,14 @@ const Products = () => {
                     </div> */}
                 </div>
 
-                {isModalOpen && (
+                
+            </div>
+            {isModalOpen && (
                     <ProductForm 
                         onClose={() => setIsModalOpen(false)} 
                         product={selectedProduct}
                     />
                 )}
-            </div>
         </div>
     );
 };
