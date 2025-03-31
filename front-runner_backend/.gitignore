@@ -5,3 +5,4 @@ node_modules
 *.key
 .env
 .storefrontkey
+.DS_Store
