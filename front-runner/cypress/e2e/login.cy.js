@@ -1,6 +1,6 @@
 describe('Login Form', () => {
   beforeEach(() => {
-    cy.visit('http://localhost:3000/login');
+    cy.visit('https://localhost:8080/login');
     
     // Mock the login API endpoint
     cy.intercept('POST', '/api/login', {

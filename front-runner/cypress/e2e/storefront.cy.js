@@ -1,7 +1,16 @@
 describe('StorefrontLinkForm', () => {
     beforeEach(() => {
+      // Visit the orders page before each test
+      cy.visit('https://localhost:8080/login');
+      cy.get('#root_email').type('test@frontrunner.com');
+      cy.get('#root_password').type('frontrunner');
+      cy.get('button[type="submit"]').click();
+      // wait until the url is https://localhost:8080/ to continue
+      cy.url().should('equal', 'https://localhost:8080/');
+      
+      
       // Mock the storefront data for testing (if required) or visit the page where the component is rendered.
-      cy.visit('http://localhost:3000/storefronts'); // Replace with the appropriate route to load the StorefrontLinkForm
+      cy.visit('https://localhost:8080/storefronts'); // Replace with the appropriate route to load the StorefrontLinkForm
     });
   
     it('should render the form and show the correct title', () => {

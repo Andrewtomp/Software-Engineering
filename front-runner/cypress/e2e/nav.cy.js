@@ -1,8 +1,12 @@
 // cypress/integration/navbar.spec.js
 describe('Navbar Navigation', () => {
     beforeEach(() => {
-      // Visit the application and login if necessary
-      cy.visit('http://localhost:3000/');
+      cy.visit('https://localhost:8080/login');
+      cy.get('#root_email').type('test@frontrunner.com');
+      cy.get('#root_password').type('frontrunner');
+      cy.get('button[type="submit"]').click();
+      // wait until the url is https://localhost:8080/ to continue
+      cy.url().should('equal', 'https://localhost:8080/');
       
       // Mock API responses for smoother testing
       cy.intercept('POST', '/api/logout', {
