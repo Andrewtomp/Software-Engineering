@@ -18,32 +18,45 @@ Video: [Sprint 3 VIDEO]()
 - *Incomplete Sprint2 Issue:* Fixed bug where product tags aren't being received correctly when submitting a new product
 - *Incomplete Sprint2 Issue:* Connected Product page and preview on dashboard with back end to show users' products in real time
 - Created Cypress Tests for this sprint's functionality
-   
+
 ### Back end
-- Merged all Sprint 1 content to main branch
-- Updated the routing so that logging in actually redirects to main page
-  - Linked login page to correct route and created function to submit login api request
-- Updated so that registering an account from the registration form actually registers a user AND logs in automatically
-  - Linked registration page to correct route and created function that submits registration api call AND login api call
-- Updated nav bar logout button so user is actually logged out and redirected to the login screen
-  - Created function so that logout button to sends a logout api request and redirects
-- Updated so that clicking on the add item button from the product page actually redirects to the product form
-- Updated the product form to have the required fields
-  - Created function to gather image and send add_product api request
-- Updated swagger docs for API
-- Updated unit tests for routes
-- Added unit tests for `prodtable`
-- Added unit tests for `imageStore`
-- Added migration functions for `user`, `product` and, `image` database tables so they are automatically made/ migrated
+- Merged all Sprint 2 content to main branch
+- Created `storefronttable` package
+  - `AddStorefront()`
+  - `GetStorefronts()`
+  - `UpdateStorefront()`
+  - `DeleteStorefront()`
+- Added unit tests for `storefronttable`
+- Added separate `encryption` module for `storfronttable`
+- Created the `generateCert.sh` script that generates the tls certificate required to access the site and generates the `.storefrontkey` for encrypted API info storage
+- Updated the routing to add api calls to `storefronttable`
+- Added very basic front end for Store Fronts
+- Added pop-up form for adding a Store Front
+- Made it so that clicking on a Store Front allows a user to edit it
+- Made it so that only the logged in user's store fronts appear
+- Updated `routes` to include calls to `storefronttable`
+- Updated `main` to correct initalize the `storefronttable` db
+- Updated `Product` struct so that `UserID` and `ProdName` have to be a unique combination
+- Updated how products are updated in the `prodtable` to account for new restriction
+- Implemented back end product filter so only products added by a specific user appear when that user is authorized (logged in)
+- Connected the ability to edit values for each item to the front end
+- Connected the ability to delete an item to the front end
+- Swagger docs have been updated
 
 ## Incomplete Work
 ### Front end
 - Need to complete Storefronts Figma pages so development can start
 
 ### Back end
-- Need to implement back end product filter so only products added by a specific user appear when that user is authorized (logged in)
-- Need to connect the ability to edit values for each item to the front end
-- Need to connect the ability to delete an item to the front end
+- Need to implement OAuth 2.0 for truely connecting to external stores
+  - The site needs to be hosted somewhere
+  - We need to create developer accounts for all supported storefronts
+  - We need to register our site in our developer accounts
+  - We need to set up the token management for the OAuth (many steps here)
+- Need to implement order tracking
+- Need to implement ag-grid updates for front end
+- Need to refine `routes` unit tests to account for added routes
+
 
 ## Testing
 ### Front end
@@ -104,27 +117,22 @@ go test ./internal/login # replace login with the desired internal package
 
 Alternatively, the tests can be automatically run with an extension in vscode.
 
-![image](backend_tests.png)
+
 
 _Unit Tests List_
 
 | Unit Test | Test Description |
 | --- | --- |
 | `TestGetDB` | Tests the GetDB function for initializing a database connection and verifies that the connection can be pinged successfully. |
-| `TestLoadImage_Unauthorized` | Tests that LoadImage returns an unauthorized error when the user is not logged in. |
-| `TestLoadImage_InvalidFilename` | Tests that LoadImage returns an error when the image record is not found. |
-| `TestLoadImage_PermissionDenied`| Tests that LoadImage returns a forbidden error when the image record exists but belongs to a different user. |
-| `TestLoadImage_FileNotExist` | tests that LoadImage returns a 404 error when the image file does not exist, even if the image record exists and the user is authorized. |
-| `TestLoadImage_Success` | Tests that LoadImage successfully serves the image file when all conditions are met. |
-| `TestUploadImage_Unauthorized` | Tests that UploadImage returns unauthorized when the user is not logged in. |
-| `TestUploadImage_InvalidFileType` | Tests that UploadImage returns an error for non-image file uploads. |
-| `TestUploadImage_Success` | Tests that UploadImage successfully uploads an image file. |
 | `TestLoginUser` | Checks that logging in with valid credentials works. |
 | `TestLoginUSerInvalid` | Checks that an invalid login attempt returns an error. |
 | `TestLogoutUser` | Verifies that logging out clears the session. |
 | `TestAddProduct` | Tests the AddProduct endpoint by simulating a multipart/form-data POST request that includes product details and an image file. It uses a valid session cookie from the fake user. It verifies that the product and associated image are stored in the database. |
 | `TestDeleteProduct` | Tests the DeleteProduct endpoint by inserting a dummy product (with an associated image file) for the fake user, then simulating a deletion request with a valid session cookie. It verifies that the product is removed from the database and the image file is deleted. |
 | `TestUpdateProduct` | Tests the UpdateProduct endpoint by creating a dummy product for the fake user, then simulating an update request with new description, price, and stock count. It verifies that the product is updated in the database. |
+| `TestGetProduct` | Verifies the `/api/get_product` endpoint successfully retrieves the correct product details when queried by its ID after creating a test product. |
+| `TestGetProductImage` | Checks if the `/api/get_product_image` endpoint returns a success status when attempting to retrieve a product's image file using its filename. |
+| `TestGetProducts` | Tests if the `/api/get_products` endpoint correctly retrieves a list containing the user's product(s) after creating a test product. |
 | `TestRegisterRoutes_AllRoutes` | Verifies that the router correctly matches the expected routes and HTTP methods. |
 | `TestRegisterRoutes_WithDummyStaticFile` | Verifies that the static file server returns the dummy index file. |
 | `TestDirectUserEntry` | Tests direct insertion of user records into the database. |
@@ -132,5 +140,433 @@ _Unit Tests List_
 | `TestRegisterUserEmptyFields` | Verifies that the registration endpoint returns an error when required fields are missing. |
 | `TestValidEmail` | Verifies that a properly formatted email address is considered valid. |
 | `TestInvalidEmail`| Verifies that improperly formatted email addresses are considered invalid. |
+| `TestAddStorefront_RealLogin` | Verifies the `/api/add_storefront` endpoint correctly creates links for authenticated users (via real login) and denies unauthorized requests. |
+| `TestGetUpdateDeleteFlow_RealLogin` | Simulates an authenticated user successfully adding, viewing, updating, and deleting a storefront link through the relevant API endpoints. |
+| `TestSpecificErrors_RealLogin` | Checks that the update and delete endpoints correctly return errors like 'Forbidden' (when accessing another user's link) and 'Not Found' (when targeting a non-existent link). |
 
-## API Documentation
+## Front Runner API Documentation
+
+API documentation for the Front Runner application.
+
+## Version: 1.0
+
+**Contact information:**  
+API Support  
+jonathan.bravo@ufl.edu  
+
+**License:** [MIT](http://www.apache.org/licenses/LICENSE-2.0.html)
+
+---
+### /api/add_product
+
+#### POST
+##### Summary
+
+Add a new product
+
+##### Description
+
+Creates a new product with details including name, description, price, count, tags, and an associated image.
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ------ |
+| productName | formData | Product name | Yes | string |
+| description | formData | Product description | Yes | string |
+| price | formData | Product price | Yes | number |
+| count | formData | Product stock count | Yes | integer |
+| tags | formData | Product tags | No | string |
+| image | formData | Product image file | Yes | file |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 201 | Product added successfully | string |
+| 400 | Error parsing form or uploading image | string |
+| 401 | User not authenticated | string |
+| 500 | Internal server error | string |
+
+### /api/delete_product
+
+#### DELETE
+##### Summary
+
+Delete a product
+
+##### Description
+
+Deletes an existing product and its associated image if the product belongs to the authenticated user.
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ------ |
+| id | query | Product ID | Yes | string |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | Product deleted successfully | string |
+| 401 | User not authenticated or unauthorized | string |
+| 404 | Product not found | string |
+
+### /api/get_product
+
+#### GET
+##### Summary
+
+Retrieve a product
+
+##### Description
+
+Retreives an existing product and its associated metadata if the product belongs to the authenticated user.
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ------ |
+| id | query | Product ID | Yes | integer |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | JSON representation of a product's information | string |
+| 401 | User not authenticated or unauthorized | string |
+| 403 | Permission denied | string |
+| 404 | No Product with specified ID | string |
+
+### /api/get_product_image
+
+#### GET
+##### Summary
+
+Retrieve a product image
+
+##### Description
+
+Retreives an existing product image if it exists and belongs to the authenticated user.
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ------ |
+| image | query | Filepath of image | Yes | string |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | Image's data | string |
+| 401 | User not authenticated or unauthorized | string |
+| 403 | Permission denied | string |
+| 404 | Requested image does not exist | string |
+
+### /api/get_products
+
+#### GET
+##### Summary
+
+Retrieves all product information for authenticated user.
+
+##### Description
+
+Retreives existing products and their associated metadata for the authenticated user.
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | JSON representation of a user's product information | string |
+| 401 | User not authenticated or unauthorized | string |
+
+### /api/update_product
+
+#### PUT
+##### Summary
+
+Update a product
+
+##### Description
+
+Updates the details of an existing product (description, price, stock count) that belongs to the authenticated user.
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ------ |
+| id | query | Product ID | Yes | string |
+| product_description | formData | New product description | No | string |
+| item_price | formData | New product price | No | number |
+| stock_amount | formData | New product stock count | No | integer |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | Product updated successfully | string |
+| 401 | User not authenticated or unauthorized | string |
+| 404 | Product not found | string |
+
+---
+### /api/add_storefront
+
+#### POST
+##### Summary
+
+Link a new storefront
+
+##### Description
+
+Links a new external storefront (e.g., Amazon, Pinterest) to the user's account, storing credentials securely. Requires authentication.
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ------ |
+| storefrontLink | body | Storefront Link Details (including credentials like apiKey, apiSecret) | Yes | [storefronttable.StorefrontLinkAddPayload](#storefronttablestorefrontlinkaddpayload) |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 201 | Successfully linked storefront (credentials omitted) | [storefronttable.StorefrontLinkReturn](#storefronttablestorefrontlinkreturn) |
+| 400 | Bad Request - Invalid input, missing fields, or JSON parsing error | string |
+| 401 | Unauthorized - User session invalid or expired | string |
+| 409 | Conflict - A link with this name/type already exists for the user | string |
+| 500 | Internal Server Error - E.g., failed to encrypt, database error | string |
+
+##### Security
+
+| Security Schema | Scopes |
+| --------------- | ------ |
+| ApiKeyAuth |  |
+
+### /api/delete_storefront
+
+#### DELETE
+##### Summary
+
+Unlink a storefront
+
+##### Description
+
+Removes the link to an external storefront specified by its unique ID. User must own the link. Requires authentication.
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ------ |
+| id | query | ID of the Storefront Link to delete | Yes | integer (uint) |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | Storefront unlinked successfully | string |
+| 204 | Storefront unlinked successfully (No Content) | string |
+| 400 | Bad Request - Invalid or missing 'id' query parameter | string |
+| 401 | Unauthorized - User session invalid or expired | string |
+| 403 | Forbidden - User does not own this storefront link | string |
+| 404 | Not Found - Storefront link with the specified ID not found | string |
+| 500 | Internal Server Error - Database deletion failed | string |
+
+##### Security
+
+| Security Schema | Scopes |
+| --------------- | ------ |
+| ApiKeyAuth |  |
+
+### /api/get_storefronts
+
+#### GET
+##### Summary
+
+Get linked storefronts
+
+##### Description
+
+Retrieves a list of all external storefronts linked by the currently authenticated user. Credentials are *never* included. Requires authentication.
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | List of linked storefronts (empty array if none) | [ [storefronttable.StorefrontLinkReturn](#storefronttablestorefrontlinkreturn) ] |
+| 401 | Unauthorized - User session invalid or expired | string |
+| 500 | Internal Server Error - Database query failed | string |
+
+##### Security
+
+| Security Schema | Scopes |
+| --------------- | ------ |
+| ApiKeyAuth |  |
+
+### /api/update_storefront
+
+#### PUT
+##### Summary
+
+Update a storefront link
+
+##### Description
+
+Updates the name, store ID, or store URL of an existing storefront link belonging to the authenticated user. Store type and credentials cannot be updated via this endpoint.
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ------ |
+| id | query | ID of the Storefront Link to update | Yes | integer (uint) |
+| storefrontUpdate | body | Fields to update (storeName, storeId, storeUrl) | Yes | [storefronttable.StorefrontLinkUpdatePayload](#storefronttablestorefrontlinkupdatepayload) |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | Successfully updated storefront link details | [storefronttable.StorefrontLinkReturn](#storefronttablestorefrontlinkreturn) |
+| 400 | Bad Request - Invalid input, missing ID, or JSON parsing error | string |
+| 401 | Unauthorized - User session invalid or expired | string |
+| 403 | Forbidden - User does not own this storefront link | string |
+| 404 | Not Found - Storefront link with the specified ID not found | string |
+| 409 | Conflict - Update would violate a unique constraint (e.g., duplicate name) | string |
+| 500 | Internal Server Error - Database update failed | string |
+
+##### Security
+
+| Security Schema | Scopes |
+| --------------- | ------ |
+| ApiKeyAuth |  |
+
+---
+### /api/get_product_image
+
+#### GET
+##### Summary
+
+Retrieve a product image
+
+##### Description
+
+Retreives an existing product image if it exists and belongs to the authenticated user.
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ------ |
+| image | query | Filepath of image | Yes | string |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | Image's data | string |
+| 401 | User not authenticated or unauthorized | string |
+| 403 | Permission denied | string |
+| 404 | Requested image does not exist | string |
+
+---
+### /api/login
+
+#### POST
+##### Summary
+
+User login
+
+##### Description
+
+Authenticates a user and creates a session.
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ------ |
+| email | formData | User email | Yes | string |
+| password | formData | User password | Yes | string |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | Logged in successfully. | string |
+| 400 | Email and password are required | string |
+| 401 | Invalid credentials | string |
+
+### /api/logout
+
+#### POST
+##### Summary
+
+User logout
+
+##### Description
+
+Logs out the current user by clearing the session.
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | Logged out successfully | string |
+
+### /api/register
+
+#### POST
+##### Summary
+
+Register a new user
+
+##### Description
+
+Registers a new user using email, password, and an optional business name.
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ------ |
+| email | formData | User email | Yes | string |
+| password | formData | User password | Yes | string |
+| business_name | formData | Business name | No | string |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | User registered successfully | string |
+| 400 | Email and password are required or invalid email format | string |
+| 409 | Email already in use or database error | string |
+
+---
+### Models
+
+#### storefronttable.StorefrontLinkAddPayload
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| apiKey | string | Example credential field | No |
+| apiSecret | string | Example credential field | No |
+| storeId | string | Platform-specific ID | No |
+| storeName | string | User-defined nickname | No |
+| storeType | string |  | No |
+| storeUrl | string | Storefront URL | No |
+
+#### storefronttable.StorefrontLinkReturn
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| id | integer |  | No |
+| storeId | string | Match frontend JSON keys | No |
+| storeName | string |  | No |
+| storeType | string |  | No |
+| storeUrl | string |  | No |
+
+#### storefronttable.StorefrontLinkUpdatePayload
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| storeId | string | Platform-specific ID | No |
+| storeName | string | User-defined nickname | No |
+| storeUrl | string | Storefront URL | No |
