@@ -4,3 +4,4 @@ node_modules
 *.crt
 *.key
 .env
+.storefrontkey
