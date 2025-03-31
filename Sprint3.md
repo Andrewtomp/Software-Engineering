@@ -3,7 +3,7 @@ Video: [Sprint 3 VIDEO]()
 
 ## Completed Work
 ### Front end
-- Merged all Sprint 1 content to main branch
+- Merged all Sprint 2 content to main branch
 - Implemented image widget within Product form so that when an image is selected, there is a preview
 - Updated README for dependencies and directions to start front end server
 - Added support for a scrollable products page
@@ -15,6 +15,8 @@ Video: [Sprint 3 VIDEO]()
 - Implemented front end logic for deleting products
 - Added delete option to product form
 - Made home page products more responsive
+- *Incomplete Sprint2 Issue:* Fixed bug where product tags aren't being received correctly when submitting a new product
+- *Incomplete Sprint2 Issue:* Connected Product page and preview on dashboard with back end to show users' products in real time
 - Created Cypress Test for opening the ProductForm modal [CHANGE THIS]
 - Created React unit tests
    
