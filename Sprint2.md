@@ -80,7 +80,7 @@ go test ./internal/login # replace login with the desired internal package
 
 Alternatively, the tests can be automatically run with an extension in vscode.
 
-![image](backend_tests.png)
+
 
 _Unit Tests List_
 
