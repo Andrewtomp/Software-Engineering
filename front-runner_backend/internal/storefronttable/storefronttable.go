@@ -79,6 +79,7 @@ func Setup() {
 		}
 
 		// Get DB connection from coredbutils
+		coredbutils.LoadEnv()
 		db = coredbutils.GetDB()
 		if db == nil {
 			log.Fatal("FATAL: Database connection is nil in storefronttable Setup.")
@@ -102,6 +103,18 @@ func MigrateStorefrontDB() {
 		log.Fatalf("Storefront link migration failed: %v", err)
 	}
 	log.Println("Storefront link database migration complete.")
+}
+
+func ClearStorefrontTable(db *gorm.DB) error {
+	if db == nil {
+		return errors.New("storefront db is nil")
+	}
+	log.Println("DB COMMAND: DELETE FROM storefront_links")
+	if err := db.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&StorefrontLink{}).Error; err != nil {
+		return fmt.Errorf("error clearing storefront_links table: %w", err)
+	}
+	log.Println("Cleared storefront_links table successfully.")
+	return nil
 }
 
 // --- API Handlers ---
