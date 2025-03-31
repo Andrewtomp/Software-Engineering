@@ -15,42 +15,30 @@ describe('Login Form', () => {
     
     // Wait for form to be rendered and check if form elements exist
     cy.get('form').should('exist');
-    /*
-    // Check if email field is present and visible
-    cy.get('input[type="email"]').should('be.visible');
-    
-    // Check if password field is present and visible
-    cy.get('input[type="password"]').should('be.visible');
-    
-    // Check if submit button is visible
-    cy.get('button[type="submit"]').contains('Submit').should('be.visible');
   });
 
   it('should allow user to input credentials', () => {
     // Type email and password
-    cy.get('input[type="email"]').should('be.visible').type('test@example.com');
-    cy.get('input[type="password"]').should('be.visible').type('password123!');
+    cy.get('#root_email').type('test@frontrunner.com');
+      cy.get('#root_password').type('frontrunner');
     
     // Verify input values
-    cy.get('input[type="email"]').should('have.value', 'test@example.com');
-    cy.get('input[type="password"]').should('have.value', 'password123!');
+    cy.get('#root_email').should('have.value', 'test@frontrunner.com');
+    cy.get('#root_password').should('have.value', 'frontrunner');
   });
 
   it('should submit the form successfully', () => {
-    // Fill out the form
-    cy.get('input[type="email"]').should('be.visible').type('user@test.com');
-    cy.get('input[type="password"]').should('be.visible').type('securepass');
-    
+    // Type valid credentials
+    cy.get('#root_email').type('test@frontrunner.com');
+    cy.get('#root_password').type('frontrunner');
+
     // Submit the form
-    cy.get('form').submit();
+    cy.get('button[type="submit"]').click();
     
     // Wait for the API request and verify it was called
     cy.wait('@loginRequest').then((interception) => {
       // Check that the request body contains the credentials
-      expect(interception.request.body).to.include({
-        email: 'user@test.com',
-        password: 'securepass'
-      });
+      expect(interception.request.body).to.include('email=test%40frontrunner.com&password=frontrunner');
       
       // Check status code
       expect(interception.response.statusCode).to.equal(200);
@@ -65,20 +53,16 @@ describe('Login Form', () => {
     }).as('failedLoginRequest');
     
     // Type invalid credentials
-    cy.get('input[type="email"]').should('be.visible').type('wrong@example.com');
-    cy.get('input[type="password"]').should('be.visible').type('wrongpassword');
+    cy.get('#root_email').should('be.visible').type('wrong@example.com');
+    cy.get('#root_password').should('be.visible').type('wrongpassword');
     
     // Submit the form
     cy.get('button[type="submit"]').click();
     
     // Wait for the failed login request
-    cy.wait('@failedLoginRequest');
-    
-    // Check if error message is displayed
-    cy.get('[role="alert"], .error-message, .alert')
-      .should('be.visible')
-      .and('contain.text', 'Invalid credentials');
-
-      */
+    cy.wait('@failedLoginRequest').then((interception) => {
+      // Check status code
+      expect(interception.response.statusCode).to.equal(401);
+    });
   });
 });
