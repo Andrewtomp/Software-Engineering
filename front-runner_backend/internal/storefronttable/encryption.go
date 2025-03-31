@@ -12,6 +12,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -19,11 +20,59 @@ var encryptionKey []byte // Loaded during Setup
 
 const keyFileName = ".storefrontkey"
 
+const projectDirName = "front-runner_backend"
+
+// findProjectRoot searches upwards from the current directory for the project root marker.
+func findProjectRoot() (string, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("failed to get current working directory: %w", err)
+	}
+
+	// Simple check: look for a known file/dir at the root, e.g., go.mod or .git
+	// Or use the regex approach if you prefer (can be brittle if nested)
+	dir := cwd
+	for {
+		// Adjust this check based on your project structure (e.g., "go.mod", ".git")
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir, nil // Found project root
+		}
+		// Go up one level
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			// Reached the filesystem root, project root not found
+			break
+		}
+		dir = parent
+	}
+
+	// Fallback: Use the regex method from TestMain as an alternative/backup
+	re := regexp.MustCompile(`^(.*` + projectDirName + `)`)
+	rootPathMatch := re.FindString(cwd)
+	if rootPathMatch != "" {
+		log.Printf("WARN: findProjectRoot using fallback regex method. Found: %s", rootPathMatch)
+		return rootPathMatch, nil
+	}
+
+	return "", fmt.Errorf("project root containing '%s' or go.mod not found starting from %s", projectDirName, cwd)
+}
+
 // loadEncryptionKey retrieves the key from environment variables.
 // IMPORTANT: Ensure STOREFRONT_ENCRYPTION_KEY is set securely in your environment!
 // It should be a 32-byte base64 encoded string for AES-256.
 func loadEncryptionKey() error {
-	keyFilePath := filepath.Clean(keyFileName)
+	projectRoot, err := findProjectRoot()
+	if err != nil {
+		// Log the error details and return a specific error
+		log.Printf("Error finding project root: %v", err)
+		// Provide guidance relevant to the error
+		log.Println("Cannot locate project root to find encryption key file.")
+		log.Println("Ensure '.storefrontkey' is in the project root directory (e.g., where your go.mod file is).")
+		return fmt.Errorf("could not find project root to locate key file: %w", err)
+	}
+
+	keyFilePath := filepath.Join(projectRoot, keyFileName) // Build path relative to root
+	keyFilePath = filepath.Clean(keyFilePath)
 
 	if _, err := os.Stat(keyFilePath); os.IsNotExist(err) {
 		// File doesn't exist - provide helpful error
