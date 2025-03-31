@@ -53,11 +53,11 @@ const Storefronts = () => {
 
     // Placeholder for future 'edit' functionality
     const handleStorefrontClick = (storefront) => {
-        console.log("Clicked storefront:", storefront);
-        // If you implement editing:
-        // setSelectedStorefront(storefront);
-        // setIsModalOpen(true);
-        // For now, clicking a tile might not do anything, or could link out (TBD)
+        console.log("Editing storefront:", storefront);
+        // Set the selected storefront data to pass to the modal
+        setSelectedStorefront(storefront);
+        // Open the modal
+        setIsModalOpen(true);
     };
 
     // Function to be passed to the modal to refresh data after adding/editing
