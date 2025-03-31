@@ -11,6 +11,7 @@
     "@rjsf/validator-ajv8": "^5.24.8",
     "ag-grid-community": "^33.2.1",
     "ag-grid-react": "^33.2.1",
+    "axios": "^1.8.4",
     "bootstrap": "^5.3.3",
     "cra-template": "1.2.0",
     "font-awesome": "^4.7.0",

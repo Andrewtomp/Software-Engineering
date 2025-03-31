@@ -42,9 +42,9 @@ describe('LoginForm Component', () => {
     fireEvent.submit(submitButton);
 
     // Ensure fetch is called with correct API and method
-    //expect(global.fetch).toHaveBeenCalledWith(
-    //  '/api/login',
-    //  expect.objectContaining({ method: 'post' })
-   // );
+  //   expect(global.fetch).toHaveBeenCalledWith(
+  //    '/api/login',
+  //    expect.objectContaining({ method: 'post' })
+  //  );
   });
 });

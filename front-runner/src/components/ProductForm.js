@@ -259,6 +259,7 @@ const ProductForm = ({ onClose, product }) => {
               icon={faTrash} 
               onClick={() => handleDeleteProduct(product)} 
               className='delete-icon'
+              data-testid="delete-icon"
             />
           )}
         </div>

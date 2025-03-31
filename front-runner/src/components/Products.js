@@ -100,6 +100,7 @@ const Products = () => {
                                     className='product-tile' 
                                     style={{ backgroundImage: `url(/api/get_product_image?image=${product.image})` }}
                                     onClick={() => handleProductClick(product)}
+                                    data-testid="product-tile"
                                 >
                                     <div className='product-info'>
                                         <h2>{product.prodName}</h2>
