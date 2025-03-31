@@ -80,7 +80,7 @@ go test ./internal/login # replace login with the desired internal package
 
 Alternatively, the tests can be automatically run with an extension in vscode.
 
-
+![backend_tests_sprint2](https://github.com/user-attachments/assets/b8eb56f0-d53a-4f58-9531-3c197e94be80)
 
 _Unit Tests List_
 
