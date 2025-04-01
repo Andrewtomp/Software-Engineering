@@ -11,13 +11,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"os"
-	"path/filepath" // <-- Import filepath again
-	"regexp"        // <-- Import regexp again
+	"os"     // <-- Import filepath again
+	"regexp" // <-- Import regexp again
 	"strings"
 	"testing"
 	"time"
 
+	"front-runner/internal/coredbutils"
 	"front-runner/internal/login"
 	"front-runner/internal/usertable"
 
@@ -27,6 +27,23 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
+
+const projectDirName = "front-runner_backend"
+
+func init() {
+	re := regexp.MustCompile(`^(.*` + projectDirName + `)`)
+	cwd, _ := os.Getwd()
+	rootPath := re.Find([]byte(cwd))
+
+	err := godotenv.Load(string(rootPath) + `/.env`)
+	if err != nil {
+		log.Fatalf("Problem loading .env file. cwd:%s; cause: %s", cwd, err)
+	}
+	coredbutils.LoadEnv()
+	usertable.Setup()
+	login.Setup()
+	Setup()
+}
 
 // --- Constants ---
 // Adjust this if your project root identifier is different
@@ -121,40 +138,12 @@ func makeTestUser(t *testing.T, password string) (uint, *http.Cookie, error) {
 func TestMain(m *testing.M) {
 	log.Println("--- TestMain Start (No Mocking) ---")
 
-	// --- Load Environment Variables for Local Test Database --- // <-- ADD THIS SECTION BACK
-	// Find project root dynamically
-	re := regexp.MustCompile(`^(.*` + projectDirName + `)`)
-	cwd, _ := os.Getwd()
-	rootPath := re.FindString(cwd)
-	if rootPath == "" {
-		log.Printf("WARN: Could not find project root based on '%s'. Searching for .env in current dir: %s", projectDirName, cwd)
-		rootPath = cwd
-	}
-	envPath := filepath.Join(rootPath, ".env")
-	log.Printf("TEST: Attempting to load environment variables from: %s", envPath)
-	err := godotenv.Load(envPath)
-	if err != nil {
-		// Fail if .env is crucial and not found
-		log.Fatalf("FATAL: Failed to load .env file from %s: %v. DB variables (like DB_HOST) are required.", envPath, err)
-	} else {
-		log.Printf("TEST: Loaded environment variables from %s", envPath)
-	}
-	// Optional: Call coredbutils.LoadEnv() if it exists and reads from os.Getenv()
-	// coredbutils.LoadEnv()
-
-	// --- Run Package Setups ---
-	// Setups will now use the environment variables loaded from .env
-	log.Println("TEST: Calling package Setups...")
-	usertable.Setup()
-	login.Setup()
-	Setup() // Uses package-level 'db', loads real key file
-
 	// --- Verify DB Connection and Key Loading ---
 	if db == nil {
 		log.Fatal("FATAL: Database connection (db) is nil after Setup(). Check DB config in .env and DB service.")
 	}
 	if len(encryptionKey) == 0 {
-		log.Fatal("FATAL: Encryption key was not loaded after Setup(). Ensure '.storefrontkey' exists and is readable.")
+		log.Fatal("FATAL: Encryption key was not loaded after Setup(). Ensure 'STOREFRONT_KEY' ennviroment vairiable is set.")
 	}
 	sqlDB, err := db.DB()
 	if err != nil {

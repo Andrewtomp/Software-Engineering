@@ -11,103 +11,33 @@ import (
 	"io"
 	"log"
 	"os"
-	"path/filepath"
-	"regexp"
 	"strings"
 )
 
 var encryptionKey []byte // Loaded during Setup
 
-const keyFileName = ".storefrontkey"
-
-const projectDirName = "front-runner_backend"
-
-// findProjectRoot searches upwards from the current directory for the project root marker.
-func findProjectRoot() (string, error) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return "", fmt.Errorf("failed to get current working directory: %w", err)
-	}
-
-	// Simple check: look for a known file/dir at the root, e.g., go.mod or .git
-	// Or use the regex approach if you prefer (can be brittle if nested)
-	dir := cwd
-	for {
-		// Adjust this check based on your project structure (e.g., "go.mod", ".git")
-		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
-			return dir, nil // Found project root
-		}
-		// Go up one level
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			// Reached the filesystem root, project root not found
-			break
-		}
-		dir = parent
-	}
-
-	// Fallback: Use the regex method from TestMain as an alternative/backup
-	re := regexp.MustCompile(`^(.*` + projectDirName + `)`)
-	rootPathMatch := re.FindString(cwd)
-	if rootPathMatch != "" {
-		log.Printf("WARN: findProjectRoot using fallback regex method. Found: %s", rootPathMatch)
-		return rootPathMatch, nil
-	}
-
-	return "", fmt.Errorf("project root containing '%s' or go.mod not found starting from %s", projectDirName, cwd)
-}
-
 // loadEncryptionKey retrieves the key from environment variables.
 // IMPORTANT: Ensure STOREFRONT_ENCRYPTION_KEY is set securely in your environment!
 // It should be a 32-byte base64 encoded string for AES-256.
 func loadEncryptionKey() error {
-	projectRoot, err := findProjectRoot()
-	if err != nil {
-		// Log the error details and return a specific error
-		log.Printf("Error finding project root: %v", err)
-		// Provide guidance relevant to the error
-		log.Println("Cannot locate project root to find encryption key file.")
-		log.Println("Ensure '.storefrontkey' is in the project root directory (e.g., where your go.mod file is).")
-		return fmt.Errorf("could not find project root to locate key file: %w", err)
-	}
-
-	keyFilePath := filepath.Join(projectRoot, keyFileName) // Build path relative to root
-	keyFilePath = filepath.Clean(keyFilePath)
-
-	if _, err := os.Stat(keyFilePath); os.IsNotExist(err) {
-		// File doesn't exist - provide helpful error
-		log.Printf("Encryption key file '%s' not found.", keyFilePath)
-		log.Println("Please generate the key file by running the generateCert.sh script.")
-		log.Println("Ensure '.storefrontkey' is added to your .gitignore file.")
-		return fmt.Errorf("encryption key file not found at %s", keyFilePath)
-	} else if err != nil {
-		// Other error accessing the file (e.g., permissions)
-		return fmt.Errorf("error checking key file %s: %w", keyFilePath, err)
-	}
-
-	keyBase64Bytes, err := os.ReadFile(keyFilePath)
-	if err != nil {
-		return fmt.Errorf("failed to read encryption key file %s: %w", keyFilePath, err)
-	}
-
-	keyBase64 := strings.TrimSpace(string(keyBase64Bytes))
+	keyBase64 := strings.TrimSpace(string(os.Getenv("STOREFRONT_KEY")))
 
 	if keyBase64 == "" {
-		return fmt.Errorf("encryption key file %s is empty", keyFilePath)
+		return fmt.Errorf("must provide storefront encryption key")
 	}
 
 	key, err := base64.StdEncoding.DecodeString(keyBase64)
 	if err != nil {
-		return fmt.Errorf("failed to decode base64 key from file %s: %w", keyFilePath, err)
+		return fmt.Errorf("failed to decode base64 key from file: %w", err)
 	}
 
 	// Ensure key length is suitable for AES (16, 24, or 32 bytes)
 	// We'll enforce AES-256 (32 bytes) for strong security.
 	if len(key) != 32 {
-		return fmt.Errorf("decoded encryption key from %s must be 32 bytes for AES-256, got %d bytes", keyFilePath, len(key))
+		return fmt.Errorf("decoded encryption key must be 32 bytes for AES-256, got %d bytes", len(key))
 	}
 	encryptionKey = key
-	log.Printf("Storefront encryption key loaded successfully from %s.", keyFilePath)
+	log.Printf("Storefront encryption key loaded successfully")
 	return nil
 }
 

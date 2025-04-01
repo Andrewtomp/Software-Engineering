@@ -2,4 +2,7 @@
 
 openssl req -x509 -newkey rsa:4096 -keyout server.key -out server.crt -sha256 -days 3650 -nodes -subj "/C=US/ST=FL/L=Gainesville/O=FrontRunner/OU=/CN=localhost"
 
-openssl rand -base64 32 > .storefrontkey
+# Change the STOREFRONT_KEY setting:
+storefrontKey=$(openssl rand -base64 32)
+sed -i -E "s|(STOREFRONT_KEY[ ]*=).*|\1 \"$storefrontKey\"|" .env
+printf "Setting STOREFRONT_KEY to: $storefrontKey"
