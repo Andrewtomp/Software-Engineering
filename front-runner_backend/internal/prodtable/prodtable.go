@@ -266,7 +266,7 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	productID := r.URL.Query().Get("id")
 	var product Product
 
-	if err := db.First(&product, "id = ?", productID).Error; err != nil {
+	if err := db.Preload("Img").First(&product, "id = ?", productID).Error; err != nil {
 		http.Error(w, "Product not found", http.StatusNotFound)
 		return
 	}
@@ -285,22 +285,6 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update all fields if provided
-	// if productName := r.FormValue("productName"); productName != "" {
-	// 	product.ProdName = productName
-	// }
-	// if productDescription := r.FormValue("product_description"); productDescription != "" {
-	// 	product.ProdDescription = productDescription
-	// }
-	// if productPrice, err := strconv.ParseFloat(r.FormValue("item_price"), 64); err == nil && productPrice > 0 {
-	// 	product.ProdPrice = productPrice
-	// }
-	// if productCount, err := strconv.Atoi(r.FormValue("stock_amount")); err == nil && productCount >= 0 {
-	// 	product.ProdCount = uint(productCount)
-	// }
-	// if productTags := r.FormValue("tags"); productTags != "" {
-	// 	product.ProdTags = productTags
-	// }
-
 	values := map[string]interface{}{}
 	if productName := r.FormValue("productName"); productName != "" {
 		values["ProdName"] = productName
@@ -334,12 +318,9 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		defer dst.Close()
 		io.Copy(dst, file)
 
-		// Create new image record
-		image := Image{
-			URL:    imageFilename,
-			UserID: userID,
-		}
-		db.Create(&image)
+		imageData := map[string]interface{}{}
+
+		imageData["URL"] = imageFilename
 
 		// Delete old image file
 		if product.Img.URL != "" {
@@ -347,13 +328,13 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 			os.Remove(oldImagePath)
 		}
 
-		// Update product's image ID
-		values["ImgID"] = image.ID
-		// product.ImgID = image.ID
+		if err := db.Model(&product.Img).Updates(imageData).Error; err != nil {
+			http.Error(w, "Error updating image: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	// Save all updates
-	// if err := db.Save(&product).Error
 	if err := db.Model(&product).Updates(values).Error; err != nil {
 		http.Error(w, "Error updating product: "+err.Error(), http.StatusInternalServerError)
 		return
