@@ -304,9 +304,7 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 
 	// Handle image update if provided
 	file, handler, err := r.FormFile("image")
-	updateImage := false
 	if err == nil {
-		updateImage = true
 		defer file.Close()
 
 		// Save new image
@@ -320,37 +318,26 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		defer dst.Close()
 		io.Copy(dst, file)
 
-		// Create new image record
-		image := Image{
-			URL:    imageFilename,
-			UserID: userID,
-		}
-		db.Create(&image)
+		imageData := map[string]interface{}{}
+
+		imageData["URL"] = imageFilename
 
 		// Delete old image file
 		if product.Img.URL != "" {
 			oldImagePath := filepath.Join("uploads", product.Img.URL)
-			log.Println("Removing ", oldImagePath)
 			os.Remove(oldImagePath)
 		}
 
-		// Update product's image ID
-		values["Img"] = image
+		if err := db.Model(&product.Img).Updates(imageData).Error; err != nil {
+			http.Error(w, "Error updating image: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
-
-	oldID := product.ImgID
 
 	// Save all updates
 	if err := db.Model(&product).Updates(values).Error; err != nil {
 		http.Error(w, "Error updating product: "+err.Error(), http.StatusInternalServerError)
 		return
-	}
-
-	if updateImage {
-		if err := db.Delete(&Image{}, "id = ?", oldID).Error; err != nil {
-			http.Error(w, "Error replacing image: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
 	}
 
 	w.WriteHeader(http.StatusOK)
