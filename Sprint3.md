@@ -42,10 +42,12 @@ Video: [Sprint 3 VIDEO]()
 - Connected the ability to edit values for each item to the front end
 - Connected the ability to delete an item to the front end
 - Swagger docs have been updated
+- Added makefile for automatic deployment
 
 ## Incomplete Work
 ### Front end
 - Need to complete Storefronts Figma pages so development can start
+- Enable product and storefront editing on home page
 
 ### Back end
 - Need to implement OAuth 2.0 for truely connecting to external stores
@@ -56,6 +58,7 @@ Video: [Sprint 3 VIDEO]()
 - Need to implement order tracking
 - Need to implement ag-grid updates for front end
 - Need to refine `routes` unit tests to account for added routes
+- improve makefile
 
 
 ## Testing
