@@ -1,5 +1,5 @@
 # Sprint 3
-Video: [Sprint 3 VIDEO]()
+Video: [Sprint 3 VIDEO](https://youtu.be/DJhXZlULoso)
 
 ## Completed Work
 ### Front end
