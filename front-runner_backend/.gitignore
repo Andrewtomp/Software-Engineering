@@ -4,5 +4,4 @@ node_modules
 *.crt
 *.key
 .env
-.storefrontkey
 .DS_Store
