@@ -71,8 +71,10 @@ var (
 // and ensures the encryption key is loaded.
 func Setup() {
 	setupOnce.Do(func() {
+
 		// Load encryption key first, fail early if not configured
 		// This refers to loadEncryptionKey in the same (storefronttable) package
+
 		if err := loadEncryptionKey(); err != nil {
 			// Use log.Fatalf to stop execution if security cannot be guaranteed
 			log.Fatalf("FATAL: Failed to setup storefronttable package security: %v", err)
@@ -81,6 +83,7 @@ func Setup() {
 		// Get DB connection from coredbutils
 		coredbutils.LoadEnv()
 		db = coredbutils.GetDB()
+		login.Setup()
 		if db == nil {
 			log.Fatal("FATAL: Database connection is nil in storefronttable Setup.")
 		}
