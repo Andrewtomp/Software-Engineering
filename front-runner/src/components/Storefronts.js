@@ -8,6 +8,16 @@ const Storefronts = () => {
     const [storefronts, setStorefronts] = useState([]);
     const [selectedStorefront, setSelectedStorefront] = useState(null);
 
+    useEffect(() => {
+            // Check URL parameters when component mounts
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('openModal') === 'true') {
+                setIsModalOpen(true);
+                // Remove the parameter from the URL without refreshing the page
+                window.history.replaceState({}, '', '/storefronts');
+            }
+        }, []);
+
     // --- Fetch Storefronts ---
     useEffect(() => {
         const fetchStorefronts = async () => {
@@ -74,8 +84,24 @@ const Storefronts = () => {
 
                 <div className='storefronts-container'>
                     {storefronts.length === 0 ? (
-                         <p style={{ /* Placeholder styles */ }}>
-                            No storefronts linked yet. <a href="#" onClick={(e) => { e.preventDefault(); handleAddNewClick(); }} style={{ /* Link styles */ }}>Link a storefront to get started</a>
+                        <p style={{ 
+                            width: '90%',
+                            position: 'absolute', 
+                            textAlign: 'center',
+                            top: '50%', 
+                            left: '50%', 
+                            transform: 'translate(-50%, -50%)', 
+                            fontStyle: 'italic', 
+                            color: 'gray'
+                        }}>
+                            Nothing to see here yet. <a href="#" onClick={(e) => { e.preventDefault(); handleAddNewClick(); }} style={{
+                                textDecoration: 'underline',
+                                background: 'linear-gradient(to right, #FF4949, #FF8000)',
+                                backgroundClip: 'text',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                borderBottom: '1px solid #FF4949'
+                            }}>Link a storefront to get started</a>
                         </p>
                     ) : (
                         storefronts.map((storefront) => {

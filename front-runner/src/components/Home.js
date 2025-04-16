@@ -218,11 +218,11 @@ const Home = () => {
                                         top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
                                         fontStyle: 'italic', color: 'gray'
                                     }}>
-                                        No storefronts linked yet. <a href='/storefronts' style={{ /* Link styles */
+                                        Nothing to see here yet. <a href='/storefronts?openModal=true' style={{ /* Link styles */
                                             textDecoration: 'underline', background: 'linear-gradient(to right, #FF4949, #FF8000)',
                                             backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                                             borderBottom: '1px solid #FF4949'
-                                        }}>Link one</a>.
+                                        }}>Link a storefront to get started</a>.
                                     </p>
                                 ) : (
                                     // Map over the fetched storefronts

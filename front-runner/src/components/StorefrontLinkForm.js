@@ -1,225 +1,207 @@
 import React, { useState, useEffect } from 'react';
-import './StorefrontLinkForm.css'; // Ensure CSS supports the form styles
+import Form from '@rjsf/core';
+import './StorefrontLinkForm.css';
+import validator from '@rjsf/validator-ajv8';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTimes, faTrash } from '@fortawesome/free-solid-svg-icons';
 
-// Define supported storefront types
 const SUPPORTED_STOREFRONTS = [
     { value: 'amazon', label: 'Amazon Seller Central' },
     { value: 'pinterest', label: 'Pinterest Business' },
     { value: 'etsy', label: 'Etsy' },
-    // Add more as you support them
 ];
 
-const StorefrontLinkForm = ({ storefront, onClose, onSubmitSuccess }) => {
+const getSchema = (isEditing) => ({
+    title: '',
+    type: 'object',
+    required: isEditing ? [] : ['storeType', 'apiKey', 'apiSecret'],
+    properties: {
+        storeType: {
+            type: 'string',
+            title: 'Storefront Type',
+            enum: SUPPORTED_STOREFRONTS.map((s) => s.value),
+            enumNames: SUPPORTED_STOREFRONTS.map((s) => s.label),
+        },
+        storeName: {
+            type: 'string',
+            title: 'Link Name',
+        },
+        ...(isEditing ? {} : {
+            apiKey: {
+                type: 'string',
+                title: 'API Key',
+            },
+            apiSecret: {
+                type: 'string',
+                title: 'API Secret / Token',
+            },
+        }),
+        storeId: {
+            type: 'string',
+            title: 'Store ID / Seller ID',
+        },
+        storeUrl: {
+            type: 'string',
+            format: 'uri',
+            title: 'Store URL',
+        },
+    },
+});
+
+const uiSchema = {
+    storeType: {
+        'ui:disabled': true,
+    },
+    apiKey: {
+        'ui:widget': 'password',
+        'ui:options': { inputType: 'password' },
+    },
+    apiSecret: {
+        'ui:widget': 'password',
+        'ui:options': { inputType: 'password' },
+    },
+    storeId: {
+        'ui:placeholder': 'Platform-specific ID (e.g., Amazon Seller ID)',
+    },
+    storeUrl: {
+        'ui:placeholder': 'e.g., https://www.amazon.com/yourstore',
+    },
+    storeName: {
+        'ui:placeholder': 'e.g., My Primary Amazon Store',
+    },
+};
+
+const StorefrontLinkFormRJSF = ({ storefront, onClose, onSubmitSuccess }) => {
     const isEditing = storefront !== null;
-    const formTitle = isEditing ? 'Edit Storefront Link' : 'Link New Storefront';
-
-    const [storeType, setStoreType] = useState(storefront?.storeType || SUPPORTED_STOREFRONTS[0]?.value || '');
-    const [storeName, setStoreName] = useState(storefront?.storeName || '');
-    const [apiKey, setApiKey] = useState('');
-    const [apiSecret, setApiSecret] = useState('');
-    const [storeId, setStoreId] = useState(storefront?.storeId || '');
-    const [storeUrl, setStoreUrl] = useState(storefront?.storeUrl || '');
-
-    const [isLoading, setIsLoading] = useState(false);
+    const [formData, setFormData] = useState({});
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        if (isEditing) {
-            setApiKey('');
-            setApiSecret('');
-        }
-        setStoreType(storefront?.storeType || SUPPORTED_STOREFRONTS[0]?.value || '');
-        setStoreName(storefront?.storeName || '');
-        setStoreId(storefront?.storeId || '');
-        setStoreUrl(storefront?.storeUrl || '');
-        setError('');
-    }, [storefront, isEditing]);
-
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-        setIsLoading(true);
-        setError('');
-
-        if (!storeType) {
-            setError('Please select a storefront type.');
-            setIsLoading(false);
-            return;
-        }
-        if (!isEditing && (apiKey === '' || apiSecret === '')) {
-            setError('API Key and Secret are required when linking a new storefront.');
-            setIsLoading(false);
-            return;
-        }
-
-        let payload = {};
-        let apiUrl = '';
-        let apiMethod = '';
-
-        if (isEditing) {
-            apiMethod = 'PUT';
-            apiUrl = `/api/update_storefront?id=${storefront.id}`;
-            payload = {
-                storeName: storeName || `${storefront.storeType} Link`,
-                storeId: storeId,
-                storeUrl: storeUrl,
-            };
+        if (storefront) {
+            setFormData({
+                storeType: storefront.storeType,
+                storeName: storefront.storeName,
+                storeId: storefront.storeId,
+                storeUrl: storefront.storeUrl,
+            });
         } else {
-            apiMethod = 'POST';
-            apiUrl = '/api/add_storefront';
-            payload = {
-                storeType,
-                storeName: storeName || `${storeType} Link`,
-                apiKey,
-                apiSecret,
-                storeId,
-                storeUrl,
-            };
+            setFormData({ storeType: SUPPORTED_STOREFRONTS[0]?.value });
         }
+    }, [storefront]);
+
+    const handleSubmit = async ({ formData }) => {
+        setError('');
+        setIsLoading(true);
 
         try {
-            const response = await fetch(apiUrl, {
-                method: apiMethod,
+            let payload = {};
+            let url = '';
+            let method = '';
+
+            if (isEditing) {
+                method = 'PUT';
+                url = `/api/update_storefront?id=${storefront.id}`;
+                payload = {
+                    storeName: formData.storeName || `${storefront.storeType} Link`,
+                    storeId: formData.storeId,
+                    storeUrl: formData.storeUrl,
+                };
+            } else {
+                method = 'POST';
+                url = '/api/add_storefront';
+                payload = {
+                    ...formData,
+                    storeName: formData.storeName || `${formData.storeType} Link`,
+                };
+            }
+
+            const response = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || `Failed to ${isEditing ? 'update' : 'add'} storefront. Status: ${response.status}`);
+                const errText = await response.text();
+                throw new Error(errText || 'Error occurred.');
             }
-            onSubmitSuccess(); // Close modal and trigger refresh via parent
 
+            onSubmitSuccess();
         } catch (err) {
-            console.error("Form submission error:", err);
-            setError(err.message || 'An unexpected error occurred.');
+            console.error(err);
+            setError(err.message || 'Unexpected error.');
         } finally {
             setIsLoading(false);
         }
     };
 
-    // --- ADDED: Delete Handler ---
     const handleDelete = async () => {
-        // Double-check we are in edit mode and have an ID
-        if (!isEditing || !storefront || !storefront.id) {
-            setError("Cannot delete - storefront data missing.");
-            return;
-        }
+        if (!storefront?.id) return;
 
-        // Confirmation dialog
-        const confirmDelete = window.confirm(
-            `Are you sure you want to unlink the storefront "${storefront.storeName || storefront.storeType}"? This action cannot be undone.`
-        );
-
-        if (!confirmDelete) {
-            return; // User cancelled
-        }
+        if (!window.confirm(`Are you sure you want to delete "${storefront.storeName || storefront.storeType}"?`)) return;
 
         setIsLoading(true);
         setError('');
 
         try {
-            const apiUrl = `/api/delete_storefront?id=${storefront.id}`;
-            const response = await fetch(apiUrl, {
+            const res = await fetch(`/api/delete_storefront?id=${storefront.id}`, {
                 method: 'DELETE',
-                headers: {
-                    // Include auth headers if needed
-                    // 'Authorization': `Bearer ${token}`
-                },
             });
 
-            if (!response.ok) {
-                 const errorText = await response.text();
-                 throw new Error(errorText || `Failed to delete storefront. Status: ${response.status}`);
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(errText || 'Failed to delete storefront.');
             }
 
-            // Success! Call the same success handler as add/update
-            // This will close the modal and trigger the refresh in Storefronts.js
             onSubmitSuccess();
-
         } catch (err) {
-             console.error("Delete error:", err);
-             setError(err.message || 'An unexpected error occurred during deletion.');
+            console.error(err);
+            setError(err.message || 'Error deleting storefront.');
         } finally {
             setIsLoading(false);
         }
     };
-    // --- End Delete Handler ---
 
     return (
-        <div className="modal-backdrop">
-            <div className="modal-content storefront-form">
-                <h2>{formTitle}</h2>
-                <button className="modal-close-button" onClick={onClose} aria-label="Close">X</button>
-
-                <form onSubmit={handleSubmit}>
-                    {error && <p className="form-error">{error}</p>}
-
-                    {/* --- Form Groups remain the same --- */}
-                    {/* Store Type Dropdown - Disabled when editing */}
-                    <div className="form-group">
-                        <label htmlFor="storeType">Storefront Type *</label>
-                        <select id="storeType" value={storeType} onChange={(e) => setStoreType(e.target.value)} required disabled={isEditing}>
-                            <option value="" disabled={storeType !== ''}>Select a type...</option>
-                            {SUPPORTED_STOREFRONTS.map(option => (<option key={option.value} value={option.value}>{option.label}</option>))}
-                        </select>
-                        {isEditing && <p className="form-note">Store type cannot be changed after linking.</p>}
-                    </div>
-                     {/* Store Name Input */}
-                     <div className="form-group">
-                        <label htmlFor="storeName">Link Name</label>
-                        <input type="text" id="storeName" value={storeName} onChange={(e) => setStoreName(e.target.value)} placeholder="e.g., My Primary Amazon Store"/>
-                        <p className="form-note">Give your link a nickname (optional).</p>
-                    </div>
-                    {/* Credentials Fields - ONLY visible when ADDING */}
-                    {!isEditing && (
-                         <>
-                            <div className="form-group">
-                                <label htmlFor="apiKey">API Key *</label>
-                                <input type="password" id="apiKey" value={apiKey} onChange={(e) => setApiKey(e.target.value)} required placeholder="Enter API Key from store" autoComplete="new-password"/>
-                            </div>
-                             <div className="form-group">
-                                <label htmlFor="apiSecret">API Secret / Token *</label>
-                                <input type="password" id="apiSecret" value={apiSecret} onChange={(e) => setApiSecret(e.target.value)} required placeholder="Enter API Secret or Token" autoComplete="new-password"/>
-                                <p className="form-note">Credentials are required for linking and are stored securely. They cannot be updated later; re-link if they change.</p>
-                             </div>
-                         </>
+        <div className="add-storefront-container" style={{ backgroundColor: "rgba(0,0,0,0.8)" }}>
+            <div className='add-storefront-card'>
+                <div className='storefront-form-header'>
+                    <h2>{isEditing ? 'Edit Storefront Link' : 'Link A New Storefront'}</h2>
+                    {isEditing && (
+                        <FontAwesomeIcon
+                            icon={faTrash}
+                            onClick={handleDelete}
+                            className='delete-icon'
+                            data-testid="delete-icon"
+                        />
                     )}
-                     {/* Store ID Input */}
-                    <div className="form-group">
-                        <label htmlFor="storeId">Store ID / Seller ID</label>
-                        <input type="text" id="storeId" value={storeId} onChange={(e) => setStoreId(e.target.value)} placeholder="Platform-specific ID (e.g., Amazon Seller ID)"/>
-                    </div>
-                    {/* Store URL Input */}
-                     <div className="form-group">
-                        <label htmlFor="storeUrl">Store URL</label>
-                        <input type="url" id="storeUrl" value={storeUrl} onChange={(e) => setStoreUrl(e.target.value)} placeholder="e.g., https://www.amazon.com/yourstore (optional)"/>
-                     </div>
-                    {/* --- End Form Groups --- */}
+                </div>
+                <FontAwesomeIcon
+                    icon={faTimes}
+                    onClick={onClose}
+                    style={{ position: "absolute", top: "10", right: "10", width: "32px", height: "32px", cursor: "pointer" }}
+                />
+                {error && <p className="form-error">{error}</p>}
 
-                    {/* --- MODIFIED: Form Actions --- */}
-                    <div className="form-actions">
-                         {/* ADDED: Delete button, only shown when editing */}
-                         {isEditing && (
-                            <button
-                                type="button"
-                                className="delete-button" // Add class for styling
-                                onClick={handleDelete}
-                                disabled={isLoading} // Disable while any action is loading
-                            >
-                                {isLoading ? 'Deleting...' : 'Delete Link'}
-                            </button>
-                        )}
-                        {/* Existing Cancel and Submit/Update buttons */}
-                        <button type="button" onClick={onClose} disabled={isLoading}>Cancel</button>
-                        <button type="submit" disabled={isLoading}>
-                            {isLoading ? 'Saving...' : (isEditing ? 'Update Link' : 'Link Storefront')}
-                        </button>
-                    </div>
-                    {/* --- End Form Actions --- */}
-                </form>
+                <Form
+                    schema={getSchema(isEditing)}
+                    uiSchema={{
+                        ...uiSchema,
+                        storeType: {
+                            ...uiSchema.storeType,
+                            'ui:disabled': isEditing,
+                        },
+                    }}
+                    formData={formData}
+                    validator={validator}
+                    onChange={(e) => setFormData(e.formData)}
+                    onSubmit={handleSubmit}
+                />
+
             </div>
         </div>
     );
 };
 
-export default StorefrontLinkForm;
+export default StorefrontLinkFormRJSF;
