@@ -18,6 +18,7 @@ import (
 	_ "front-runner/docs" // This is important for swagger to find your docs!
 	"front-runner/internal/coredbutils"
 	"front-runner/internal/login"
+	"front-runner/internal/orderstable"
 	"front-runner/internal/prodtable"
 	"front-runner/internal/routes"
 	"front-runner/internal/storefronttable"
@@ -53,6 +54,9 @@ func setupModules() {
 	// Storefront Table
 	storefronttable.Setup()
 	storefronttable.MigrateStorefrontDB()
+
+	orderstable.Setup()
+	orderstable.MigrateProdDB()
 }
 
 func main() {
