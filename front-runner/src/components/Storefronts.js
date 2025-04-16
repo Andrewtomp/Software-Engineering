@@ -2,11 +2,29 @@ import React, { useState, useEffect } from 'react';
 import './Storefronts.css'; // We'll need to create this CSS file
 import NavBar from './NavBar';
 import StorefrontLinkForm from './StorefrontLinkForm';
+import { faAmazon, faEtsy, faPinterest } from '@fortawesome/free-brands-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+const storeIcons = {
+    amazon: faAmazon,
+    etsy: faEtsy,
+    pinterest: faPinterest,
+};
 
 const Storefronts = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [storefronts, setStorefronts] = useState([]);
     const [selectedStorefront, setSelectedStorefront] = useState(null);
+
+    useEffect(() => {
+            // Check URL parameters when component mounts
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('openModal') === 'true') {
+                setIsModalOpen(true);
+                // Remove the parameter from the URL without refreshing the page
+                window.history.replaceState({}, '', '/storefronts');
+            }
+        }, []);
 
     // --- Fetch Storefronts ---
     useEffect(() => {
@@ -74,48 +92,55 @@ const Storefronts = () => {
 
                 <div className='storefronts-container'>
                     {storefronts.length === 0 ? (
-                         <p style={{ /* Placeholder styles */ }}>
-                            No storefronts linked yet. <a href="#" onClick={(e) => { e.preventDefault(); handleAddNewClick(); }} style={{ /* Link styles */ }}>Link a storefront to get started</a>
+                        <p style={{ 
+                            width: '90%',
+                            position: 'absolute', 
+                            textAlign: 'center',
+                            top: '50%', 
+                            left: '50%', 
+                            transform: 'translate(-50%, -50%)', 
+                            fontStyle: 'italic', 
+                            color: 'gray'
+                        }}>
+                            Nothing to see here yet. <a href="#" onClick={(e) => { e.preventDefault(); handleAddNewClick(); }} style={{
+                                textDecoration: 'underline',
+                                background: 'linear-gradient(to right, #FF4949, #FF8000)',
+                                backgroundClip: 'text',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                borderBottom: '1px solid #FF4949'
+                            }}>Link a storefront to get started</a>
                         </p>
                     ) : (
                         storefronts.map((storefront) => {
-                            // Get domain for favicon service
-                            // Use storeUrl field which should contain the full URL
-                            const domain = getDomain(storefront.storeUrl);
-                            // Construct favicon URL using Google's service (adjust size with sz=)
-                            // Using domain_url is often more reliable than just domain=
-                            const faviconUrl = domain
-                                ? `https://www.google.com/s2/favicons?sz=32&domain_url=${encodeURIComponent(storefront.storeUrl)}`
-                                : null; // Fallback if URL is invalid or missing
+                            // // Get domain for favicon service
+                            // // Use storeUrl field which should contain the full URL
+                            // const domain = getDomain(storefront.storeUrl);
+                            // // Construct favicon URL using Google's service (adjust size with sz=)
+                            // // Using domain_url is often more reliable than just domain=
+                            // const faviconUrl = domain
+                            //     ? `https://www.google.com/s2/favicons?sz=32&domain_url=${encodeURIComponent(storefront.storeUrl)}`
+                            //     : null; // Fallback if URL is invalid or missing
 
                             return (
-                                <div
-                                    key={storefront.id}
-                                    className='storefront-tile' // Apply styles for layout
+                                <div 
+                                    key={storefront.id} 
+                                    className='storefront-tile' 
+                                    // style={{ backgroundImage: `url(${faviconUrl})` }}
                                     onClick={() => handleStorefrontClick(storefront)}
-                                    style={{ cursor: 'pointer' }}
                                 >
-                                    {/* --- ADDED: Favicon Image --- */}
-                                    {faviconUrl && (
-                                        <img
-                                            src={faviconUrl}
-                                            alt={`${storefront.storeName || storefront.storeType} favicon`}
-                                            className="storefront-favicon" // Class for styling
-                                            // Add error handling for broken images
-                                            onError={(e) => {
-                                                e.target.style.display = 'none'; // Hide if favicon fails to load
-                                                // Optionally show a default icon/placeholder
-                                            }}
-                                        />
-                                    )}
-                                    {/* --- End Favicon Image --- */}
-
-                                    <div className='storefront-info'>
-                                        <h2>{storefront.storeName || storefront.storeType}</h2>
-                                        <p>{storefront.storeType}</p>
-                                        {/* Optionally display URL if desired */}
-                                        {/* {storefront.storeUrl && <a href={storefront.storeUrl.startsWith('http') ? storefront.storeUrl : `http://${storefront.storeUrl}`} target="_blank" rel="noopener noreferrer" className="storefront-link" onClick={(e) => e.stopPropagation()}>Visit Store</a>} */}
-                                    </div>
+                                    <FontAwesomeIcon 
+                                        icon={storeIcons[storefront.storeType]} 
+                                        fontSize={'64px'}
+                                        className="storefront-image"
+                                        color="white"
+                                    />
+                                    <h2>{storefront.storeName || storefront.storeType}</h2>
+                                    {/* <img 
+                                        src={faviconUrl} 
+                                        alt='storefront-image' 
+                                        className='storefront-image-preview'
+                                    /> */}
                                 </div>
                             );
                         })

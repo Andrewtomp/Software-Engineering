@@ -28,7 +28,7 @@ Follow these steps to set up the project:
     npm install @rjsf/core @rjsf/utils @rjsf/validator-ajv8 --save
 
 6. Install Font Awesome Icons:
-    npm install --save @fortawesome/react-fontawesome @fortawesome/fontawesome-svg-core @fortawesome/free-solid-svg-icons
+    npm install --save @fortawesome/react-fontawesome @fortawesome/fontawesome-svg-core @fortawesome/free-solid-svg-icons @fortawesome/free-brands-svg-icons
 
 7. Insall React Jest for tests:
     npm install --save-dev jest @testing-library/react @testing-library/jest-dom @testing-library/user-event
