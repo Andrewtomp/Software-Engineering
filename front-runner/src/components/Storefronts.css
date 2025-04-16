@@ -69,19 +69,19 @@
 }
 
 
-.product-tile:hover {
+.storefront-tile:hover {
     cursor: pointer;
 }
 
-.product-tile h2 {
+.storefront-tile h2 {
     margin: 0px;
     color: white;
-    font-size: 1.25rem;
+    font-size: 2rem;
     z-index: 1;
     position: relative;
 }
 
-.product-tile p {
+.storefront-tile p {
     z-index: 1;
     position: relative;
     margin-top: 10px;
@@ -95,43 +95,31 @@
     width: 2rem;
 }
 
-.product-tile {
-    width: calc(50% - 10px);
-    height: 225px;
+.storefront-tile {
+    width: calc(33% - 10px);
+    height: 100px;
     padding: 10px;
     padding-left: 15px;
-    border-radius: 25px;
     background-size: cover;
     background-position: center;
     position: relative;
     overflow: hidden; /* Hide anything spilling out */
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: left;
+    gap: 20px;
     align-items: center;
-}
-
-.product-tile::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
     border-radius: 25px;
     background: rgba(24, 24, 24, 0.5); /* Semi-transparent dark overlay */
-    backdrop-filter: blur(7px); /* Apply blur effect */
-    z-index: 0; /* Ensure the overlay is beneath the text */
     border: 1px rgba(255, 255, 255, .25) solid;
-    
 }
 
-.product-info {
+.storefront-info {
     width: 65%;
     height: 100%;
 }
 
-.product-image-preview {
+.storefront-image-preview {
     z-index: 1;
     margin-left: auto;
     max-height: 200px;

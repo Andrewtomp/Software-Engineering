@@ -16,12 +16,14 @@ const getSchema = (isEditing) => ({
     type: 'object',
     required: isEditing ? [] : ['storeType', 'apiKey', 'apiSecret'],
     properties: {
-        storeType: {
-            type: 'string',
-            title: 'Storefront Type',
-            enum: SUPPORTED_STOREFRONTS.map((s) => s.value),
-            enumNames: SUPPORTED_STOREFRONTS.map((s) => s.label),
-        },
+        ...(isEditing ? {} : {
+            storeType: {
+                type: 'string',
+                title: 'Storefront Type',
+                enum: SUPPORTED_STOREFRONTS.map((s) => s.value),
+                enumNames: SUPPORTED_STOREFRONTS.map((s) => s.label),
+            },
+        }),
         storeName: {
             type: 'string',
             title: 'Link Name',
@@ -167,7 +169,13 @@ const StorefrontLinkFormRJSF = ({ storefront, onClose, onSubmitSuccess }) => {
         <div className="add-storefront-container" style={{ backgroundColor: "rgba(0,0,0,0.8)" }}>
             <div className='add-storefront-card'>
                 <div className='storefront-form-header'>
-                    <h2>{isEditing ? 'Edit Storefront Link' : 'Link A New Storefront'}</h2>
+                    <h2>
+                        {isEditing ?
+                            `Edit ${SUPPORTED_STOREFRONTS.find(s => s.value === formData.storeType)?.label || formData.storeType} Link`
+                            :
+                            'Link A New Storefront'
+                        }
+                    </h2>
                     {isEditing && (
                         <FontAwesomeIcon
                             icon={faTrash}
@@ -191,6 +199,7 @@ const StorefrontLinkFormRJSF = ({ storefront, onClose, onSubmitSuccess }) => {
                         storeType: {
                             ...uiSchema.storeType,
                             'ui:disabled': isEditing,
+                            'classNames': isEditing ? 'storetype-disabled' : '',
                         },
                     }}
                     formData={formData}
