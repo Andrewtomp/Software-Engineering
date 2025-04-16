@@ -111,9 +111,7 @@ html, body {
 
 
 
-.home-storefront h3{
-    margin: 15px;
-    margin-top: 10px;
+.home-storefront h2{
     margin-right: 2px;
     font-size: 1.5rem;
     color: white;
@@ -200,8 +198,16 @@ html, body {
     width: calc(33% - 7.5px);
     height: 100%;
     border-radius: 25px;
-    border: 2px white solid;
-    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    align-items: center;
+    border-radius: 25px;
+    background: rgba(24, 24, 24, 0.5); /* Semi-transparent dark overlay */
+    border: 1px rgba(255, 255, 255, .25) solid;
+    cursor: pointer;
+    text-align: center;
 }
 
 

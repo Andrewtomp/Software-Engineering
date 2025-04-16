@@ -1,8 +1,16 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community'; 
+import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import NavBar from './NavBar';
 import './Home.css';
+import { faAmazon, faEtsy, faPinterest } from '@fortawesome/free-brands-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+const storeIcons = {
+    amazon: faAmazon,
+    etsy: faEtsy,
+    pinterest: faPinterest,
+};
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -52,7 +60,7 @@ const Home = () => {
             try {
                 const response = await fetch('/api/get_storefronts'); // API endpoint
                 if (!response.ok) {
-                     if (response.status === 401) {
+                    if (response.status === 401) {
                         console.log("User not authenticated to fetch storefronts.");
                         setStorefronts([]);
                         return;
@@ -72,52 +80,30 @@ const Home = () => {
 
     return (
         <div className='home'>
-            <NavBar />  
+            <NavBar />
             <div className='home-content'>
                 <h1>Home</h1>
                 <div className='home-tiles'>
                     <div className='products-tile'>
                         <div className='tile-header'>
                             <h2>My Products</h2>
-                            <div className='view-all-products' onClick={() => window.location.href='/products'}>
+                            <div className='view-all-products' onClick={() => window.location.href = '/products'}>
                                 <p>View all</p>
                                 <svg width="26" height="24" viewBox="0 0 26 24" fill="none" xmlns="http://www.w3.org/2000/svg" className='arrow-right'>
-                                    <path d="M25.0607 13.0607C25.6464 12.4749 25.6464 11.5251 25.0607 10.9393L15.5147 1.3934C14.9289 0.807612 13.9792 0.807612 13.3934 1.3934C12.8076 1.97918 12.8076 2.92893 13.3934 3.51472L21.8787 12L13.3934 20.4853C12.8076 21.0711 12.8076 22.0208 13.3934 22.6066C13.9792 23.1924 14.9289 23.1924 15.5147 22.6066L25.0607 13.0607ZM0 13.5H24V10.5H0L0 13.5Z" fill="white"/>
+                                    <path d="M25.0607 13.0607C25.6464 12.4749 25.6464 11.5251 25.0607 10.9393L15.5147 1.3934C14.9289 0.807612 13.9792 0.807612 13.3934 1.3934C12.8076 1.97918 12.8076 2.92893 13.3934 3.51472L21.8787 12L13.3934 20.4853C12.8076 21.0711 12.8076 22.0208 13.3934 22.6066C13.9792 23.1924 14.9289 23.1924 15.5147 22.6066L25.0607 13.0607ZM0 13.5H24V10.5H0L0 13.5Z" fill="white" />
                                 </svg>
                             </div>
                         </div>
                         <div className='home-products'>
-                            
-                            {/* <div className='home-product' style={{ backgroundImage: `url("../images/image-1.png")` }}>
-                                <div className='product-info'>
-                                    <h2>Product 1</h2>
-                                    <p>Product 1 is a great product that people should buy</p>
-                                </div>
-                                <img src='../images/image-1.png' alt='product-image' className='product-image-preview'/>
-                            </div>
-                            <div className='home-product' style={{ backgroundImage: `url("../images/image-2.png")` }}>
-                                <div className='product-info'>
-                                    <h2>Product 2</h2>
-                                    <p>Product 2 is a great product that people should buy</p>
-                                </div>
-                                <img src='../images/image-2.png' alt='product-image' className='product-image-preview'/>
-                            </div>
-                            <div className='home-product' style={{ backgroundImage: `url("../images/image-3.png")` }}>
-                                <div className='product-info'>
-                                    <h2>Product 3</h2>
-                                    <p>Product 3 is a great product that people should buy</p>
-                                </div>
-                                <img src='../images/image-3.png' alt='product-image' className='product-image-preview'/>
-                            </div> */}
                             {products.length === 0 ? (
-                                <p style={{ 
+                                <p style={{
                                     width: '90%',
-                                    position: 'absolute', 
+                                    position: 'absolute',
                                     textAlign: 'center',
-                                    top: '50%', 
-                                    left: '50%', 
-                                    transform: 'translate(-50%, -50%)', 
-                                    fontStyle: 'italic', 
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    fontStyle: 'italic',
                                     color: 'gray'
                                 }}>
                                     Nothing to see here yet. <a href='/products?openModal=true' style={{
@@ -131,18 +117,18 @@ const Home = () => {
                                 </p>
                             ) : (
                                 products.map((product) => (
-                                    <div 
-                                        key={product.prodID} 
-                                        className='product-tile' 
+                                    <div
+                                        key={product.prodID}
+                                        className='product-tile'
                                         style={{ width: "100%", backgroundImage: `url(/api/get_product_image?image=${product.image})` }}
                                     >
                                         <div className='product-info'>
                                             <h2>{product.prodName}</h2>
                                             <p>{product.prodDesc}</p>
                                         </div>
-                                        <img 
-                                            src={`/api/get_product_image?image=${product.image}`} 
-                                            alt='product-image' 
+                                        <img
+                                            src={`/api/get_product_image?image=${product.image}`}
+                                            alt='product-image'
                                             className='product-image-preview'
                                         />
                                     </div>
@@ -154,10 +140,10 @@ const Home = () => {
                         <div className='small-home-tile orders-small-home-tile'>
                             <div className='tile-header'>
                                 <h2>My Orders</h2>
-                                <div className='view-all-products' onClick={() => window.location.href='/orders'}>
+                                <div className='view-all-products' onClick={() => window.location.href = '/orders'}>
                                     <p>View all</p>
                                     <svg width="26" height="24" viewBox="0 0 26 24" fill="none" xmlns="http://www.w3.org/2000/svg" className='arrow-right'>
-                                        <path d="M25.0607 13.0607C25.6464 12.4749 25.6464 11.5251 25.0607 10.9393L15.5147 1.3934C14.9289 0.807612 13.9792 0.807612 13.3934 1.3934C12.8076 1.97918 12.8076 2.92893 13.3934 3.51472L21.8787 12L13.3934 20.4853C12.8076 21.0711 12.8076 22.0208 13.3934 22.6066C13.9792 23.1924 14.9289 23.1924 15.5147 22.6066L25.0607 13.0607ZM0 13.5H24V10.5H0L0 13.5Z" fill="white"/>
+                                        <path d="M25.0607 13.0607C25.6464 12.4749 25.6464 11.5251 25.0607 10.9393L15.5147 1.3934C14.9289 0.807612 13.9792 0.807612 13.3934 1.3934C12.8076 1.97918 12.8076 2.92893 13.3934 3.51472L21.8787 12L13.3934 20.4853C12.8076 21.0711 12.8076 22.0208 13.3934 22.6066C13.9792 23.1924 14.9289 23.1924 15.5147 22.6066L25.0607 13.0607ZM0 13.5H24V10.5H0L0 13.5Z" fill="white" />
                                     </svg>
                                 </div>
                             </div>
@@ -170,40 +156,18 @@ const Home = () => {
                                         resizable: true,
                                         cellStyle: { alignItems: "center", textAlign: "center" },
                                     }}
-                                    
+
                                 />
                             </div>
 
                         </div>
-                        {/* <div className='small-home-tile storefronts-small-home-tile'>
-                            <div className='tile-header'>
-                                <h2>My Storefronts</h2>
-                                <div className='view-all-products' onClick={() => window.location.href='/storefronts'}>
-                                    <p>View all</p>
-                                    <svg width="26" height="24" viewBox="0 0 26 24" fill="none" xmlns="http://www.w3.org/2000/svg" className='arrow-right'>
-                                        <path d="M25.0607 13.0607C25.6464 12.4749 25.6464 11.5251 25.0607 10.9393L15.5147 1.3934C14.9289 0.807612 13.9792 0.807612 13.3934 1.3934C12.8076 1.97918 12.8076 2.92893 13.3934 3.51472L21.8787 12L13.3934 20.4853C12.8076 21.0711 12.8076 22.0208 13.3934 22.6066C13.9792 23.1924 14.9289 23.1924 15.5147 22.6066L25.0607 13.0607ZM0 13.5H24V10.5H0L0 13.5Z" fill="white"/>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div className='storefront-tiles'>
-                                <div className='home-storefront'>
-                                    <h3>Storefront 1</h3>
-                                </div>
-                                <div className='home-storefront'>
-                                    <h3>Storefront 2</h3>
-                                </div>
-                                <div className='home-storefront'>
-                                    <h3>Storefront 2</h3>
-                                </div>
-                            </div>
-                        </div> */}
                         {/* --- Storefronts Tile (MODIFIED) --- */}
                         <div className='small-home-tile storefronts-small-home-tile'>
                             <div className='tile-header'>
                                 <h2>My Storefronts</h2>
                                 <div className='view-all-products' onClick={() => window.location.href = '/storefronts'}>
                                     <p>View all</p>
-                                     {/* Arrow SVG */}
+                                    {/* Arrow SVG */}
                                     <svg width="26" height="24" viewBox="0 0 26 24" fill="none" xmlns="http://www.w3.org/2000/svg" className='arrow-right'>
                                         <path d="M25.0607 13.0607C25.6464 12.4749 25.6464 11.5251 25.0607 10.9393L15.5147 1.3934C14.9289 0.807612 13.9792 0.807612 13.3934 1.3934C12.8076 1.97918 12.8076 2.92893 13.3934 3.51472L21.8787 12L13.3934 20.4853C12.8076 21.0711 12.8076 22.0208 13.3934 22.6066C13.9792 23.1924 14.9289 23.1924 15.5147 22.6066L25.0607 13.0607ZM0 13.5H24V10.5H0L0 13.5Z" fill="white" />
                                     </svg>
@@ -213,7 +177,7 @@ const Home = () => {
                             <div className='storefront-tiles'>
                                 {storefronts.length === 0 ? (
                                     // Placeholder when no storefronts are linked
-                                     <p style={{ /* Placeholder styles */
+                                    <p style={{ /* Placeholder styles */
                                         width: '90%', position: 'absolute', textAlign: 'center',
                                         top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
                                         fontStyle: 'italic', color: 'gray'
@@ -228,9 +192,13 @@ const Home = () => {
                                     // Map over the fetched storefronts
                                     storefronts.map((storefront) => (
                                         <div className='home-storefront' key={storefront.id}>
-                                            {/* Display the storefront name or type */}
-                                            {/* Make sure 'storeName' and 'storeType' match your API response fields */}
-                                            <h3>{storefront.storeName || storefront.storeType}</h3>
+                                            <FontAwesomeIcon
+                                                icon={storeIcons[storefront.storeType]}
+                                                fontSize={'64px'}
+                                                className="storefront-image"
+                                                color="white"
+                                            />
+                                            <h2>{storefront.storeName || storefront.storeType}</h2>
                                         </div>
                                     ))
                                 )}
