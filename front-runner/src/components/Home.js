@@ -86,7 +86,7 @@ const Home = () => {
                 <div className='home-tiles'>
                     <div className='products-tile'>
                         <div className='tile-header'>
-                        <a href="/products" className="tile-header-link"><h2>My Products</h2></a>
+                        <h2>My Products</h2>
                             <div className='view-all-products' onClick={() => window.location.href = '/products'}>
                                 <p>View all</p>
                                 <svg width="26" height="24" viewBox="0 0 26 24" fill="none" xmlns="http://www.w3.org/2000/svg" className='arrow-right'>
@@ -121,6 +121,7 @@ const Home = () => {
                                         key={product.prodID}
                                         className='product-tile'
                                         style={{ width: "100%", backgroundImage: `url(/api/get_product_image?image=${product.image})` }}
+                                        onClick={() => window.location.href = `/products?id=${product.prodID}`}
                                     >
                                         <div className='product-info'>
                                             <h2>{product.prodName}</h2>
@@ -139,7 +140,7 @@ const Home = () => {
                     <div className='small-home-tiles'>
                         <div className='small-home-tile orders-small-home-tile'>
                             <div className='tile-header'>
-                                <a href="/orders" className="tile-header-link"><h2>My Orders</h2></a>
+                                <h2>My Orders</h2>
                                 <div className='view-all-products' onClick={() => window.location.href = '/orders'}>
                                     <p>View all</p>
                                     <svg width="26" height="24" viewBox="0 0 26 24" fill="none" xmlns="http://www.w3.org/2000/svg" className='arrow-right'>
@@ -164,7 +165,7 @@ const Home = () => {
                         {/* --- Storefronts Tile (MODIFIED) --- */}
                         <div className='small-home-tile storefronts-small-home-tile'>
                             <div className='tile-header'>
-                            <a href="/storefronts" className="tile-header-link"><h2>My Storefronts</h2></a>
+                            <h2>My Storefronts</h2>
                                 <div className='view-all-products' onClick={() => window.location.href = '/storefronts'}>
                                     <p>View all</p>
                                     {/* Arrow SVG */}
@@ -191,7 +192,9 @@ const Home = () => {
                                 ) : (
                                     // Map over the fetched storefronts
                                     storefronts.map((storefront) => (
-                                        <div className='home-storefront' key={storefront.id}>
+                                        <div className='home-storefront' key={storefront.id}
+                                        onClick={() => window.location.href = `/storefronts?id=${storefront.id}`}
+                                        >
                                             <FontAwesomeIcon
                                                 icon={storeIcons[storefront.storeType]}
                                                 fontSize={'64px'}
