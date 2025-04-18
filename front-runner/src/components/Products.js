@@ -32,6 +32,34 @@ const Products = () => {
         }
     }, []);
 
+    useEffect(() => {
+        const fetchProductAndOpenModal = async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            console.log("ID from URL:", id);
+    
+            if (id) {
+                try {
+                    const response = await fetch(`/api/get_product?id=${id}`);
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch product');
+                    }
+    
+                    const product = await response.json();
+                    setSelectedProduct(product);
+                    setIsModalOpen(true);
+    
+                    // Remove the parameter from the URL without refreshing the page
+                    window.history.replaceState({}, '', '/products');
+                } catch (error) {
+                    console.error('Error fetching product:', error);
+                }
+            }
+        };
+    
+        fetchProductAndOpenModal();
+    }, []);    
+
     const handleAddNewClick = () => {
         setSelectedProduct(null);
         setIsModalOpen(true);

@@ -26,6 +26,34 @@ const Storefronts = () => {
             }
         }, []);
 
+    useEffect(() => {
+            const fetchStorefrontAndOpenModal = async () => {
+                const urlParams = new URLSearchParams(window.location.search);
+                const id = urlParams.get('id');
+                console.log("ID from URL:", id);
+        
+                if (id) {
+                    try {
+                        const response = await fetch(`/api/get_storefront?id=${id}`);
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch storefront');
+                        }
+        
+                        const storefront = await response.json();
+                        setSelectedStorefront(storefront);
+                        setIsModalOpen(true);
+        
+                        // Remove the parameter from the URL without refreshing the page
+                        window.history.replaceState({}, '', '/storefronts');
+                    } catch (error) {
+                        console.error('Error fetching storefront:', error);
+                    }
+                }
+            };
+        
+            fetchStorefrontAndOpenModal();
+        }, []);
+
     // --- Fetch Storefronts ---
     useEffect(() => {
         const fetchStorefronts = async () => {
