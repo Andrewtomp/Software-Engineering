@@ -277,3 +277,82 @@ func GetOrder(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(ret))
 }
+
+// GetOrder retrieves the information about a specified order if it belongs to the logged-in user.
+//
+// @Summary      Retrieve an order
+// @Description  Retreives an existing order and its associated metadata if the order belongs to the authenticated user.
+// @Tags         order
+// @Produce      json
+// @Success      200  {array}  OrderReturn "JSON representation of an orders information (empty object if none)"
+// @Failure      401  {string}  string "User not authenticated or unauthorized"
+// @Failure      403  {string}  string "Permission denied"
+// @Failure      404  {string}  string "No Order with specified ID"
+// @Router       /api/get_orders [get]
+func GetOrders(w http.ResponseWriter, r *http.Request) {
+	if !login.IsLoggedIn(r) {
+		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := login.GetUserID(r)
+	if err != nil {
+		http.Error(w, "Error retrieving session: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var orders []OrderOwner
+	db.Preload("Order").Where("user_id = ?", userID).Find(&orders)
+
+	var orderRet []OrderReturn
+
+	for _, order := range orders { // for each order referencing a user's id
+		var orderProds []OrderProd // get products for order
+		db.Preload("Prod").Preload("Order").Where("order_id = ?", order.Order.ID).Find(&orderProds)
+
+		if len(orderProds) == 0 { // no products associated with order
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("[]"))
+			return
+		}
+
+		var userProds []OrderProductReturn
+		var totalCost float64 = 0.0
+		for _, product := range orderProds {
+			if product.Prod.UserID == userID {
+				userProd := OrderProductReturn{
+					ProdID:   product.Prod.ID,
+					ProdName: product.Prod.ProdName,
+					Count:    product.Count,
+					Price:    product.Cost,
+				}
+				totalCost += (product.Cost * float64(product.Count))
+				userProds = append(userProds, userProd)
+			}
+		}
+
+		if len(userProds) == 0 {
+			// TODO: What should be sent in the case of no products owned by user present in order
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("[]"))
+			return
+		}
+
+		orderInfo := OrderReturn{
+			OrderID:         order.Order.ID,
+			CustomerName:    order.Order.CustomerName,
+			CustomerEmail:   order.Order.CustomerEmail,
+			OrderDate:       order.Order.OrderDate.String(),
+			OrderStatus:     order.Order.OrderStatus,
+			TrackingNumber:  order.Order.TrackingNumber,
+			Total:           totalCost,
+			OrderedProducts: userProds,
+		}
+
+		orderRet = append(orderRet, orderInfo)
+	}
+
+	ret, _ := json.Marshal(orderRet)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(ret))
+}
