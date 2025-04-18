@@ -86,7 +86,7 @@ const Home = () => {
                 <div className='home-tiles'>
                     <div className='products-tile'>
                         <div className='tile-header'>
-                            <h2>My Products</h2>
+                        <a href="/products" className="tile-header-link"><h2>My Products</h2></a>
                             <div className='view-all-products' onClick={() => window.location.href = '/products'}>
                                 <p>View all</p>
                                 <svg width="26" height="24" viewBox="0 0 26 24" fill="none" xmlns="http://www.w3.org/2000/svg" className='arrow-right'>
@@ -139,7 +139,7 @@ const Home = () => {
                     <div className='small-home-tiles'>
                         <div className='small-home-tile orders-small-home-tile'>
                             <div className='tile-header'>
-                                <h2>My Orders</h2>
+                                <a href="/orders" className="tile-header-link"><h2>My Orders</h2></a>
                                 <div className='view-all-products' onClick={() => window.location.href = '/orders'}>
                                     <p>View all</p>
                                     <svg width="26" height="24" viewBox="0 0 26 24" fill="none" xmlns="http://www.w3.org/2000/svg" className='arrow-right'>
@@ -164,7 +164,7 @@ const Home = () => {
                         {/* --- Storefronts Tile (MODIFIED) --- */}
                         <div className='small-home-tile storefronts-small-home-tile'>
                             <div className='tile-header'>
-                                <h2>My Storefronts</h2>
+                            <a href="/storefronts" className="tile-header-link"><h2>My Storefronts</h2></a>
                                 <div className='view-all-products' onClick={() => window.location.href = '/storefronts'}>
                                     <p>View all</p>
                                     {/* Arrow SVG */}
