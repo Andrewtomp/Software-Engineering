@@ -278,10 +278,10 @@ func GetOrder(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(ret))
 }
 
-// GetOrder retrieves the information about a specified order if it belongs to the logged-in user.
+// GetOrders retrieves the information about a all orders belonging to the logged-in user.
 //
-// @Summary      Retrieve an order
-// @Description  Retreives an existing order and its associated metadata if the order belongs to the authenticated user.
+// @Summary      Retrieve an user's orders
+// @Description  Retreives orders and their associated metadata belonging to the authenticated user.
 // @Tags         order
 // @Produce      json
 // @Success      200  {array}  OrderReturn "JSON representation of an orders information (empty object if none)"

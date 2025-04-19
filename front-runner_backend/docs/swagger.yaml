@@ -1,5 +1,62 @@
 basePath: /
 definitions:
+  orderstable.OrderCreatePayload:
+    properties:
+      customerEmail:
+        description: Email of the customer that placed the order
+        type: string
+      customerName:
+        description: Name of the customer that placed the order
+        type: string
+      orderedProducts:
+        description: List of ordered products
+        items:
+          $ref: '#/definitions/orderstable.OrderProductPayload'
+        type: array
+    type: object
+  orderstable.OrderProductPayload:
+    properties:
+      count:
+        type: integer
+      productID:
+        type: integer
+    type: object
+  orderstable.OrderProductReturn:
+    properties:
+      count:
+        type: integer
+      price:
+        type: number
+      productID:
+        type: integer
+      productName:
+        type: string
+    type: object
+  orderstable.OrderReturn:
+    properties:
+      customerEmail:
+        description: Name of the customer that placed the order
+        type: string
+      customerName:
+        description: Name of the customer that placed the order
+        type: string
+      orderDate:
+        type: string
+      orderID:
+        description: ID of the order requested
+        type: integer
+      orderedProducts:
+        description: List of ordered products
+        items:
+          $ref: '#/definitions/orderstable.OrderProductReturn'
+        type: array
+      status:
+        type: string
+      total:
+        type: number
+      trackingNumber:
+        type: string
+    type: object
   storefronttable.StorefrontLinkAddPayload:
     properties:
       apiKey:
@@ -159,6 +216,41 @@ paths:
       summary: Link a new storefront
       tags:
       - storefronts
+  /api/create_order:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new order entry with details including customer name,
+        products, count, and order date.
+      parameters:
+      - description: Order Details
+        in: body
+        name: orderInfo
+        required: true
+        schema:
+          $ref: '#/definitions/orderstable.OrderCreatePayload'
+      produces:
+      - text/plain
+      responses:
+        "201":
+          description: Product added successfully
+          schema:
+            type: string
+        "400":
+          description: Error parsing form or uploading image
+          schema:
+            type: string
+        "401":
+          description: User not authenticated
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Creates an order
+      tags:
+      - order
   /api/delete_product:
     delete:
       description: Deletes an existing product and its associated image if the product
@@ -235,6 +327,68 @@ paths:
       summary: Unlink a storefront
       tags:
       - storefronts
+  /api/get_order:
+    get:
+      description: Retreives an existing order and its associated metadata if the
+        order belongs to the authenticated user.
+      parameters:
+      - description: Order ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: JSON representation of an orders information (empty object
+            if none)
+          schema:
+            $ref: '#/definitions/orderstable.OrderReturn'
+        "401":
+          description: User not authenticated or unauthorized
+          schema:
+            type: string
+        "403":
+          description: Permission denied
+          schema:
+            type: string
+        "404":
+          description: No Order with specified ID
+          schema:
+            type: string
+      summary: Retrieve an order
+      tags:
+      - order
+  /api/get_orders:
+    get:
+      description: Retreives orders and their associated metadata belonging to the
+        authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: JSON representation of an orders information (empty object
+            if none)
+          schema:
+            items:
+              $ref: '#/definitions/orderstable.OrderReturn'
+            type: array
+        "401":
+          description: User not authenticated or unauthorized
+          schema:
+            type: string
+        "403":
+          description: Permission denied
+          schema:
+            type: string
+        "404":
+          description: No Order with specified ID
+          schema:
+            type: string
+      summary: Retrieve an user's orders
+      tags:
+      - order
   /api/get_product:
     get:
       description: Retreives an existing product and its associated metadata if the
