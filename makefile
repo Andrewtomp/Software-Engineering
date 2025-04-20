@@ -1,7 +1,6 @@
 # Makefile for building the frontend, generating backend certs, and running the backend.
 
 # --- Variables ---
-
 # Detect OS for browser opening command
 # Default to xdg-open (Linux)
 OPEN_CMD = xdg-open
@@ -14,8 +13,17 @@ else
 	endif
 endif
 
-BROWSER_URL = https://localhost:8080/
 WAIT_SECONDS = 10
+
+ARGS ?=
+
+NGROK_DETECTED := $(findstring --ngrok,$(ARGS))
+
+BROWSER_URL := https://localhost:8080/
+
+ifneq ($(NGROK_DETECTED),)
+	BROWSER_URL := https://chief-dane-illegally.ngrok-free.app/
+endif
 
 # --- Targets ---
 
@@ -45,9 +53,10 @@ generate-certs:
 run: build-frontend generate-certs
 	@echo "Starting Go backend server (front-runner_backend/main.go) in FOREGROUND..."
 	@echo "The server will run here. Press Ctrl+C to stop it."
-	@ $(OPEN_CMD) $(BROWSER_URL)
 	@# Run the Go server in the foreground (removed the '&')
-	@cd front-runner_backend && go run .
+	@ cd front-runner_backend && go run . $(ARGS)
+	@ sleep $(WAIT_SECONDS)
+	@ $(OPEN_CMD) $(BROWSER_URL)
 	@# --- The lines below will ONLY execute AFTER the Go server stops ---
 	@echo "Go backend server stopped."
 
