@@ -15,15 +15,7 @@ endif
 
 WAIT_SECONDS = 10
 
-ARGS ?=
-
-NGROK_DETECTED := $(findstring --ngrok,$(ARGS))
-
 BROWSER_URL := https://localhost:8080/
-
-ifneq ($(NGROK_DETECTED),)
-	BROWSER_URL := https://chief-dane-illegally.ngrok-free.app/
-endif
 
 # --- Targets ---
 
@@ -54,9 +46,18 @@ run: build-frontend generate-certs
 	@echo "Starting Go backend server (front-runner_backend/main.go) in FOREGROUND..."
 	@echo "The server will run here. Press Ctrl+C to stop it."
 	@# Run the Go server in the foreground (removed the '&')
-	@ cd front-runner_backend && go run . $(ARGS)
+	@ cd front-runner_backend && go run .
 	@ sleep $(WAIT_SECONDS)
 	@ $(OPEN_CMD) $(BROWSER_URL)
+	@# --- The lines below will ONLY execute AFTER the Go server stops ---
+	@echo "Go backend server stopped."
+
+.PHONY: ngrok
+ngrok: build-frontend generate-certs
+	@echo "Starting Go backend server (front-runner_backend/main.go) in FOREGROUND..."
+	@echo "The server will run here. Press Ctrl+C to stop it."
+	@# Run the Go server in the foreground (removed the '&')
+	@ cd front-runner_backend && go run . --ngrok
 	@# --- The lines below will ONLY execute AFTER the Go server stops ---
 	@echo "Go backend server stopped."
 
