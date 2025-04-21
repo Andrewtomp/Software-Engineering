@@ -60,7 +60,7 @@ func setupModules() {
 	coredbutils.LoadEnv() // Ensures DB utils have env vars if they need them independently
 
 	// --- 2. Initialize Database ---
-	db = coredbutils.GetDB()
+	db, _ = coredbutils.GetDB()
 	if db == nil {
 		log.Fatal("Failed to get database connection")
 	}
