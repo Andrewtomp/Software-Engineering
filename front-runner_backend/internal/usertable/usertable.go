@@ -229,11 +229,25 @@ func UpdateUser(user *User) error {
 	if user.ID == 0 {
 		return errors.New("cannot update user without ID")
 	}
+
+	log.Printf("DEBUG: UpdateUser attempting to Save user ID: %d", user.ID)
+
 	// Use Save to update all fields, or Updates to update specific fields/non-zero fields
-	err := db.Save(user).Error
+	result := db.Updates(user)
+	err := result.Error
+
 	if err != nil {
 		log.Printf("Error updating user (ID: %d): %v", user.ID, err)
 		return fmt.Errorf("database error updating user: %w", err)
 	}
+
+	if result.RowsAffected == 0 {
+		log.Printf("DEBUG: UpdateUser(ID: %d) - RowsAffected is 0. Returning gorm.ErrRecordNotFound.", user.ID) // Added log
+		log.Printf("Attempted to update non-existent user (ID: %d), no rows affected.", user.ID)
+		// Return ErrRecordNotFound to indicate the record wasn't found for updating.
+		return gorm.ErrRecordNotFound
+	}
+
+	log.Printf("DEBUG: UpdateUser(ID: %d) - RowsAffected is %d (> 0). Returning nil.", user.ID, result.RowsAffected)
 	return nil
 }
