@@ -43,16 +43,17 @@ var (
 	local        bool = false
 	verbose      bool = false
 	envFile      string
-	useNgrok     bool                     = false
-	db           *gorm.DB                 // Hold DB connection globally in main
-	sessionStore *sessions.CookieStore    // Hold session store globally in main
-	callbackURL  string                   // Store the determined callback URL
-	sessionName  = "front-runner-session" // Consistent session name
-	sessionKey   = "userID"               // Consistent session key
-	isSecure     = false                  // Track if session cookie should be secure
+	useNgrok     bool                  = false
+	db           *gorm.DB              // Hold DB connection globally in main
+	sessionStore *sessions.CookieStore // Hold session store globally in main
+	callbackURL  string                // Store the determined callback URL
+	isSecure     = false               // Track if session cookie should be secure
 )
 
-// setupModules initializes database, session store, and dependent packages.
+// setupModules initializes essential components like the database connection,
+// session store, and dependent internal packages (auth, tables, etc.).
+// It ensures that environment variables are loaded and necessary migrations are run.
+// It populates the global db and sessionStore variables.
 func setupModules() {
 	// --- 1. Load Environment Variables ---
 	// Moved env loading to the start of main, but keep LoadEnv for DB utils if needed
@@ -87,12 +88,6 @@ func setupModules() {
 		}
 		// log.Printf("Decoded SESSION_ENC_KEY length: %d bytes", len(encKey))
 	}
-	// --- 3. Initialize Session Store ---
-	// sessionAuthKey := os.Getenv("SESSION_AUTH_KEY")
-	// if sessionAuthKey == "" {
-	// 	log.Fatal("SESSION_AUTH_KEY environment variable not set")
-	// }
-	// sessionEncKey := os.Getenv("SESSION_ENC_KEY") // Optional encryption key
 
 	// Determine callback URL and secure flag *before* initializing store
 	callbackURL = os.Getenv("GOOGLE_REDIRECT_URI")
@@ -123,13 +118,6 @@ func setupModules() {
 		sessionStore = sessions.NewCookieStore(authKey, encKey) // Use decoded authKey and encKey
 		log.Println("Session store initialized (with encryption).")
 	}
-	// // Initialize the store
-	// if sessionEncKey == "" {
-	// 	sessionStore = sessions.NewCookieStore([]byte(sessionAuthKey))
-	// 	log.Println("Warning: SESSION_ENC_KEY not set. Session data will not be encrypted.")
-	// } else {
-	// 	sessionStore = sessions.NewCookieStore([]byte(sessionAuthKey), []byte(sessionEncKey))
-	// }
 
 	sessionStore.Options = &sessions.Options{
 		Path:     "/",
@@ -163,6 +151,10 @@ func setupModules() {
 	log.Println("All modules set up.")
 }
 
+// main is the entry point of the application.
+// It parses command-line flags, loads environment variables, sets up modules,
+// configures the HTTP/S server (potentially with ngrok), registers routes,
+// and starts listening for incoming connections.
 func main() {
 	// --- Argument Parsing ---
 	getopt.FlagLong(&verbose, "verbose", 'v', "Enable logging of incomming HTTP requests")
@@ -257,6 +249,11 @@ func main() {
 		// We pass the main router directly, as TLSConfig is for local serving
 		err = http.Serve(tun, router) // Serve plain HTTP to the tunnel
 
+		if err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server failed: %v", err)
+		} else {
+			log.Println("Server stopped gracefully.")
+		}
 	} else {
 		// Standard Local Server
 		address := ""

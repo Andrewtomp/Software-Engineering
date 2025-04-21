@@ -13,10 +13,9 @@ import (
 	"gorm.io/gorm"
 )
 
-// @title Authentication Endpoints
-// @description Endpoints for user registration, login, and logout.
-//
-// User represents an authenticated user.
+// User represents an application user in the database.
+// It includes fields for both local password-based authentication
+// and OAuth provider-based authentication.
 // swagger:model User
 type User struct {
 	ID           uint   `gorm:"primaryKey"`
@@ -34,13 +33,17 @@ var (
 	setupOnce sync.Once
 )
 
+// Setup initializes the database connection for the usertable package.
+// It ensures the connection is obtained only once using sync.Once.
 func Setup() {
 	setupOnce.Do(func() {
 		coredbutils.LoadEnv()
-		db = coredbutils.GetDB()
+		db, _ = coredbutils.GetDB()
 	})
 }
 
+// MigrateUserDB runs the GORM auto-migration for the User model.
+// It ensures the users table schema matches the User struct definition.
 func MigrateUserDB() {
 	if db == nil {
 		log.Fatal("Database connection is not initialized")
@@ -54,14 +57,8 @@ func MigrateUserDB() {
 }
 
 // ClearUserTable deletes all records from the users table.
-// The AllowGlobalUpdate flag is required for global deletes in GORM v2.
-//
-// @Summary     Clear user table
-// @Description Deletes all records from the user table in the database. Useful for testing and reset purposes.
-//
-// @Tags        dbtable, user, housekeeping
-// @Success     200 {string} string "User table cleared successfully"
-// @Failure     500 {string} string "Error clearing users table"
+// USE WITH EXTREME CAUTION, especially in production environments.
+// Primarily intended for testing or complete resets.
 func ClearUserTable(db *gorm.DB) error {
 	if err := db.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&User{}).Error; err != nil {
 		return fmt.Errorf("error clearing users table: %w", err)
@@ -69,20 +66,22 @@ func ClearUserTable(db *gorm.DB) error {
 	return nil
 }
 
-// RegisterUser creates a new user record.
+// RegisterUser handles the HTTP request for creating a new 'local' user account.
+// It expects email, password, name, and optionally businessName via form data.
 //
-// @Summary      Register a new user
-// @Description  Registers a new user using email, password, and an optional business name.
-//
-// @Tags         authentication
+// @Summary      Register a new local user
+// @Description  Registers a new user account using email and password for local authentication.
+// @Tags         Authentication
 // @Accept       application/x-www-form-urlencoded
-// @Produce      plain
-// @Param        email formData string true "User email"
-// @Param        password formData string true "User password"
-// @Param        business_name formData string false "Business name"
+// @Produce      text/plain
+// @Param        email        formData string true  "User's Email Address" example("user@example.com")
+// @Param        password     formData string true  "User's Password (min length recommended)" example("password123")
+// @Param        name         formData string true  "User's Full Name" example("John Doe")
+// @Param        businessName formData string false "User's Business Name (Optional)" example("JD Enterprises")
 // @Success      200 {string} string "User registered successfully"
-// @Failure      400 {string} string "Email and password are required or invalid email format"
-// @Failure      409 {string} string "Email already in use or database error"
+// @Failure      400 {string} string "Bad Request: Missing required fields (email, password, name), or invalid email format"
+// @Failure      409 {string} string "Conflict: Email address is already registered"
+// @Failure      500 {string} string "Internal Server Error: Failed to hash password or save user to database"
 // @Router       /api/register [post]
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
@@ -138,6 +137,8 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "User registered successfully")
 }
 
+// GetUserByProviderID finds a user based on their OAuth provider and provider-specific ID.
+// Returns the user pointer or nil if not found. Returns an error for database issues.
 func GetUserByProviderID(provider, providerID string) (*User, error) {
 	if db == nil {
 		return nil, errors.New("database connection not initialized")
@@ -153,6 +154,8 @@ func GetUserByProviderID(provider, providerID string) (*User, error) {
 	return &user, nil
 }
 
+// GetUserByEmail finds a user based on their email address.
+// Returns the user pointer or nil if not found. Returns an error for database issues.
 func GetUserByEmail(email string) (*User, error) {
 	if db == nil {
 		return nil, errors.New("database connection not initialized")
@@ -169,6 +172,9 @@ func GetUserByEmail(email string) (*User, error) {
 	return &user, nil
 }
 
+// CreateUser saves a new user record to the database.
+// Performs basic validation before attempting to save.
+// Returns an error if validation fails or the database operation fails.
 func CreateUser(user *User) error {
 	if db == nil {
 		return errors.New("database connection not initialized")
@@ -195,6 +201,8 @@ func CreateUser(user *User) error {
 	return nil
 }
 
+// GetUserByID finds a user based on their primary key ID.
+// Returns the user pointer or nil if not found. Returns an error for database issues.
 func GetUserByID(userID uint) (*User, error) {
 	if db == nil {
 		return nil, errors.New("database connection not initialized")
@@ -211,6 +219,9 @@ func GetUserByID(userID uint) (*User, error) {
 	return &user, nil
 }
 
+// UpdateUser updates an existing user record in the database using all fields from the provided User struct.
+// It requires the User struct to have a valid ID.
+// Returns an error if the database operation fails.
 func UpdateUser(user *User) error {
 	if db == nil {
 		return errors.New("database connection not initialized")

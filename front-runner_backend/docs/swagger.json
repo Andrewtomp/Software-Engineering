@@ -13,109 +13,22 @@
         },
         "version": "1.0"
     },
-    "host": "localhost:8080",
+    "host": "localhost:8080 // Update this if using ngrok static domain for Swagger docs",
     "basePath": "/",
     "paths": {
-        "/api/add_product": {
-            "post": {
-                "description": "Creates a new product with details including name, description, price, count, tags, and an associated image.",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "text/plain"
-                ],
-                "tags": [
-                    "product"
-                ],
-                "summary": "Add a new product",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Product name",
-                        "name": "productName",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Product description",
-                        "name": "description",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "number",
-                        "description": "Product price",
-                        "name": "price",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Product stock count",
-                        "name": "count",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Product tags",
-                        "name": "tags",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "file",
-                        "description": "Product image file",
-                        "name": "image",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Product added successfully",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Error parsing form or uploading image",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "User not authenticated",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
         "/api/add_storefront": {
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKeyAuth // Assuming ApiKeyAuth is defined for session/token auth": []
                     }
                 ],
                 "description": "Links a new external storefront (e.g., Amazon, Pinterest) to the user's account, storing credentials securely. Requires authentication.",
                 "consumes": [
                     "application/json"
                 ],
-                "produces": [
-                    "application/json"
-                ],
                 "tags": [
-                    "storefronts"
+                    "Storefronts"
                 ],
                 "summary": "Link a new storefront",
                 "parameters": [
@@ -163,47 +76,6 @@
                 }
             }
         },
-        "/api/delete_product": {
-            "delete": {
-                "description": "Deletes an existing product and its associated image if the product belongs to the authenticated user.",
-                "produces": [
-                    "text/plain"
-                ],
-                "tags": [
-                    "product"
-                ],
-                "summary": "Delete a product",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Product ID",
-                        "name": "id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Product deleted successfully",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "User not authenticated or unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Product not found",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
         "/api/delete_storefront": {
             "delete": {
                 "security": [
@@ -212,11 +84,8 @@
                     }
                 ],
                 "description": "Removes the link to an external storefront specified by its unique ID. User must own the link. Requires authentication.",
-                "produces": [
-                    "text/plain"
-                ],
                 "tags": [
-                    "storefronts"
+                    "Storefronts"
                 ],
                 "summary": "Unlink a storefront",
                 "parameters": [
@@ -238,7 +107,7 @@
                         }
                     },
                     "204": {
-                        "description": "Storefront unlinked successfully (No Content)",
+                        "description": "Storefront unlinked successfully (No Content)\" // Added 204 as an alternative success",
                         "schema": {
                             "type": "string"
                         }
@@ -276,127 +145,6 @@
                 }
             }
         },
-        "/api/get_product": {
-            "get": {
-                "description": "Retreives an existing product and its associated metadata if the product belongs to the authenticated user.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "product"
-                ],
-                "summary": "Retrieve a product",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Product ID",
-                        "name": "id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "JSON representation of a product's information",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "User not authenticated or unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Permission denied",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "No Product with specified ID",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/get_product_image": {
-            "get": {
-                "description": "Retreives an existing product image if it exists and belongs to the authenticated user.",
-                "produces": [
-                    "image/*"
-                ],
-                "tags": [
-                    "product",
-                    "images"
-                ],
-                "summary": "Retrieve a product image",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Filepath of image",
-                        "name": "image",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Image's data",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "User not authenticated or unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Permission denied",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Requested image does not exist",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/get_products": {
-            "get": {
-                "description": "Retreives existing products and their associated metadata for the authenticated user.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "product"
-                ],
-                "summary": "Retrieves all product information for authenticated user.",
-                "responses": {
-                    "200": {
-                        "description": "JSON representation of a user's product information",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "User not authenticated or unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
         "/api/get_storefronts": {
             "get": {
                 "security": [
@@ -405,11 +153,8 @@
                     }
                 ],
                 "description": "Retrieves a list of all external storefronts linked by the currently authenticated user. Credentials are *never* included. Requires authentication.",
-                "produces": [
-                    "application/json"
-                ],
                 "tags": [
-                    "storefronts"
+                    "Storefronts"
                 ],
                 "summary": "Get linked storefronts",
                 "responses": {
@@ -439,48 +184,51 @@
         },
         "/api/login": {
             "post": {
-                "description": "Authenticates a user and creates a session.",
+                "description": "Authenticates a user using email and password. Creates a session cookie upon successful authentication and redirects to the homepage.",
                 "consumes": [
                     "application/x-www-form-urlencoded"
                 ],
-                "produces": [
-                    "text/plain"
-                ],
                 "tags": [
-                    "authentication"
+                    "Authentication"
                 ],
-                "summary": "User login",
+                "summary": "User Login (Email/Password)",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "User email",
+                        "description": "User's Email Address",
                         "name": "email",
                         "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "User password",
+                        "description": "User's Password",
                         "name": "password",
                         "in": "formData",
                         "required": true
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Logged in successfully.",
+                    "303": {
+                        "description": "Redirects to / on successful login",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "400": {
-                        "description": "Email and password are required",
+                        "description": "Bad Request: Email and password are required",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "401": {
-                        "description": "Invalid credentials",
+                        "description": "Unauthorized: Invalid credentials",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "string"
                         }
@@ -488,19 +236,430 @@
                 }
             }
         },
-        "/api/logout": {
-            "post": {
-                "description": "Logs out the current user by clearing the session.",
+        "/api/products": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a list of all products owned by the authenticated user.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Get all products for the user",
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved list of products",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/prodtable.ProductReturn"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: User not authenticated",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Database error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Updates details (name, description, price, count, tags) and/or the image for a specific product owned by the authenticated user. Fields not provided are left unchanged.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
                 "produces": [
                     "text/plain"
                 ],
                 "tags": [
-                    "authentication"
+                    "Products"
                 ],
-                "summary": "User logout",
+                "summary": "Update a product",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "uint64",
+                        "description": "ID of the product to update",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "New name for the product",
+                        "name": "productName",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "New description for the product",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "number",
+                        "format": "float",
+                        "description": "New price for the product (e.g., 29.99)",
+                        "name": "price",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "New available stock count",
+                        "name": "count",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "New comma-separated tags (replaces old tags)",
+                        "name": "tags",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "New product image file (replaces old image)",
+                        "name": "image",
+                        "in": "formData"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Logged out successfully",
+                        "description": "Product updated successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid Product ID or data format",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: User not authenticated",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: User does not own this product",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: Product not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict: Product name already exists for this user\" // If name is updated",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Database or file system error during update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Creates a new product listing associated with the authenticated user. Requires product details and an image upload.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Add a new product",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Name of the product",
+                        "name": "productName",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Description of the product",
+                        "name": "description",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "format": "float",
+                        "description": "Price of the product (e.g., 19.99)",
+                        "name": "price",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "Available stock count",
+                        "name": "count",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated tags for the product",
+                        "name": "tags",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Product image file",
+                        "name": "image",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Product added successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Missing required fields, invalid data format, or image error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: User not authenticated",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Database or file system error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Deletes a specific product owned by the authenticated user, identified by its ID. Also deletes the associated image file and record.",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Delete a product",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "uint64",
+                        "description": "ID of the product to delete",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product deleted successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid Product ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: User not authenticated",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: User does not own this product",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: Product not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Database or file system error during deletion",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/products/details": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves details for a specific product owned by the authenticated user, identified by its ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Get a specific product",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "uint64",
+                        "description": "ID of the product to retrieve",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved product details",
+                        "schema": {
+                            "$ref": "#/definitions/prodtable.ProductReturn"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid Product ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: User not authenticated",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: User does not own this product",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: Product not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Database error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/products/image": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves and serves the image file associated with a product, identified by its filename. Requires the user to be authenticated and own the product/image.",
+                "produces": [
+                    "image/*"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Get a product image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filename of the image to retrieve (e.g., 'uuid.jpg')",
+                        "name": "image",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product image file",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Missing or invalid image filename",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: User not authenticated",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: User does not own this image",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: Image metadata or file not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error: Database or file system error",
                         "schema": {
                             "type": "string"
                         }
@@ -510,7 +669,7 @@
         },
         "/api/register": {
             "post": {
-                "description": "Registers a new user using email, password, and an optional business name.",
+                "description": "Registers a new user account using email and password for local authentication.",
                 "consumes": [
                     "application/x-www-form-urlencoded"
                 ],
@@ -518,28 +677,39 @@
                     "text/plain"
                 ],
                 "tags": [
-                    "authentication"
+                    "Authentication"
                 ],
-                "summary": "Register a new user",
+                "summary": "Register a new local user",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "User email",
+                        "example": "\"user@example.com\"",
+                        "description": "User's Email Address",
                         "name": "email",
                         "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "User password",
+                        "example": "\"password123\"",
+                        "description": "User's Password (min length recommended)",
                         "name": "password",
                         "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Business name",
-                        "name": "business_name",
+                        "example": "\"John Doe\"",
+                        "description": "User's Full Name",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "\"JD Enterprises\"",
+                        "description": "User's Business Name (Optional)",
+                        "name": "businessName",
                         "in": "formData"
                     }
                 ],
@@ -551,75 +721,19 @@
                         }
                     },
                     "400": {
-                        "description": "Email and password are required or invalid email format",
+                        "description": "Bad Request: Missing required fields (email, password, name), or invalid email format",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "409": {
-                        "description": "Email already in use or database error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/update_product": {
-            "put": {
-                "description": "Updates the details of an existing product (description, price, stock count) that belongs to the authenticated user.",
-                "consumes": [
-                    "application/x-www-form-urlencoded"
-                ],
-                "produces": [
-                    "text/plain"
-                ],
-                "tags": [
-                    "product"
-                ],
-                "summary": "Update a product",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Product ID",
-                        "name": "id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "New product description",
-                        "name": "product_description",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "number",
-                        "description": "New product price",
-                        "name": "item_price",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "New product stock count",
-                        "name": "stock_amount",
-                        "in": "formData"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Product updated successfully",
+                        "description": "Conflict: Email address is already registered",
                         "schema": {
                             "type": "string"
                         }
                     },
-                    "401": {
-                        "description": "User not authenticated or unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Product not found",
+                    "500": {
+                        "description": "Internal Server Error: Failed to hash password or save user to database",
                         "schema": {
                             "type": "string"
                         }
@@ -638,11 +752,8 @@
                 "consumes": [
                     "application/json"
                 ],
-                "produces": [
-                    "application/json"
-                ],
                 "tags": [
-                    "storefronts"
+                    "Storefronts"
                 ],
                 "summary": "Update a storefront link",
                 "parameters": [
@@ -710,9 +821,112 @@
                     }
                 }
             }
+        },
+        "/auth/google": {
+            "get": {
+                "description": "Redirects the user to Google for authentication as part of the OAuth2 flow.",
+                "tags": [
+                    "Authentication (OAuth)"
+                ],
+                "summary": "Initiate Google Login",
+                "responses": {
+                    "307": {
+                        "description": "Redirects to Google's authentication endpoint",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error (if Goth setup fails)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/google/callback": {
+            "get": {
+                "description": "Handles the callback from Google after authentication. Creates a user session upon successful authentication and redirects to the homepage.",
+                "tags": [
+                    "Authentication (OAuth)"
+                ],
+                "summary": "Google Login Callback",
+                "responses": {
+                    "307": {
+                        "description": "Redirects to / on successful login",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request (e.g., state mismatch)\" // Goth might handle this",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error (session, database, or Goth issue)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/logout": {
+            "get": {
+                "description": "Logs out the current user by clearing the session cookie and redirects to the homepage.",
+                "tags": [
+                    "Authentication (OAuth)",
+                    "Authentication"
+                ],
+                "summary": "User Logout",
+                "responses": {
+                    "307": {
+                        "description": "Redirects to / after logout",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error (if saving cleared session fails)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "prodtable.ProductReturn": {
+            "type": "object",
+            "properties": {
+                "image": {
+                    "description": "Consider renaming to imageURL or similar",
+                    "type": "string"
+                },
+                "prodCount": {
+                    "type": "integer"
+                },
+                "prodDesc": {
+                    "type": "string"
+                },
+                "prodID": {
+                    "type": "integer"
+                },
+                "prodName": {
+                    "type": "string"
+                },
+                "prodPrice": {
+                    "type": "number"
+                },
+                "prodTags": {
+                    "type": "string"
+                }
+            }
+        },
         "storefronttable.StorefrontLinkAddPayload": {
             "type": "object",
             "properties": {

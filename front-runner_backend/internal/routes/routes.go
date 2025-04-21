@@ -16,19 +16,18 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-// var (
-// 	sessionStore *sessions.CookieStore
-// )
-
-// spaHandler serves the static ReactJS site. It always serves the index.html
-// file to allow React Router to handle client-side routing.
+// spaHandler serves the static ReactJS site. It ensures that requests
+// for paths not corresponding to existing static files are served the
+// index.html file, allowing React Router to handle client-side routing.
 type spaHandler struct {
 	staticPath string
 	indexPath  string
 }
 
 // ServeHTTP implements the http.Handler interface for spaHandler.
-// It checks if the requested file exists. If not, it falls back to serving index.html.
+// It checks if the requested file exists within the staticPath.
+// If the file exists and is not a directory, it serves the file.
+// Otherwise (file not found or is a directory), it serves the indexPath file.
 func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Join internally call path.Clean to prevent directory traversal
 	path := filepath.Join(h.staticPath, r.URL.Path)
@@ -50,21 +49,15 @@ func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.FileServer(http.Dir(h.staticPath)).ServeHTTP(w, r)
 }
 
+// InvalidAPI handles requests to API paths that are not explicitly defined.
+// It returns a 404 Not Found error.
 func InvalidAPI(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Invalid API Endpoint", http.StatusNotFound)
 }
 
-// authMiddleware redirects to /login if the user is not authenticated.
-//
-//	func authMiddleware(next http.Handler) http.Handler {
-//		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//			if !login.IsLoggedIn(r) {
-//				http.Redirect(w, r, "/login", http.StatusSeeOther)
-//				return
-//			}
-//			next.ServeHTTP(w, r)
-//		})
-//	}
+// authMiddleware checks if a user is authenticated by verifying the session.
+// If the user is not authenticated or an error occurs checking the session,
+// it redirects the client to the /login path. Otherwise, it calls the next handler.
 func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := oauth.GetCurrentUser(r)
@@ -84,15 +77,10 @@ func authMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// RegisterRoutes configures all application routes.
-//
-// This function registers API endpoints for:
-//   - User management: registration (/api/register), login (/api/login), and logout (/api/logout).
-//   - Product operations: adding (/api/add_product), deleting (/api/delete_product), updating (/api/update_product), and retrieving (/get_product, /get_products, /get_product_image) products.
-//
-// It also sets up:
-//   - The Swagger documentation UI, accessible under /swagger/.
-//   - Static file serving for the ReactJS frontend, including protected routes that require authentication.
+// RegisterRoutes sets up the main router, API sub-router, Swagger documentation,
+// authentication middleware, and static file serving for the SPA.
+// It wires up URL paths to their corresponding handler functions from various packages.
+// If logging is enabled, it wraps the router with a logging handler.
 func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
 	// Subrouters
 	api := router.PathPrefix("/api").Subrouter()

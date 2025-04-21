@@ -7,7 +7,6 @@ import (
 	"front-runner/internal/coredbutils"
 	"front-runner/internal/oauth" // Import oauth
 
-	// "front-runner/internal/login" // Remove login import
 	"io"
 	"log"
 	"net/http"
@@ -20,14 +19,14 @@ import (
 	"gorm.io/gorm"
 )
 
-// Image struct definition (no changes)
+// Image struct definition
 type Image struct {
 	ID     uint   `gorm:"primaryKey;autoIncrement"`
 	URL    string `gorm:"unique;not null"`
 	UserID uint   `gorm:"not null;index"`
 }
 
-// Product struct definition (no changes)
+// Product struct definition
 type Product struct {
 	ID              uint   `gorm:"primaryKey"`
 	UserID          uint   `gorm:"not null;index:idx_product,unique"`
@@ -40,7 +39,7 @@ type Product struct {
 	ProdTags        string
 }
 
-// AfterDelete hook (no changes)
+// AfterDelete hook to clean up associated image file and record.
 func (p *Product) AfterDelete(tx *gorm.DB) (err error) {
 	// Find the image associated with the product
 	var img Image
@@ -76,7 +75,7 @@ var (
 func Setup() {
 	setupOnce.Do(func() {
 		coredbutils.LoadEnv()
-		db = coredbutils.GetDB()
+		db, _ = coredbutils.GetDB()
 		// login.Setup() // REMOVE: Login setup is now centralized
 		log.Println("prodtable package setup complete")
 	})
@@ -93,13 +92,13 @@ func Setup() {
 	}
 }
 
-// doesFileExist function (no changes)
+// doesFileExist checks if a file exists at the given path.
 func doesFileExist(filepath string) bool {
 	_, err := os.Stat(filepath)
 	return !errors.Is(err, os.ErrNotExist)
 }
 
-// MigrateProdDB function (no changes)
+// MigrateProdDB runs GORM auto-migration for Product and Image models.
 func MigrateProdDB() {
 	if db == nil {
 		log.Fatal("Database connection is not initialized")
@@ -112,7 +111,7 @@ func MigrateProdDB() {
 	log.Println("Product and Image database migration complete")
 }
 
-// ClearProdTable function (no changes)
+// ClearProdTable removes all records from the Product and Image tables. USE WITH CAUTION.
 func ClearProdTable(db *gorm.DB) error {
 	// It's safer to delete images first if there's no strict foreign key constraint ensuring cascade delete
 	if err := db.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&Image{}).Error; err != nil {
@@ -132,7 +131,25 @@ func ClearProdTable(db *gorm.DB) error {
 }
 
 // AddProduct creates a new product and associates it with the logged-in user.
-// swagger annotations remain the same
+// It expects product details and an image file via multipart/form-data.
+//
+// @Summary      Add a new product
+// @Description  Creates a new product listing associated with the authenticated user. Requires product details and an image upload.
+// @Tags         Products
+// @Accept       multipart/form-data
+// @Produce      text/plain
+// @Param        productName  formData  string  true  "Name of the product"
+// @Param        description  formData  string  true  "Description of the product"
+// @Param        price        formData  number  true  "Price of the product (e.g., 19.99)" Format(float)
+// @Param        count        formData  integer true  "Available stock count" Format(int32)
+// @Param        tags         formData  string  false "Comma-separated tags for the product"
+// @Param        image        formData  file    true  "Product image file"
+// @Success      201  {string}  string "Product added successfully"
+// @Failure      400  {string}  string "Bad Request: Missing required fields, invalid data format, or image error"
+// @Failure      401  {string}  string "Unauthorized: User not authenticated"
+// @Failure      500  {string}  string "Internal Server Error: Database or file system error"
+// @Security     ApiKeyAuth
+// @Router       /api/products [post]
 func AddProduct(w http.ResponseWriter, r *http.Request) {
 	// --- Updated Auth Check ---
 	user, err := oauth.GetCurrentUser(r)
@@ -268,7 +285,21 @@ func AddProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteProduct removes a product if it belongs to the logged-in user.
-// swagger annotations remain the same
+// It uses the product's ID provided as a query parameter.
+//
+// @Summary      Delete a product
+// @Description  Deletes a specific product owned by the authenticated user, identified by its ID. Also deletes the associated image file and record.
+// @Tags         Products
+// @Produce      text/plain
+// @Param        id   query     int  true  "ID of the product to delete" Format(uint64)
+// @Success      200  {string}  string "Product deleted successfully"
+// @Failure      400  {string}  string "Bad Request: Invalid Product ID"
+// @Failure      401  {string}  string "Unauthorized: User not authenticated"
+// @Failure      403  {string}  string "Forbidden: User does not own this product"
+// @Failure      404  {string}  string "Not Found: Product not found"
+// @Failure      500  {string}  string "Internal Server Error: Database or file system error during deletion"
+// @Security     ApiKeyAuth
+// @Router       /api/products [delete]
 func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	// --- Updated Auth Check ---
 	user, err := oauth.GetCurrentUser(r)
@@ -340,7 +371,29 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateProduct updates an existing product's details if it belongs to the logged-in user.
-// swagger annotations remain the same
+// It accepts optional fields via multipart/form-data and an optional new image.
+//
+// @Summary      Update a product
+// @Description  Updates details (name, description, price, count, tags) and/or the image for a specific product owned by the authenticated user. Fields not provided are left unchanged.
+// @Tags         Products
+// @Accept       multipart/form-data
+// @Produce      text/plain
+// @Param        id           query     int     true  "ID of the product to update" Format(uint64)
+// @Param        productName  formData  string  false "New name for the product"
+// @Param        description  formData  string  false "New description for the product"
+// @Param        price        formData  number  false "New price for the product (e.g., 29.99)" Format(float)
+// @Param        count        formData  integer false "New available stock count" Format(int32)
+// @Param        tags         formData  string  false "New comma-separated tags (replaces old tags)"
+// @Param        image        formData  file    false "New product image file (replaces old image)"
+// @Success      200  {string}  string "Product updated successfully"
+// @Failure      400  {string}  string "Bad Request: Invalid Product ID or data format"
+// @Failure      401  {string}  string "Unauthorized: User not authenticated"
+// @Failure      403  {string}  string "Forbidden: User does not own this product"
+// @Failure      404  {string}  string "Not Found: Product not found"
+// @Failure      409  {string}  string "Conflict: Product name already exists for this user" // If name is updated
+// @Failure      500  {string}  string "Internal Server Error: Database or file system error during update"
+// @Security     ApiKeyAuth
+// @Router       /api/products [put] // Or PATCH if partial updates are the primary intent
 func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	// --- Updated Auth Check ---
 	user, err := oauth.GetCurrentUser(r)
@@ -519,7 +572,7 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Product updated successfully")
 }
 
-// ProductReturn struct definition (no changes)
+// ProductReturn struct definition for returning product data via the API.
 type ProductReturn struct {
 	ProdID          uint    `json:"prodID"`
 	ProdName        string  `json:"prodName"`
@@ -530,7 +583,7 @@ type ProductReturn struct {
 	ProdTags        string  `json:"prodTags"`
 }
 
-// setProductReturn function (no changes)
+// setProductReturn converts a Product DB model to a ProductReturn API model.
 func setProductReturn(product Product) ProductReturn {
 	var ret ProductReturn
 	ret.ProdID = product.ID
@@ -544,7 +597,20 @@ func setProductReturn(product Product) ProductReturn {
 }
 
 // GetProduct retrieves the information about a specified product if it belongs to the logged-in user.
-// swagger annotations remain the same
+//
+// @Summary      Get a specific product
+// @Description  Retrieves details for a specific product owned by the authenticated user, identified by its ID.
+// @Tags         Products
+// @Produce      application/json
+// @Param        id   query     int  true  "ID of the product to retrieve" Format(uint64)
+// @Success      200  {object}  ProductReturn "Successfully retrieved product details"
+// @Failure      400  {string}  string "Bad Request: Invalid Product ID"
+// @Failure      401  {string}  string "Unauthorized: User not authenticated"
+// @Failure      403  {string}  string "Forbidden: User does not own this product"
+// @Failure      404  {string}  string "Not Found: Product not found"
+// @Failure      500  {string}  string "Internal Server Error: Database error"
+// @Security     ApiKeyAuth
+// @Router       /api/products/details [get] // Changed path slightly to avoid conflict with GetProducts
 func GetProduct(w http.ResponseWriter, r *http.Request) {
 	// --- Updated Auth Check ---
 	user, err := oauth.GetCurrentUser(r)
@@ -595,8 +661,17 @@ func GetProduct(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GetProducts retrieves the information about all products belonging to the logged-in user.
-// swagger annotations remain the same
+// GetProducts retrieves information about all products belonging to the logged-in user.
+//
+// @Summary      Get all products for the user
+// @Description  Retrieves a list of all products owned by the authenticated user.
+// @Tags         Products
+// @Produce      application/json
+// @Success      200  {array}   ProductReturn "Successfully retrieved list of products"
+// @Failure      401  {string}  string "Unauthorized: User not authenticated"
+// @Failure      500  {string}  string "Internal Server Error: Database error"
+// @Security     ApiKeyAuth
+// @Router       /api/products [get]
 func GetProducts(w http.ResponseWriter, r *http.Request) {
 	// --- Updated Auth Check ---
 	user, err := oauth.GetCurrentUser(r)
@@ -641,8 +716,23 @@ func GetProducts(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GetProductImage retrieves a product image if it belongs to the logged-in user.
-// swagger annotations remain the same
+// GetProductImage serves the image file associated with a product.
+// It requires the image filename (e.g., the UUID.ext stored in the Image record) as a query parameter.
+// Authentication checks if the user owns the image record.
+//
+// @Summary      Get a product image
+// @Description  Retrieves and serves the image file associated with a product, identified by its filename. Requires the user to be authenticated and own the product/image.
+// @Tags         Products
+// @Produce      image/*
+// @Param        image  query     string true  "Filename of the image to retrieve (e.g., 'uuid.jpg')"
+// @Success      200    {file}    binary "Product image file"
+// @Failure      400    {string}  string "Bad Request: Missing or invalid image filename"
+// @Failure      401    {string}  string "Unauthorized: User not authenticated"
+// @Failure      403    {string}  string "Forbidden: User does not own this image"
+// @Failure      404    {string}  string "Not Found: Image metadata or file not found"
+// @Failure      500    {string}  string "Internal Server Error: Database or file system error"
+// @Security     ApiKeyAuth
+// @Router       /api/products/image [get]
 func GetProductImage(w http.ResponseWriter, r *http.Request) {
 	// --- Updated Auth Check ---
 	// Note: Authentication might not be strictly necessary if image URLs are non-guessable UUIDs

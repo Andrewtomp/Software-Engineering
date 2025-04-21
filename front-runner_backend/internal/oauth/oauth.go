@@ -27,7 +27,8 @@ const (
 	userSessionKey = "userID" // Key to store user ID in session
 )
 
-// Setup initializes the OAuth providers and session store
+// Setup initializes the OAuth providers and session store.
+// It reads configuration from environment variables and configures the goth library.
 func Setup(store *sessions.CookieStore) {
 	if store == nil {
 		log.Fatal("OAuth Setup: Received nil session store")
@@ -103,7 +104,15 @@ func Setup(store *sessions.CookieStore) {
 	// )
 }
 
-// HandleGoogleLogin initiates the Google OAuth flow
+// HandleGoogleLogin initiates the Google OAuth2 authentication flow.
+// It redirects the user to Google's consent screen.
+//
+// @Summary      Initiate Google Login
+// @Description  Redirects the user to Google for authentication as part of the OAuth2 flow.
+// @Tags         Authentication (OAuth)
+// @Success      307  {string}  string "Redirects to Google's authentication endpoint"
+// @Failure      500  {object}  string "Internal Server Error (if Goth setup fails)"
+// @Router       /auth/google [get]
 func HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	providerName := "google"
 	ctx := context.WithValue(r.Context(), gothic.ProviderParamKey, providerName)
@@ -111,7 +120,17 @@ func HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	gothic.BeginAuthHandler(w, r)
 }
 
-// HandleGoogleCallback handles the callback from Google
+// HandleGoogleCallback handles the callback request from Google after user authentication.
+// It completes the OAuth2 flow, retrieves user information, finds or creates a local user,
+// establishes a session, and redirects the user to the application's root.
+//
+// @Summary      Google Login Callback
+// @Description  Handles the callback from Google after authentication. Creates a user session upon successful authentication and redirects to the homepage.
+// @Tags         Authentication (OAuth)
+// @Success      307  {string}  string "Redirects to / on successful login"
+// @Failure      400  {object}  string "Bad Request (e.g., state mismatch)" // Goth might handle this
+// @Failure      500  {object}  string "Internal Server Error (session, database, or Goth issue)"
+// @Router       /auth/google/callback [get]
 func HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	gothUser, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
@@ -188,7 +207,15 @@ func HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusTemporaryRedirect) // Or wherever logged-in users should go
 }
 
-// HandleLogout clears the user session
+// HandleLogout clears the user's session information, effectively logging them out.
+// It redirects the user to the root path ('/') regardless of initial login state.
+//
+// @Summary      User Logout
+// @Description  Logs out the current user by clearing the session cookie and redirects to the homepage.
+// @Tags         Authentication (OAuth), Authentication
+// @Success      307  {string}  string "Redirects to / after logout"
+// @Failure      500  {object}  string "Internal Server Error (if saving cleared session fails)"
+// @Router       /logout [get]
 func HandleLogout(w http.ResponseWriter, r *http.Request) {
 	session, err := sharedStore.Get(r, sessionName)
 	if err == nil { // Only proceed if session exists
@@ -210,10 +237,9 @@ func HandleLogout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 }
 
-// --- Helper Function (Example) ---
-// You might put this in a middleware or context utility
-
-// GetCurrentUser retrieves the logged-in user from the session
+// GetCurrentUser retrieves the logged-in user details based on the session cookie.
+// This is a helper function, typically used in middleware or other handlers.
+// It does not directly handle HTTP requests and thus has no Swagger annotations.
 func GetCurrentUser(r *http.Request) (*usertable.User, error) {
 	session, err := sharedStore.Get(r, sessionName)
 	if err != nil {

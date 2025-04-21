@@ -16,9 +16,10 @@ import (
 
 var encryptionKey []byte // Loaded during Setup
 
-// loadEncryptionKey retrieves the key from environment variables.
-// IMPORTANT: Ensure STOREFRONT_ENCRYPTION_KEY is set securely in your environment!
-// It should be a 32-byte base64 encoded string for AES-256.
+// loadEncryptionKey retrieves the AES-256 encryption key from the
+// STOREFRONT_KEY environment variable. The key must be a 32-byte
+// value encoded in base64. It populates the package-level encryptionKey variable.
+// It returns an error if the key is missing, cannot be decoded, or is not 32 bytes long.
 func loadEncryptionKey() error {
 	keyBase64 := strings.TrimSpace(string(os.Getenv("STOREFRONT_KEY")))
 
@@ -41,8 +42,10 @@ func loadEncryptionKey() error {
 	return nil
 }
 
-// encryptCredentials encrypts plaintext credentials using AES-GCM.
-// Returns a base64 encoded string containing nonce + ciphertext.
+// encryptCredentials encrypts the given plaintext string using AES-GCM with the
+// package-level encryption key. It generates a unique nonce for each encryption.
+// Returns a base64 encoded string containing the nonce prepended to the ciphertext.
+// Returns an error if the encryption key is not loaded or if any cryptographic operation fails.
 func encryptCredentials(plaintext string) (string, error) {
 	if len(encryptionKey) == 0 {
 		// This should ideally not happen if Setup is called correctly
@@ -79,7 +82,11 @@ func encryptCredentials(plaintext string) (string, error) {
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-// decryptCredentials decrypts a base64 encoded ciphertext (nonce + encrypted data) using AES-GCM.
+// decryptCredentials decrypts a base64 encoded string (containing nonce + ciphertext)
+// using AES-GCM with the package-level encryption key.
+// It verifies the integrity of the data during decryption.
+// Returns the original plaintext string or an error if the key is not loaded,
+// the input format is invalid, or decryption fails (e.g., due to tampering or incorrect key).
 func decryptCredentials(ciphertextBase64 string) (string, error) {
 	if len(encryptionKey) == 0 {
 		log.Println("Error: decryptCredentials called before encryption key was loaded.")
