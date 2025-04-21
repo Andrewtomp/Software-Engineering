@@ -151,9 +151,9 @@ func setupModules() {
 	storefronttable.MigrateStorefrontDB()
 
 	orderstable.Setup()
-	orderstable.MigrateProdDB()
-  
-  log.Println("All modules set up.")
+	orderstable.MigrateOrdersDB()
+
+	log.Println("All modules set up.")
 
 }
 
