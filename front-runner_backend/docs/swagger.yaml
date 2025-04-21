@@ -1,28 +1,12 @@
 basePath: /
 definitions:
-  prodtable.ProductReturn:
-    properties:
-      image:
-        description: Consider renaming to imageURL or similar
-        type: string
-      prodCount:
-        type: integer
-      prodDesc:
-        type: string
-      prodID:
-        type: integer
-      prodName:
-        type: string
-      prodPrice:
-        type: number
-      prodTags:
   orderstable.OrderCreatePayload:
     properties:
       customerEmail:
-        description: Email of the customer that placed the order
+        description: Email of the customer placing the order
         type: string
       customerName:
-        description: Name of the customer that placed the order
+        description: Name of the customer placing the order
         type: string
       orderedProducts:
         description: List of ordered products
@@ -42,6 +26,7 @@ definitions:
       count:
         type: integer
       price:
+        description: Price per item at the time of order
         type: number
       productID:
         type: integer
@@ -51,26 +36,47 @@ definitions:
   orderstable.OrderReturn:
     properties:
       customerEmail:
-        description: Name of the customer that placed the order
+        description: Email of the customer that placed the order
         type: string
       customerName:
         description: Name of the customer that placed the order
         type: string
       orderDate:
+        description: Formatted date string
         type: string
       orderID:
         description: ID of the order requested
         type: integer
       orderedProducts:
-        description: List of ordered products
+        description: List of ordered products *owned by the requesting user*
         items:
           $ref: '#/definitions/orderstable.OrderProductReturn'
         type: array
       status:
         type: string
       total:
+        description: Total cost *for the items owned by the requesting user* in this
+          order
         type: number
       trackingNumber:
+        type: string
+    type: object
+  prodtable.ProductReturn:
+    properties:
+      image:
+        description: Consider renaming to imageURL or similar
+        type: string
+      prodCount:
+        type: integer
+      prodDesc:
+        type: string
+      prodID:
+        type: integer
+      prodName:
+        type: string
+      prodPrice:
+        type: number
+      prodTags:
         type: string
     type: object
   storefronttable.StorefrontLinkAddPayload:
@@ -176,8 +182,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Creates a new order entry with details including customer name,
-        products, count, and order date.
+      description: Creates a new order entry with customer details and products. Updates
+        product stock and links sellers.
       parameters:
       - description: Order Details
         in: body
@@ -185,56 +191,29 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/orderstable.OrderCreatePayload'
-      produces:
-      - text/plain
       responses:
         "201":
-          description: Product added successfully
+          description: Order created successfully, returns order ID" // Example success
+            response
           schema:
-            type: string
+            additionalProperties:
+              type: integer
+            type: object
         "400":
-          description: Error parsing form or uploading image
+          description: Invalid request body, missing fields, or invalid product data
           schema:
             type: string
-        "401":
-          description: User not authenticated
+        "404":
+          description: Product not found or insufficient stock
           schema:
             type: string
         "500":
-          description: Internal server error
+          description: Internal server error during order processing
           schema:
             type: string
       summary: Creates an order
       tags:
       - order
-  /api/delete_product:
-    delete:
-      description: Deletes an existing product and its associated image if the product
-        belongs to the authenticated user.
-      parameters:
-      - description: Product ID
-        in: query
-        name: id
-        required: true
-        type: string
-      produces:
-      - text/plain
-      responses:
-        "200":
-          description: Product deleted successfully
-          schema:
-            type: string
-        "401":
-          description: User not authenticated or unauthorized
-          schema:
-            type: string
-        "404":
-          description: Product not found
-          schema:
-            type: string
-      summary: Delete a product
-      tags:
-      - product
   /api/delete_storefront:
     delete:
       description: Removes the link to an external storefront specified by its unique
@@ -282,70 +261,73 @@ paths:
       summary: Unlink a storefront
       tags:
       - Storefronts
-  /api/get_storefronts:
   /api/get_order:
     get:
-      description: Retreives an existing order and its associated metadata if the
-        order belongs to the authenticated user.
+      description: Retrieves an existing order and its associated products *owned
+        by the authenticated user (seller)*.
       parameters:
       - description: Order ID
         in: query
         name: id
         required: true
         type: integer
-      produces:
-      - application/json
       responses:
         "200":
-          description: JSON representation of an orders information (empty object
-            if none)
+          description: JSON representation of the order's information relevant to
+            the user (empty object if user has no items in this order)
           schema:
             $ref: '#/definitions/orderstable.OrderReturn'
+        "400":
+          description: Invalid Order ID format
+          schema:
+            type: string
         "401":
-          description: User not authenticated or unauthorized
+          description: User not authenticated
           schema:
             type: string
         "403":
-          description: Permission denied
+          description: Permission denied (user is not a seller for any product in
+            this order)
           schema:
             type: string
         "404":
-          description: No Order with specified ID
+          description: Order not found
           schema:
             type: string
-      summary: Retrieve an order
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieve an order (filtered for seller)
       tags:
       - order
   /api/get_orders:
     get:
-      description: Retreives orders and their associated metadata belonging to the
-        authenticated user.
-      produces:
-      - application/json
+      description: Retrieves orders containing products sold by the authenticated
+        user, along with the relevant product details for each order.
       responses:
         "200":
-          description: JSON representation of an orders information (empty object
-            if none)
+          description: JSON array of orders relevant to the user (empty array if none)
           schema:
             items:
               $ref: '#/definitions/orderstable.OrderReturn'
             type: array
         "401":
-          description: User not authenticated or unauthorized
+          description: User not authenticated
           schema:
             type: string
-        "403":
-          description: Permission denied
+        "500":
+          description: Internal server error
           schema:
             type: string
-        "404":
-          description: No Order with specified ID
-          schema:
-            type: string
-      summary: Retrieve an user's orders
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieve user's sales orders
       tags:
       - order
-  /api/get_product:
+  /api/get_storefronts:
     get:
       description: Retrieves a list of all external storefronts linked by the currently
         authenticated user. Credentials are *never* included. Requires authentication.
