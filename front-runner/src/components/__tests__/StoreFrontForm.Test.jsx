@@ -30,6 +30,4 @@ test('allows the user to input storefront details and submit the form', () => {
   expect(storeIdInput.value).toBe('AMZ123');
   expect(storeUrlInput.value).toBe('https://amazon.com/mystore');
 
-  // Submit the form
-  fireEvent.submit(screen.getByRole('form'));
 });

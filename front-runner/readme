@@ -33,6 +33,8 @@ Follow these steps to set up the project:
 7. Insall React Jest for tests:
     npm install --save-dev jest @testing-library/react @testing-library/jest-dom @testing-library/user-event
 
+    npm install --save-dev @testing-library/react @testing-library/dom
+
     npm install --save-dev react-test-renderer
 
 8. Install AG Grid:
