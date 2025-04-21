@@ -9,7 +9,7 @@ Software-Engineering project repo: FrontRunner
 - Sean Cheema
 - Andrew Tompkins
 
-## How To Run:
+## How to Run:
 ### Clone The Repository
 `git clone <repository-url>`
 
@@ -18,7 +18,7 @@ Software-Engineering project repo: FrontRunner
 2. `npm install`
 3. `npm run build`
 
-### Run Back end
+### Run Back End
 1. `cd front-runner_backend`
 2. 
 
