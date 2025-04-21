@@ -74,10 +74,17 @@ var (
 // Setup initializes database connection and ensures uploads directory exists.
 func Setup() {
 	setupOnce.Do(func() {
-		coredbutils.LoadEnv()
-		db, _ = coredbutils.GetDB()
-		// login.Setup() // REMOVE: Login setup is now centralized
-		log.Println("prodtable package setup complete")
+		coredbutils.LoadEnv() // Ensure env vars are loaded if needed by GetDB
+		var err error
+		db, err = coredbutils.GetDB() // Get the singleton DB instance
+		if err != nil {
+			// If GetDB can fail, handle it here. Assuming it fatals or test setup checks it.
+			log.Fatalf("prodtable Setup: Failed to get database connection: %v", err)
+		}
+		if db == nil {
+			log.Fatal("prodtable Setup: Database connection is nil after GetDB.")
+		}
+		log.Println("prodtable package setup complete (DB connection obtained).")
 	})
 
 	// Ensure uploads directory exists
