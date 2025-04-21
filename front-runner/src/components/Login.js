@@ -56,7 +56,7 @@ const CustomButtonTemplate = (props) => {
         className="btn btn-primary"
         role="button"
       >
-        Submit
+        Login with Email
       </button>
     </div>
   );
@@ -80,9 +80,11 @@ const LoginForm = () => {
       // if (response.status === 303) {
       if (response.type === "opaqueredirect") {
         // If server returns a redirect, update the browser location manually
-        const redirectUrl = response.headers.get('Location');
-        console.log('onSubmit: Redirect URL from server:', redirectUrl);
-        window.location.href = redirectUrl ? redirectUrl : '/';
+        // const redirectUrl = response.headers.get('Location');
+        // console.log('onSubmit: Redirect URL from server:', redirectUrl);
+        // window.location.href = redirectUrl ? redirectUrl : '/';
+        console.log('onSubmit: Redirect detected or implied, navigating to /');
+        window.location.href = '/'; // Navigate to dashboard after successful login/redirect
       } else if (response.ok) {
         console.log('onSubmit: Login succeeded without explicit redirect, navigating to home');
         // If login is successful but no explicit redirect, navigate to home
@@ -91,9 +93,11 @@ const LoginForm = () => {
         const errorText = await response.text();
         console.error('Login failed:', errorText);
         // Optionally display an error message to the user
+        alert(`Login failed: ${errorText}`);
       }
     } catch (error) {
       console.error('Error during login:', error);
+      alert('An error occurred during login. Please try again.');
     }
   };
   // const onSubmit = ({ formData }) => {
@@ -104,6 +108,10 @@ const LoginForm = () => {
   //     body: new URLSearchParams(formData)
   //   });
   // };
+
+  const handleGoogleLogin = () => {
+    window.location.href = '/auth/google';
+  };
 
   return (
     <div className="login-container" style={{ backgroundImage: `url("../assets/FrontRunner Login Background.png")`, backgroundSize: "cover", backgroundPosition: "center"}}>
@@ -119,9 +127,27 @@ const LoginForm = () => {
             ButtonTemplates: { SubmitButton: CustomButtonTemplate }
           }}
         />
-        <a href='/register'>
-          New here? Create an account.
-        </a>
+        {/* Divider */}
+        <div className="or-divider">OR</div>
+
+        {/* Google Login Button */}
+        <div className="d-flex justify-content-center mb-3">
+          <button
+            type="button" // Important: type="button" prevents form submission
+            className="btn btn-primary" // Using Bootstrap's red color for Google
+            onClick={handleGoogleLogin}
+            role="button"
+          >
+            <i className="bi bi-google me-2"></i> {/* Optional: Add Google icon if using Bootstrap Icons */}
+            Login with Google
+          </button>
+        </div>
+
+        <div className="text-center">
+          <a href='/register'>
+            New here? Create an account.
+          </a>
+        </div>
       </div>
     </div>
   );
