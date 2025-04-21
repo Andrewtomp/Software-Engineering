@@ -41,7 +41,7 @@ Video: [Sprint 4 VIDEO]()
 
 ## Incomplete Work
 ### Front end
-- 
+- N/A
 
 ### Back end
 - Need to implement OAuth 2.0 for truely connecting to external stores
@@ -108,11 +108,11 @@ _Unit Tests_
 | `RegistrationForm.Test` | Tests the rendering of login form, allowing user input, validating the input, and submitting the form |
 | `NavBar.Test` | Tests the routing from the nav bar to the home, products, storefronts, and orders pages |
 | `ProductForm.Test` | Tests that the Product Form popup allows user input, validates the input, and submits the form |
-| `Storefront.Test` | Tests that the Storefront Form popup allows user input, validates the input, and submits the form |
+| `StoreFrontForm.Test` | Tests that the Storefront Form popup allows user input, validates the input, and submits the form |
 
 Tests passing:
 
-![image](https://github.com/user-attachments/assets/9a3be6b0-f1d4-4c70-915a-b72c9c46a4f1)
+![image](https://github.com/user-attachments/assets/602e8a84-fb83-49fc-b3c7-9e7bd85bc1c2)
 
 
 ### Back end
