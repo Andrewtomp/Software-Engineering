@@ -1,7 +1,4 @@
-# Software-Engineering
-Software-Engineering project repo: FrontRunner
-
-# Project Name: FrontRunner
+# FrontRunner
 
 ## Project Members:
 - Christian Ball 
