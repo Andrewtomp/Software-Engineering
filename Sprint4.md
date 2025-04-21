@@ -5,18 +5,14 @@ Video: [Sprint 4 VIDEO]()
 ### Front end
 - Merged all Sprint 3 content to main branch
 - Updated README for dependencies and directions to start front end server
-- Added support for a scrollable products page
-  - Included fade off for clean view rather than products getting cut off
-- Implemented API calls for fetching, updating, and deleting products
-- Implemented API call for fetching image data
-- Implemented front end logic for product viewing on home page and products page
-- Implemented front end logic for updating an existing product
-- Implemented front end logic for deleting products
-- Added delete option to product form
-- Made home page products more responsive
-- *Incomplete Sprint2 Issue:* Fixed bug where product tags aren't being received correctly when submitting a new product
-- *Incomplete Sprint2 Issue:* Connected Product page and preview on dashboard with back end to show users' products in real time
-- Created Cypress Tests for this sprint's functionality
+- Implemented API calls for fetching, updating, and deleting storefronts
+- Implemented front end logic for storefront viewing on home page and storefronts page
+- Implemented front end logic for updating an existing storefront
+- Implemented front end logic for deleting storefronts
+- Added delete option to storefront form
+- Created navigation from home products and storefronts to their respective pages (e.g. ProductA is clicked on homepage, app navigates to products page, edit form for ProductA is opened)
+- *Incomplete Sprint3 Issue:* Completed user interface for storefronts page
+- Created Cypress and Unit Tests for this sprint's functionality
 
 ### Back end
 - Merged all Sprint 2 content to main branch
@@ -45,8 +41,7 @@ Video: [Sprint 4 VIDEO]()
 
 ## Incomplete Work
 ### Front end
-- Need to complete Storefronts Figma pages so development can start
-- Enable product and storefront editing on home page
+- 
 
 ### Back end
 - Need to implement OAuth 2.0 for truely connecting to external stores
@@ -84,6 +79,14 @@ _Cypress Tests_
 | `Delete Product` | Tests that a product can be deleted |
 | `Cancel Product Deletion` | Tests that deleting a product can be aborted after clicking the delete button |
 | `Close Product Form` | Tests that clicking the close button on the product form closes the form |
+| `Open Add Storefront` | Tests that the add new button opens the Add Storefront modal |
+| `Storefront Form Validation` | Tests the validation of required fields in the Add Storefront form |
+| `Add New Storefront` | Tests that a new storefront is added after the necessary, correct information is inputted |
+| `Select Existing Storefront` | Tests that an existing storefront can be clicked and its information is populated in the form |
+| `Update Storefront` | Tests that existing storefronts can be edited and the changes are upheld |
+| `Delete Storefront` | Tests that a storefront can be deleted |
+| `Cancel Storefront Deletion` | Tests that deleting a storefront can be aborted after clicking the delete button |
+| `Close Storefront Form` | Tests that clicking the close button on the storefront form closes the form |
 
 Tests passing:
 
@@ -92,6 +95,7 @@ Tests passing:
 ![image](https://github.com/user-attachments/assets/e8cba87d-5fda-4dcf-8f9f-7f20f6178d51)
 ![image](https://github.com/user-attachments/assets/0ed22aae-86a3-420f-b765-ae444db0142c)
 ![image](https://github.com/user-attachments/assets/b3b4d064-66a0-48df-9caf-0afef86c35d9)
+![image](https://github.com/user-attachments/assets/6465f370-5a5e-48b2-9b24-0dd2d71539ce)
 
 
 
@@ -104,6 +108,7 @@ _Unit Tests_
 | `RegistrationForm.Test` | Tests the rendering of login form, allowing user input, validating the input, and submitting the form |
 | `NavBar.Test` | Tests the routing from the nav bar to the home, products, storefronts, and orders pages |
 | `ProductForm.Test` | Tests that the Product Form popup allows user input, validates the input, and submits the form |
+| `Storefront.Test` | Tests that the Storefront Form popup allows user input, validates the input, and submits the form |
 
 Tests passing:
 
