@@ -145,36 +145,53 @@
                 }
             }
         },
-        "/api/get_storefronts": {
-            "get": {
-                "security": [
+
+        "/api/create_order": {
+            "post": {
+                "description": "Creates a new order entry with details including customer name, products, count, and order date.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "order"
+                ],
+                "summary": "Creates an order",
+                "parameters": [
                     {
-                        "ApiKeyAuth": []
+                        "description": "Order Details",
+                        "name": "orderInfo",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/orderstable.OrderCreatePayload"
+                        }
                     }
                 ],
-                "description": "Retrieves a list of all external storefronts linked by the currently authenticated user. Credentials are *never* included. Requires authentication.",
-                "tags": [
-                    "Storefronts"
-                ],
-                "summary": "Get linked storefronts",
                 "responses": {
-                    "200": {
-                        "description": "List of linked storefronts (empty array if none)",
+                    "201": {
+                        "description": "Product added successfully",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/storefronttable.StorefrontLinkReturn"
-                            }
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Error parsing form or uploading image",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized - User session invalid or expired",
+                        "description": "User not authenticated",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error - Database query failed",
+
+                        "description": "Internal server error",
                         "schema": {
                             "type": "string"
                         }
@@ -182,11 +199,12 @@
                 }
             }
         },
-        "/api/login": {
-            "post": {
-                "description": "Authenticates a user using email and password. Creates a session cookie upon successful authentication and redirects to the homepage.",
-                "consumes": [
-                    "application/x-www-form-urlencoded"
+        "/api/delete_product": {
+            "delete": {
+                "description": "Deletes an existing product and its associated image if the product belongs to the authenticated user.",
+                "produces": [
+                    "text/plain"
+
                 ],
                 "tags": [
                     "Authentication"
@@ -473,14 +491,100 @@
                         }
                     }
                 }
-            },
-            "delete": {
-                "security": [
+
+            }
+        },
+        "/api/get_order": {
+            "get": {
+                "description": "Retreives an existing order and its associated metadata if the order belongs to the authenticated user.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "order"
+                ],
+                "summary": "Retrieve an order",
+                "parameters": [
                     {
-                        "ApiKeyAuth": []
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
                     }
                 ],
-                "description": "Deletes a specific product owned by the authenticated user, identified by its ID. Also deletes the associated image file and record.",
+                "responses": {
+                    "200": {
+                        "description": "JSON representation of an orders information (empty object if none)",
+                        "schema": {
+                            "$ref": "#/definitions/orderstable.OrderReturn"
+                        }
+                    },
+                    "401": {
+                        "description": "User not authenticated or unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Permission denied",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "No Order with specified ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/get_orders": {
+            "get": {
+                "description": "Retreives orders and their associated metadata belonging to the authenticated user.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "order"
+                ],
+                "summary": "Retrieve an user's orders",
+                "responses": {
+                    "200": {
+                        "description": "JSON representation of an orders information (empty object if none)",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/orderstable.OrderReturn"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "User not authenticated or unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Permission denied",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "No Order with specified ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/get_product": {
+            "get": {
+                "description": "Retreives an existing product and its associated metadata if the product belongs to the authenticated user.",
                 "produces": [
                     "text/plain"
                 ],
@@ -900,29 +1004,86 @@
         }
     },
     "definitions": {
-        "prodtable.ProductReturn": {
+        "orderstable.OrderCreatePayload": {
             "type": "object",
             "properties": {
-                "image": {
-                    "description": "Consider renaming to imageURL or similar",
+                "customerEmail": {
+                    "description": "Email of the customer that placed the order",
                     "type": "string"
                 },
-                "prodCount": {
+                "customerName": {
+                    "description": "Name of the customer that placed the order",
+                    "type": "string"
+                },
+                "orderedProducts": {
+                    "description": "List of ordered products",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/orderstable.OrderProductPayload"
+                    }
+                }
+            }
+        },
+        "orderstable.OrderProductPayload": {
+            "type": "object",
+            "properties": {
+                "count": {
                     "type": "integer"
                 },
-                "prodDesc": {
-                    "type": "string"
-                },
-                "prodID": {
+                "productID": {
+                    "type": "integer"
+                }
+            }
+        },
+        "orderstable.OrderProductReturn": {
+            "type": "object",
+            "properties": {
+                "count": {
                     "type": "integer"
                 },
-                "prodName": {
-                    "type": "string"
-                },
-                "prodPrice": {
+                "price": {
                     "type": "number"
                 },
-                "prodTags": {
+                "productID": {
+                    "type": "integer"
+                },
+                "productName": {
+                    "type": "string"
+                }
+            }
+        },
+        "orderstable.OrderReturn": {
+            "type": "object",
+            "properties": {
+                "customerEmail": {
+                    "description": "Name of the customer that placed the order",
+                    "type": "string"
+                },
+                "customerName": {
+                    "description": "Name of the customer that placed the order",
+                    "type": "string"
+                },
+                "orderDate": {
+                    "type": "string"
+                },
+                "orderID": {
+                    "description": "ID of the order requested",
+                    "type": "integer"
+                },
+                "orderedProducts": {
+                    "description": "List of ordered products",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/orderstable.OrderProductReturn"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total": {
+                    "type": "number"
+                },
+                "trackingNumber": {
                     "type": "string"
                 }
             }

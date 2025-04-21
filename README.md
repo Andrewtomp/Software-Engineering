@@ -1,13 +1,53 @@
-# Software-Engineering
-Software-Engineering project repo: FrontRunner
-
-# Project Name: FrontRunner
+# FrontRunner
 
 ## Project Members:
 - Christian Ball 
 - Jonathan Bravo
 - Sean Cheema
 - Andrew Tompkins
+
+## How to Run:
+### Clone The Repository
+`git clone <repository-url>`
+
+### Compile Static Front End
+1. Navigate to front end folder:
+
+   `cd front-runner`
+
+3. Install the dependencies:
+
+    `npm install`
+
+5. Install React:
+
+    `npm install react`
+   
+    `npm install react react-dom`
+
+7. Install React Bootstrap:
+   
+    `npm install react-bootstrap bootstrap`
+
+9. Install React JSON Schema Form:
+    
+    `npm install @rjsf/core @rjsf/utils @rjsf/validator-ajv8 --save`
+
+11. Install Font Awesome Icons:
+    
+    `npm install --save @fortawesome/react-fontawesome @fortawesome/fontawesome-svg-core @fortawesome/free-solid-svg-icons @fortawesome/free-brands-svg-icons`
+
+13. Install AG Grid:
+    
+    `npm install ag-grid-react ag-grid-community`
+
+15. Run static build:
+    
+    `npm run build`
+
+### Run Back End
+1. `cd front-runner_backend`
+2. 
 
 ## Project Description:
 ## Project Idea:

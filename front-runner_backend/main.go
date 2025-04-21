@@ -22,7 +22,9 @@ import (
 	_ "front-runner/docs" // This is important for swagger to find your docs!
 	"front-runner/internal/coredbutils"
 	"front-runner/internal/login"
+
 	"front-runner/internal/oauth" // Import oauth
+	"front-runner/internal/orderstable"
 	"front-runner/internal/prodtable"
 	"front-runner/internal/routes"
 	"front-runner/internal/storefronttable"
@@ -148,7 +150,11 @@ func setupModules() {
 	storefronttable.Setup() // Assumes storefronttable.Setup uses coredbutils.GetDB() and loads key internally
 	storefronttable.MigrateStorefrontDB()
 
-	log.Println("All modules set up.")
+	orderstable.Setup()
+	orderstable.MigrateProdDB()
+  
+  log.Println("All modules set up.")
+
 }
 
 // main is the entry point of the application.
