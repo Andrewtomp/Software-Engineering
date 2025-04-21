@@ -29,24 +29,37 @@ type spaHandler struct {
 // If the file exists and is not a directory, it serves the file.
 // Otherwise (file not found or is a directory), it serves the indexPath file.
 func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// Join internally call path.Clean to prevent directory traversal
+	// Join internally calls path.Clean to prevent directory traversal
 	path := filepath.Join(h.staticPath, r.URL.Path)
 
 	// check whether a file exists or is a directory at the given path
 	fi, err := os.Stat(path)
-	if os.IsNotExist(err) || fi.IsDir() {
-		// file does not exist or path is a directory, serve index.html
-		http.ServeFile(w, r, filepath.Join(h.staticPath, h.indexPath))
+
+	// If path doesn't exist or IS a directory, serve index.html
+	if os.IsNotExist(err) || (err == nil && fi.IsDir()) {
+		indexPath := filepath.Join(h.staticPath, h.indexPath)
+		http.ServeFile(w, r, indexPath) // ServeFile is fine for index fallback
 		return
 	}
 
+	// If there was an error stating the file (and it wasn't NotExist)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// otherwise, use http.FileServer to serve the static file
-	http.FileServer(http.Dir(h.staticPath)).ServeHTTP(w, r)
+	// Path exists and is a file, serve it using ServeContent
+	f, err := os.Open(path)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer f.Close()
+
+	// ServeContent needs modtime and reader. fi was obtained from os.Stat above.
+	// Use the original request path's base name for the 'name' parameter in ServeContent
+	// to avoid potential issues with ServeContent trying to redirect based on the full fsPath.
+	http.ServeContent(w, r, filepath.Base(r.URL.Path), fi.ModTime(), f)
 }
 
 // InvalidAPI handles requests to API paths that are not explicitly defined.
