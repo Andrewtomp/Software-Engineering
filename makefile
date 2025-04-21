@@ -82,3 +82,8 @@ run-backend-only:
 	echo "Opening $(BROWSER_URL) in your browser..."; \
 	$(OPEN_CMD) $(BROWSER_URL); \
 	echo "Makefile finished. Backend server is running in the background."
+
+.PHONY: backend-ngrok
+backend-ngrok:
+	@echo "Starting Go backend server (assuming prerequisites are met)..."
+	@(cd front-runner_backend && go run . --ngrok) & \
