@@ -3,7 +3,6 @@ package login
 
 import (
 	"errors"
-	"fmt"
 	"front-runner/internal/usertable"
 	"log"
 	"net/http"
@@ -64,7 +63,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if userID, ok := session.Values[userSessionKey].(uint); ok && userID > 0 {
-		fmt.Fprintf(w, "User is already logged in")
+		http.Error(w, "User is already logged in", http.StatusConflict)
 		return
 	}
 

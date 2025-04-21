@@ -2,7 +2,6 @@
 package login
 
 import (
-	"fmt"
 	"front-runner/internal/coredbutils"
 	"front-runner/internal/usertable"
 	"log"
@@ -12,195 +11,674 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
+	// "github.com/gorilla/mux" // Not strictly needed for direct handler tests
+	"github.com/gorilla/sessions"
 	"github.com/joho/godotenv"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 const projectDirName = "front-runner_backend"
 
-func init() {
-	re := regexp.MustCompile(`^(.*` + projectDirName + `)`)
-	cwd, _ := os.Getwd()
-	rootPath := re.Find([]byte(cwd))
+// Global test variables
+var (
+	testDB           *gorm.DB
+	testSessionStore *sessions.CookieStore
+	setupEnvOnce     sync.Once
+)
 
-	err := godotenv.Load(string(rootPath) + `/.env`)
-	if err != nil {
-		log.Fatalf("Problem loading .env file. cwd:%s; cause: %s", cwd, err)
-	}
-	coredbutils.LoadEnv()
-	usertable.Setup()
-	Setup()
+// setupTestEnvironment loads environment variables, initializes DB and session store for tests.
+// It also clears the user table before each run via this function.
+func setupTestEnvironment(t *testing.T) {
+	// Use t.Helper() to mark this as a test helper function
+	t.Helper()
+
+	setupEnvOnce.Do(func() {
+		// Find project root based on a known directory name
+		re := regexp.MustCompile(`^(.*` + projectDirName + `)`)
+		cwd, _ := os.Getwd()
+		rootPath := re.Find([]byte(cwd))
+		if rootPath == nil {
+			t.Fatalf("Could not find project root directory '%s' from '%s'", projectDirName, cwd)
+		}
+
+		// Load .env file
+		envPath := string(rootPath) + `/.env`
+		err := godotenv.Load(envPath)
+		if err != nil && !os.IsNotExist(err) {
+			log.Printf("Warning: Problem loading .env file from %s: %v", envPath, err)
+		} else if err == nil {
+			log.Printf("Loaded environment variables from %s for tests", envPath)
+		}
+
+		// Initialize DB connection (using error handling version)
+		coredbutils.ResetDBStateForTests() // Reset state before loading/getting
+		err = coredbutils.LoadEnv()
+		if err != nil {
+			t.Fatalf("Failed to load core DB environment: %v", err)
+		}
+		var dbErr error
+		testDB, dbErr = coredbutils.GetDB()
+		if dbErr != nil {
+			t.Fatalf("Failed to get DB connection for tests: %v", dbErr)
+		}
+
+		// Initialize Session Store for tests (use dummy keys for testing)
+		// IMPORTANT: Use different keys than production!
+		authKey := []byte("test-auth-key-32-bytes-long-000")
+		// --- MODIFIED: Ensure encKey is 32 bytes ---
+		encKey := []byte("test-enc-key-needs-to-be-32-byte") // This string is 32 bytes long
+		// --- End Modification ---
+
+		if len(encKey) != 16 && len(encKey) != 32 {
+			// This check should now pass
+			t.Fatal("Test encryption key must be 16 or 32 bytes")
+		}
+		testSessionStore = sessions.NewCookieStore(authKey, encKey)
+		testSessionStore.Options = &sessions.Options{
+			Path:     "/",
+			MaxAge:   86400 * 1, // 1 day for tests
+			HttpOnly: true,
+			Secure:   false, // Usually false for httptest unless configured otherwise
+			SameSite: http.SameSiteLaxMode,
+		}
+
+		// Setup dependent packages
+		usertable.Setup()               // Assumes it uses coredbutils.GetDB() internally
+		Setup(testDB, testSessionStore) // Setup the login package with test DB and store
+
+		// Ensure migrations are run (optional if TestMain handles it)
+		// usertable.MigrateUserDB()
+	})
+
+	// Clear user table before each test function that calls this setup
+	err := usertable.ClearUserTable(testDB)
+	require.NoError(t, err, "Failed to clear user table before test")
 }
 
-// TestMain sets up the test database environment before tests run.
-//
-// @Summary      Setup test environment
-// @Description  Obtains a test database connection and clears the user table before and after running tests.
-//
-// @Tags         testing, setup
-func TestMain(m *testing.M) {
-	// Get the test database instance.
-	db = coredbutils.GetDB()
+// Helper to create a test user directly in the DB
+func createTestUser(t *testing.T, email, password string) *usertable.User {
+	t.Helper() // Mark as helper
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	require.NoError(t, err, "Failed to hash password for test user")
 
-	// Clear the database before running tests.
-	if err := usertable.ClearUserTable(db); err != nil {
-		fmt.Printf("failed to clear test database: %v\n", err)
-		os.Exit(1)
+	user := &usertable.User{
+		Email:        email,
+		PasswordHash: string(hashedPassword),
+		Name:         "Test User",
+		Provider:     "local",
 	}
-
-	// Run the tests.
-	code := m.Run()
-
-	// Optionally, clear the database after tests.
-	if err := usertable.ClearUserTable(db); err != nil {
-		fmt.Printf("failed to clear test database after tests: %v\n", err)
-		os.Exit(1)
-	}
-
-	os.Exit(code)
+	// Use the CreateUser function from the usertable package for consistency
+	err = usertable.CreateUser(user)
+	require.NoError(t, err, "Failed to create test user using usertable.CreateUser")
+	// We need the ID, so fetch the user back (CreateUser doesn't return the full user with ID)
+	createdUser, err := usertable.GetUserByEmail(email)
+	require.NoError(t, err, "Failed to fetch created test user by email")
+	require.NotNil(t, createdUser, "Fetched created test user should not be nil")
+	return createdUser
 }
 
-// TestLoginUser checks that logging in with valid credentials works.
-//
-// @Summary      Test login with valid credentials
-// @Description  Registers a new user and then logs in with the same credentials. Verifies that the login endpoint returns 200 OK, includes the success message, and sets the session cookie named "auth".
-//
-// @Tags         testing, login
+// TestLoginUser tests successful login.
 func TestLoginUser(t *testing.T) {
-	// First, register a user to log in.
+	setupTestEnvironment(t)
+	userEmail := "logintest@example.com"
+	userPassword := "password123"
+	_ = createTestUser(t, userEmail, userPassword) // Create user directly
+
+	// Create request body
 	form := url.Values{}
-	form.Add("email", "loginuser@example.com")
-	form.Add("password", "loginpassword")
-	form.Add("business_name", "LoginBusiness")
+	form.Add("email", userEmail)
+	form.Add("password", userPassword)
 
-	reqRegister := httptest.NewRequest("POST", "/api/register", strings.NewReader(form.Encode()))
-	reqRegister.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	recRegister := httptest.NewRecorder()
-	usertable.RegisterUser(recRegister, reqRegister)
-	if recRegister.Code != http.StatusOK {
-		t.Fatalf("failed to register user: %v", recRegister.Body.String())
-	}
+	req := httptest.NewRequest("POST", "/api/login", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr := httptest.NewRecorder()
 
-	// Now, attempt to log in with the registered credentials.
-	reqLogin := httptest.NewRequest("POST", "/api/login", strings.NewReader(form.Encode()))
-	reqLogin.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	recLogin := httptest.NewRecorder()
-	LoginUser(recLogin, reqLogin)
+	// Call the handler
+	LoginUser(rr, req)
 
-	if recLogin.Code != http.StatusSeeOther {
-		t.Fatalf("expected status %d; got %d", http.StatusSeeOther, recLogin.Code)
-	}
+	// Assertions
+	assert.Equal(t, http.StatusSeeOther, rr.Code, "Expected status code 303 See Other")
 
-	// Check that a session cookie is set.
-	cookies := recLogin.Result().Cookies()
-	found := false
-	for _, c := range cookies {
-		if c.Name == "auth" {
-			found = true
+	// --- MODIFIED: Check Location header directly ---
+	locationHeader := rr.Header().Get("Location")
+	require.NotEmpty(t, locationHeader, "Expected Location header to be set")
+	assert.Equal(t, "/", locationHeader, "Expected redirect location to be '/'")
+	// --- End Modification ---
+
+	// Check if the session cookie was set
+	cookies := rr.Result().Cookies()
+	foundCookie := false
+	for _, cookie := range cookies {
+		if cookie.Name == sessionName { // Use the constant
+			foundCookie = true
+			assert.NotEmpty(t, cookie.Value, "Session cookie should not be empty")
+
+			// Optional: Decode cookie to verify content (more involved)
+			// session, err := testSessionStore.Get(&http.Request{Header: http.Header{"Cookie": {cookie.String()}}}, sessionName)
+			// require.NoError(t, err, "Failed to decode session cookie")
+			// assert.Equal(t, createdUser.ID, session.Values[userSessionKey], "User ID in session mismatch")
+
 			break
 		}
 	}
-	if !found {
-		t.Error("expected session cookie 'auth' to be set")
-	}
+	assert.True(t, foundCookie, "Expected session cookie '%s' to be set", sessionName)
 }
 
-// TestLoginUserInvalid checks that an invalid login attempt returns an error.
-//
-// @Summary      Test login with invalid credentials
-// @Description  Attempts to log in with credentials that do not exist and verifies that the login endpoint returns a 401 Unauthorized status.
-//
-// @Tags         testing, login
+// TestLoginUserInvalid tests login with incorrect password.
 func TestLoginUserInvalid(t *testing.T) {
+	setupTestEnvironment(t)
+	userEmail := "invalidlogin@example.com"
+	userPassword := "password123"
+	_ = createTestUser(t, userEmail, userPassword) // Create user
+
+	// Create request body with wrong password
 	form := url.Values{}
-	form.Add("email", "nonexistent@example.com")
-	form.Add("password", "badpassword")
-	req := httptest.NewRequest("POST", "/login", strings.NewReader(form.Encode()))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	rec := httptest.NewRecorder()
+	form.Add("email", userEmail)
+	form.Add("password", "wrongpassword")
 
-	LoginUser(rec, req)
-
-	// Expect 401 Unauthorized.
-	if rec.Code != http.StatusUnauthorized {
-		t.Fatalf("expected status %d; got %d", http.StatusUnauthorized, rec.Code)
-	}
-}
-
-// createLogoutTestUser is a helper function that registers a test user for logout testing.
-//
-// @Summary      Create test user for logout
-// @Description  Registers a test user that can later be used to verify the logout functionality.
-//
-// @Tags         testing, helper
-func createLogoutTestUser(t *testing.T) {
-	form := url.Values{}
-	form.Add("email", "test@example.com")
-	form.Add("password", "secret")
-	form.Add("business_name", "TestBusiness")
-
-	req := httptest.NewRequest("POST", "/register", strings.NewReader(form.Encode()))
+	req := httptest.NewRequest("POST", "/api/login", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rr := httptest.NewRecorder()
-	usertable.RegisterUser(rr, req)
 
-	if rr.Code != http.StatusOK {
-		t.Fatalf("failed to register test user: %s", rr.Body.String())
-	}
-}
-
-// TestLogoutUser verifies that logging out clears the session.
-//
-// @Summary      Test logout functionality
-// @Description  Simulates a login to obtain a session cookie and then logs out, verifying that the session is cleared.
-//
-// @Tags         testing, logout
-func TestLogoutUser(t *testing.T) {
-	// Creating a test user for logout test
-	createLogoutTestUser(t)
-
-	// Step 1: Simulate a valid login to generate a session cookie.
-	form := url.Values{}
-	form.Add("email", "test@example.com")
-	form.Add("password", "secret")
-	req := httptest.NewRequest("POST", "/login", strings.NewReader(form.Encode()))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	rr := httptest.NewRecorder()
 	LoginUser(rr, req)
 
-	// Log all headers
-	for key, values := range rr.Header() {
-		for _, value := range values {
-			t.Logf("Header %s: %s", key, value)
-		}
+	assert.Equal(t, http.StatusUnauthorized, rr.Code, "Expected status code 401 Unauthorized")
+	assert.Contains(t, rr.Body.String(), "Invalid credentials", "Expected error message")
+}
+
+// TestLoginUserNotFound tests login with non-existent email.
+func TestLoginUserNotFound(t *testing.T) {
+	setupTestEnvironment(t)
+
+	form := url.Values{}
+	form.Add("email", "nosuchuser@example.com")
+	form.Add("password", "password123")
+
+	req := httptest.NewRequest("POST", "/api/login", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr := httptest.NewRecorder()
+
+	LoginUser(rr, req)
+
+	assert.Equal(t, http.StatusUnauthorized, rr.Code, "Expected status code 401 Unauthorized")
+	assert.Contains(t, rr.Body.String(), "Invalid credentials", "Expected error message")
+}
+
+// TestLoginUserMissingFields tests login with missing email or password.
+func TestLoginUserMissingFields(t *testing.T) {
+	setupTestEnvironment(t)
+
+	testCases := []struct {
+		name string
+		form url.Values
+	}{
+		{
+			name: "Missing Password",
+			form: url.Values{"email": {"test@example.com"}},
+		},
+		{
+			name: "Missing Email",
+			form: url.Values{"password": {"password123"}},
+		},
+		{
+			name: "Missing Both",
+			form: url.Values{},
+		},
 	}
 
-	// Extract the session cookie from the login response.
-	resp := rr.Result()
-	cookies := resp.Cookies()
-	if len(cookies) == 0 {
-		t.Fatal("expected at least one cookie, but got none")
-	}
-	for _, c := range cookies {
-		t.Logf("Cookie: %s = %s", c.Name, c.Value)
-	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			req := httptest.NewRequest("POST", "/api/login", strings.NewReader(tc.form.Encode()))
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			rr := httptest.NewRecorder()
 
-	cookie := rr.Header().Get("Set-Cookie")
-	if cookie == "" {
-		t.Fatal("Expected session cookie, but got none")
-	}
+			LoginUser(rr, req)
 
-	// Step 2: Use the valid session cookie for the logout request.
-	logoutReq := httptest.NewRequest("GET", "/logout", nil)
-	logoutReq.Header.Set("Cookie", cookie)
-
-	logoutRR := httptest.NewRecorder()
-	LogoutUser(logoutRR, logoutReq)
-
-	// Now you can assert that logout was successful.
-	if logoutRR.Body.String() != "Logged out successfully" {
-		t.Errorf("Unexpected logout response: %s", logoutRR.Body.String())
+			assert.Equal(t, http.StatusBadRequest, rr.Code, "Expected status code 400 Bad Request")
+			assert.Contains(t, rr.Body.String(), "Email and password are required", "Expected error message")
+		})
 	}
 }
+
+// TestLoginUserAlreadyLoggedIn tests attempting to log in when already logged in.
+func TestLoginUserAlreadyLoggedIn(t *testing.T) {
+	setupTestEnvironment(t)
+	userEmail := "alreadyin@example.com"
+	userPassword := "password123"
+	user := createTestUser(t, userEmail, userPassword)
+
+	// Simulate an existing valid session
+	req := httptest.NewRequest("POST", "/api/login", nil) // Body doesn't matter here
+	session, err := testSessionStore.New(req, sessionName)
+	require.NoError(t, err, "Failed to create new session for test setup")
+	session.Values[userSessionKey] = user.ID // Set the user ID in the session
+
+	// Manually add the session cookie to the request
+	rrCookieSetter := httptest.NewRecorder() // Use a temporary recorder to get the cookie header
+	err = testSessionStore.Save(req, rrCookieSetter, session)
+	require.NoError(t, err, "Failed to save session to get cookie header")
+	cookieHeader := rrCookieSetter.Header().Get("Set-Cookie")
+	require.NotEmpty(t, cookieHeader, "Set-Cookie header should not be empty after saving session")
+	req.Header.Set("Cookie", cookieHeader) // Set the cookie on the actual request
+
+	// Now make the login request with the existing session cookie
+	rrLogin := httptest.NewRecorder()
+	LoginUser(rrLogin, req) // Call the handler
+
+	// Assertions
+	assert.Equal(t, http.StatusConflict, rrLogin.Code, "Expected status code 409 Conflict")
+	assert.Contains(t, rrLogin.Body.String(), "User is already logged in", "Expected error message")
+}
+
+// TestLogoutUser tests successful logout when logged in.
+func TestLogoutUser(t *testing.T) {
+	setupTestEnvironment(t)
+	userEmail := "logouttest@example.com"
+	userPassword := "password123"
+	user := createTestUser(t, userEmail, userPassword)
+
+	// Simulate a logged-in state by creating a request with a valid session cookie
+	req := httptest.NewRequest("GET", "/logout", nil)
+	session, err := testSessionStore.New(req, sessionName)
+	require.NoError(t, err, "Failed to create new session for test setup")
+	session.Values[userSessionKey] = user.ID
+
+	rrCookieSetter := httptest.NewRecorder()
+	err = testSessionStore.Save(req, rrCookieSetter, session)
+	require.NoError(t, err, "Failed to save session to get cookie header")
+	cookieHeader := rrCookieSetter.Header().Get("Set-Cookie")
+	require.NotEmpty(t, cookieHeader, "Set-Cookie header should not be empty after saving session")
+	req.Header.Set("Cookie", cookieHeader) // Add the valid cookie
+
+	// Perform the logout request
+	rr := httptest.NewRecorder()
+	LogoutUser(rr, req)
+
+	// Assertions
+	assert.Equal(t, http.StatusSeeOther, rr.Code, "Expected status code 303 See Other")
+
+	// Check Location header directly
+	locationHeader := rr.Header().Get("Location")
+	require.NotEmpty(t, locationHeader, "Expected Location header to be set")
+	assert.Equal(t, "/", locationHeader, "Expected redirect location to be '/'")
+
+	// Check that the session cookie was cleared (MaxAge=0 or -1, or Expires in the past)
+	cookies := rr.Result().Cookies()
+	foundCookie := false
+	for _, cookie := range cookies {
+		if cookie.Name == sessionName {
+			foundCookie = true
+			// MaxAge check is generally more reliable than Expires across systems/clocks
+			assert.True(t, cookie.MaxAge <= 0, "Expected session cookie MaxAge to be <= 0, got %d", cookie.MaxAge)
+			// Check Expires just in case MaxAge isn't set correctly by the library
+			if cookie.MaxAge == 0 { // Only check Expires if MaxAge isn't explicitly negative
+				assert.True(t, !cookie.Expires.IsZero() && cookie.Expires.Before(time.Now().Add(time.Second*5)), "Expected session cookie Expires to be in the past or very close to it")
+			}
+			break
+		}
+	}
+	assert.True(t, foundCookie, "Expected session cookie '%s' to be set for clearing", sessionName)
+}
+
+// TestLogoutUserNotLoggedIn tests logout when not logged in.
+func TestLogoutUserNotLoggedIn(t *testing.T) {
+	setupTestEnvironment(t)
+
+	// Perform the logout request without any session cookie
+	req := httptest.NewRequest("GET", "/logout", nil)
+	rr := httptest.NewRecorder()
+	LogoutUser(rr, req)
+
+	// Assertions - Should still redirect and attempt to clear cookie
+	assert.Equal(t, http.StatusSeeOther, rr.Code, "Expected status code 303 See Other")
+
+	// Check Location header directly
+	locationHeader := rr.Header().Get("Location")
+	require.NotEmpty(t, locationHeader, "Expected Location header to be set")
+	assert.Equal(t, "/", locationHeader, "Expected redirect location to be '/'")
+
+	// Check that a clearing cookie was attempted
+	cookies := rr.Result().Cookies()
+	foundCookie := false
+	for _, cookie := range cookies {
+		if cookie.Name == sessionName {
+			foundCookie = true
+			assert.True(t, cookie.MaxAge <= 0, "Expected session cookie MaxAge to be <= 0, got %d", cookie.MaxAge)
+			if cookie.MaxAge == 0 {
+				assert.True(t, !cookie.Expires.IsZero() && cookie.Expires.Before(time.Now().Add(time.Second*5)), "Expected session cookie Expires to be in the past or very close to it")
+			}
+			break
+		}
+	}
+	assert.True(t, foundCookie, "Expected session cookie '%s' to be set for clearing even when not logged in", sessionName)
+}
+
+// // internal/login/login_test.go
+// package login
+
+// import (
+// 	"front-runner/internal/coredbutils"
+// 	"front-runner/internal/usertable"
+// 	"log"
+// 	"net/http"
+// 	"net/http/httptest"
+// 	"net/url"
+// 	"os"
+// 	"regexp"
+// 	"strings"
+// 	"sync"
+// 	"testing"
+// 	"time"
+
+// 	"github.com/gorilla/sessions"
+// 	"github.com/joho/godotenv"
+// 	"github.com/stretchr/testify/assert"
+// 	"github.com/stretchr/testify/require"
+// 	"golang.org/x/crypto/bcrypt"
+// 	"gorm.io/gorm"
+// )
+
+// const projectDirName = "front-runner_backend"
+
+// // Global test variables
+// var (
+// 	testDB           *gorm.DB
+// 	testSessionStore *sessions.CookieStore
+// 	setupEnvOnce     sync.Once
+// )
+
+// // setupTestEnvironment loads environment variables, initializes DB and session store for tests.
+// // It also clears the user table before each run via this function.
+// func setupTestEnvironment(t *testing.T) {
+// 	setupEnvOnce.Do(func() {
+// 		// Find project root based on a known directory name
+// 		re := regexp.MustCompile(`^(.*` + projectDirName + `)`)
+// 		cwd, _ := os.Getwd()
+// 		rootPath := re.Find([]byte(cwd))
+// 		if rootPath == nil {
+// 			t.Fatalf("Could not find project root directory '%s' from '%s'", projectDirName, cwd)
+// 		}
+
+// 		// Load .env file
+// 		envPath := string(rootPath) + `/.env`
+// 		err := godotenv.Load(envPath)
+// 		if err != nil && !os.IsNotExist(err) {
+// 			log.Printf("Warning: Problem loading .env file from %s: %v", envPath, err)
+// 		} else if err == nil {
+// 			log.Printf("Loaded environment variables from %s for tests", envPath)
+// 		}
+
+// 		// Initialize DB connection (using error handling version)
+// 		coredbutils.ResetDBStateForTests() // Reset state before loading/getting
+// 		err = coredbutils.LoadEnv()
+// 		if err != nil {
+// 			t.Fatalf("Failed to load core DB environment: %v", err)
+// 		}
+// 		var dbErr error
+// 		testDB, dbErr = coredbutils.GetDB()
+// 		if dbErr != nil {
+// 			t.Fatalf("Failed to get DB connection for tests: %v", dbErr)
+// 		}
+
+// 		// Initialize Session Store for tests (use dummy keys for testing)
+// 		// IMPORTANT: Use different keys than production!
+// 		authKey := []byte("test-auth-key-32-bytes-long-000")
+// 		encKey := []byte("test-enc-key-16-bytes") // 16, 24, or 32 bytes
+// 		testSessionStore = sessions.NewCookieStore(authKey, encKey)
+// 		testSessionStore.Options = &sessions.Options{
+// 			Path:     "/",
+// 			MaxAge:   86400 * 1, // 1 day for tests
+// 			HttpOnly: true,
+// 			Secure:   false, // Usually false for httptest unless configured otherwise
+// 			SameSite: http.SameSiteLaxMode,
+// 		}
+
+// 		// Setup dependent packages
+// 		usertable.Setup()               // Assumes it uses coredbutils.GetDB() internally
+// 		Setup(testDB, testSessionStore) // Setup the login package with test DB and store
+
+// 		// Ensure migrations are run (optional if TestMain handles it)
+// 		// usertable.MigrateUserDB()
+// 	})
+
+// 	// Clear user table before each test function that calls this setup
+// 	err := usertable.ClearUserTable(testDB)
+// 	require.NoError(t, err, "Failed to clear user table before test")
+// }
+
+// // Helper to create a test user directly in the DB
+// func createTestUser(t *testing.T, email, password string) *usertable.User {
+// 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+// 	require.NoError(t, err, "Failed to hash password for test user")
+
+// 	user := &usertable.User{
+// 		Email:        email,
+// 		PasswordHash: string(hashedPassword),
+// 		Name:         "Test User",
+// 		Provider:     "local",
+// 	}
+// 	err = usertable.CreateUser(user)
+// 	require.NoError(t, err, "Failed to create test user")
+// 	return user
+// }
+
+// // TestLoginUser tests successful login.
+// func TestLoginUser(t *testing.T) {
+// 	setupTestEnvironment(t)
+// 	userEmail := "logintest@example.com"
+// 	userPassword := "password123"
+// 	_ = createTestUser(t, userEmail, userPassword) // Create user directly
+
+// 	// Create request body
+// 	form := url.Values{}
+// 	form.Add("email", userEmail)
+// 	form.Add("password", userPassword)
+
+// 	req := httptest.NewRequest("POST", "/api/login", strings.NewReader(form.Encode()))
+// 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+// 	rr := httptest.NewRecorder()
+
+// 	// Call the handler
+// 	LoginUser(rr, req)
+
+// 	// Assertions
+// 	assert.Equal(t, http.StatusSeeOther, rr.Code, "Expected status code 303 See Other")
+
+// 	// Check redirect location
+// 	location, err := rr.Result().Location()
+// 	require.NoError(t, err, "Expected Location header")
+// 	assert.Equal(t, "/", location.Path, "Expected redirect location to be '/'")
+
+// 	// Check if the session cookie was set
+// 	cookies := rr.Result().Cookies()
+// 	foundCookie := false
+// 	for _, cookie := range cookies {
+// 		if cookie.Name == sessionName { // Use the constant
+// 			foundCookie = true
+// 			assert.NotEmpty(t, cookie.Value, "Session cookie should not be empty")
+// 			break
+// 		}
+// 	}
+// 	assert.True(t, foundCookie, "Expected session cookie '%s' to be set", sessionName)
+// }
+
+// // TestLoginUserInvalid tests login with incorrect password.
+// func TestLoginUserInvalid(t *testing.T) {
+// 	setupTestEnvironment(t)
+// 	userEmail := "invalidlogin@example.com"
+// 	userPassword := "password123"
+// 	_ = createTestUser(t, userEmail, userPassword) // Create user
+
+// 	// Create request body with wrong password
+// 	form := url.Values{}
+// 	form.Add("email", userEmail)
+// 	form.Add("password", "wrongpassword")
+
+// 	req := httptest.NewRequest("POST", "/api/login", strings.NewReader(form.Encode()))
+// 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+// 	rr := httptest.NewRecorder()
+
+// 	LoginUser(rr, req)
+
+// 	assert.Equal(t, http.StatusUnauthorized, rr.Code, "Expected status code 401 Unauthorized")
+// 	assert.Contains(t, rr.Body.String(), "Invalid credentials", "Expected error message")
+// }
+
+// // TestLoginUserNotFound tests login with non-existent email.
+// func TestLoginUserNotFound(t *testing.T) {
+// 	setupTestEnvironment(t)
+
+// 	form := url.Values{}
+// 	form.Add("email", "nosuchuser@example.com")
+// 	form.Add("password", "password123")
+
+// 	req := httptest.NewRequest("POST", "/api/login", strings.NewReader(form.Encode()))
+// 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+// 	rr := httptest.NewRecorder()
+
+// 	LoginUser(rr, req)
+
+// 	assert.Equal(t, http.StatusUnauthorized, rr.Code, "Expected status code 401 Unauthorized")
+// 	assert.Contains(t, rr.Body.String(), "Invalid credentials", "Expected error message")
+// }
+
+// // TestLoginUserMissingFields tests login with missing email or password.
+// func TestLoginUserMissingFields(t *testing.T) {
+// 	setupTestEnvironment(t)
+
+// 	testCases := []struct {
+// 		name string
+// 		form url.Values
+// 	}{
+// 		{
+// 			name: "Missing Password",
+// 			form: url.Values{"email": {"test@example.com"}},
+// 		},
+// 		{
+// 			name: "Missing Email",
+// 			form: url.Values{"password": {"password123"}},
+// 		},
+// 		{
+// 			name: "Missing Both",
+// 			form: url.Values{},
+// 		},
+// 	}
+
+// 	for _, tc := range testCases {
+// 		t.Run(tc.name, func(t *testing.T) {
+// 			req := httptest.NewRequest("POST", "/api/login", strings.NewReader(tc.form.Encode()))
+// 			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+// 			rr := httptest.NewRecorder()
+
+// 			LoginUser(rr, req)
+
+// 			assert.Equal(t, http.StatusBadRequest, rr.Code, "Expected status code 400 Bad Request")
+// 			assert.Contains(t, rr.Body.String(), "Email and password are required", "Expected error message")
+// 		})
+// 	}
+// }
+
+// // TestLoginUserAlreadyLoggedIn tests attempting to log in when already logged in.
+// func TestLoginUserAlreadyLoggedIn(t *testing.T) {
+// 	setupTestEnvironment(t)
+// 	userEmail := "alreadyin@example.com"
+// 	userPassword := "password123"
+// 	user := createTestUser(t, userEmail, userPassword)
+
+// 	// Simulate an existing valid session
+// 	req := httptest.NewRequest("POST", "/api/login", nil) // Body doesn't matter here
+// 	session, _ := testSessionStore.New(req, sessionName)
+// 	session.Values[userSessionKey] = user.ID // Set the user ID in the session
+// 	// Manually add the session cookie to the request
+// 	rr := httptest.NewRecorder()
+// 	err := testSessionStore.Save(req, rr, session)
+// 	require.NoError(t, err)
+// 	req.Header.Set("Cookie", rr.Header().Get("Set-Cookie"))
+
+// 	// Now make the login request with the existing session cookie
+// 	rrLogin := httptest.NewRecorder()
+// 	LoginUser(rrLogin, req) // Call the handler
+
+// 	// Assertions
+// 	assert.Equal(t, http.StatusConflict, rrLogin.Code, "Expected status code 409 Conflict")
+// 	assert.Contains(t, rrLogin.Body.String(), "User is already logged in", "Expected error message")
+// }
+
+// // TestLogoutUser tests successful logout when logged in.
+// func TestLogoutUser(t *testing.T) {
+// 	setupTestEnvironment(t)
+// 	userEmail := "logouttest@example.com"
+// 	userPassword := "password123"
+// 	user := createTestUser(t, userEmail, userPassword)
+
+// 	// Simulate a logged-in state by creating a request with a valid session cookie
+// 	req := httptest.NewRequest("GET", "/logout", nil)
+// 	session, _ := testSessionStore.New(req, sessionName)
+// 	session.Values[userSessionKey] = user.ID
+// 	rrCookieSetter := httptest.NewRecorder()
+// 	err := testSessionStore.Save(req, rrCookieSetter, session)
+// 	require.NoError(t, err)
+// 	req.Header.Set("Cookie", rrCookieSetter.Header().Get("Set-Cookie")) // Add the valid cookie
+
+// 	// Perform the logout request
+// 	rr := httptest.NewRecorder()
+// 	LogoutUser(rr, req)
+
+// 	// Assertions
+// 	assert.Equal(t, http.StatusSeeOther, rr.Code, "Expected status code 303 See Other")
+
+// 	location, err := rr.Result().Location()
+// 	require.NoError(t, err, "Expected Location header")
+// 	assert.Equal(t, "/", location.Path, "Expected redirect location to be '/'")
+
+// 	// Check that the session cookie was cleared (MaxAge=0 or -1, or Expires in the past)
+// 	cookies := rr.Result().Cookies()
+// 	foundCookie := false
+// 	for _, cookie := range cookies {
+// 		if cookie.Name == sessionName {
+// 			foundCookie = true
+// 			assert.True(t, cookie.MaxAge <= 0, "Expected session cookie MaxAge to be <= 0, got %d", cookie.MaxAge)
+// 			// Alternatively check Expires field:
+// 			assert.True(t, cookie.Expires.Before(time.Now()), "Expected session cookie Expires to be in the past")
+// 			break
+// 		}
+// 	}
+// 	assert.True(t, foundCookie, "Expected session cookie '%s' to be set for clearing", sessionName)
+// }
+
+// // TestLogoutUserNotLoggedIn tests logout when not logged in.
+// func TestLogoutUserNotLoggedIn(t *testing.T) {
+// 	setupTestEnvironment(t)
+
+// 	// Perform the logout request without any session cookie
+// 	req := httptest.NewRequest("GET", "/logout", nil)
+// 	rr := httptest.NewRecorder()
+// 	LogoutUser(rr, req)
+
+// 	// Assertions - Should still redirect and attempt to clear cookie
+// 	assert.Equal(t, http.StatusSeeOther, rr.Code, "Expected status code 303 See Other")
+
+// 	location, err := rr.Result().Location()
+// 	require.NoError(t, err, "Expected Location header")
+// 	assert.Equal(t, "/", location.Path, "Expected redirect location to be '/'")
+
+// 	// Check that a clearing cookie was attempted
+// 	cookies := rr.Result().Cookies()
+// 	foundCookie := false
+// 	for _, cookie := range cookies {
+// 		if cookie.Name == sessionName {
+// 			foundCookie = true
+// 			assert.True(t, cookie.MaxAge <= 0, "Expected session cookie MaxAge to be <= 0, got %d", cookie.MaxAge)
+// 			assert.True(t, cookie.Expires.Before(time.Now()), "Expected session cookie Expires to be in the past")
+// 			break
+// 		}
+// 	}
+// 	assert.True(t, foundCookie, "Expected session cookie '%s' to be set for clearing even when not logged in", sessionName)
+// }
