@@ -38,6 +38,7 @@ func LoadEnv() error {
 		name := os.Getenv("DB_NAME")
 		user := os.Getenv("DB_USER")
 		password := os.Getenv("DB_PASSWORD")
+		extraParams := os.Getenv("DB_EXTRA_PARAMS_FOR_TEST")
 
 		if host == "" {
 			loadEnvErr = errors.New("DB_HOST environment variable is required")
@@ -76,6 +77,13 @@ func LoadEnv() error {
 		// Conditionally add the password part
 		if password != "" {
 			dsnParts = append(dsnParts, fmt.Sprintf("password=%s", password))
+		}
+
+		if extraParams != "" {
+			// Split potential multiple params and add them individually
+			params := strings.Fields(extraParams) // Splits by whitespace
+			dsnParts = append(dsnParts, params...)
+			log.Printf("Appending extra DSN parameters for testing: %s", extraParams)
 		}
 		// If password is empty, we simply don't add the password part.
 		// The database driver will attempt connection without a password.

@@ -263,18 +263,32 @@ func TestGetDB_Errors(t *testing.T) {
 	t.Run("Failure_Before_LoadEnv_Success", func(t *testing.T) {
 		// This test relies on the internal check within the refactored GetDB
 		// It ensures GetDB calls LoadEnv and handles its error.
+		t.Log("Calling ResetDBStateForTests()")
 		ResetDBStateForTests()
+		t.Log("Finished ResetDBStateForTests()")
 		// Set env vars that cause LoadEnv to fail
+		t.Log("Setting environment variables...")
 		t.Setenv("DB_HOST", "remote.host")
+		t.Setenv("DB_PORT", "5432")
+		t.Setenv("DB_NAME", "remotedb")
+		t.Setenv("DB_USER", "remoteuser")
+		t.Log("Finished setting environment variables.")
 		// Missing DB_PASSWORD for remote host
 
+		t.Log("Calling GetDB()...")
 		dbInstance, err := GetDB()
+		t.Logf("GetDB() returned. Error: %v, Instance: %p", err, dbInstance)
+
+		t.Log("Starting assertions...")
 		assert.Error(t, err)
 		assert.Nil(t, dbInstance)
 		assert.Contains(t, err.Error(), "failed to load environment") // Check error comes from LoadEnv
 		assert.Contains(t, err.Error(), "DB_PASSWORD environment variable must be set")
+		t.Log("Finished assertions.")
 
+		t.Log("Calling final ResetDBStateForTests()")
 		ResetDBStateForTests()
+		t.Log("--- Exiting Failure_Before_LoadEnv_Success ---") // Log exit
 	})
 
 	t.Run("Failure_Connection_Error", func(t *testing.T) {
@@ -285,6 +299,7 @@ func TestGetDB_Errors(t *testing.T) {
 		t.Setenv("DB_NAME", "fakedb")
 		t.Setenv("DB_USER", "fakeuser")
 		t.Setenv("DB_PASSWORD", "fakepw")
+		t.Setenv("DB_EXTRA_PARAMS_FOR_TEST", "connect_timeout=1")
 
 		dbInstance, err := GetDB()
 		assert.Error(t, err)
