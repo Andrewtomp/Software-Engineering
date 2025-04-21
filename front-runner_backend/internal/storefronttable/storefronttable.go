@@ -6,7 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"front-runner/internal/coredbutils" // Use coredbutils for DB access
-	"front-runner/internal/login"       // Use login for auth
+	"front-runner/internal/oauth"       // Import oauth
+
+	// "front-runner/internal/login"       // Remove login import
 	"log"
 	"net/http"
 	"strconv"
@@ -83,7 +85,7 @@ func Setup() {
 		// Get DB connection from coredbutils
 		coredbutils.LoadEnv()
 		db = coredbutils.GetDB()
-		login.Setup()
+		// login.Setup() // REMOVE: Login setup is now centralized
 		if db == nil {
 			log.Fatal("FATAL: Database connection is nil in storefronttable Setup.")
 		}
@@ -291,8 +293,6 @@ func GetStorefronts(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(returnData)
 }
 
-// Add this function within storefronttable.go
-
 // UpdateStorefront handles updating non-sensitive details of an existing storefront link.
 // @Summary      Update a storefront link
 // @Description  Updates the name, store ID, or store URL of an existing storefront link belonging to the authenticated user. Store type and credentials cannot be updated via this endpoint.
@@ -485,20 +485,26 @@ func DeleteStorefront(w http.ResponseWriter, r *http.Request) {
 
 // --- Helper Functions ---
 
-// checkAuth is a helper to verify login status and retrieve UserID.
+// checkAuth is a helper to verify login status and retrieve UserID using the unified oauth package.
 // It writes appropriate HTTP errors (401, 500) directly to the response writer.
 // Returns the UserID and true if authenticated, otherwise 0 and false.
 func checkAuth(w http.ResponseWriter, r *http.Request) (userID uint, ok bool) {
-	if !login.IsLoggedIn(r) {
-		http.Error(w, "Unauthorized: Please log in.", http.StatusUnauthorized)
-		return 0, false
-	}
-	id, err := login.GetUserID(r)
+	// Use the unified GetCurrentUser function
+	user, err := oauth.GetCurrentUser(r)
+
 	if err != nil {
-		// Log the internal session error
-		log.Printf("Error retrieving UserID from session: %v", err)
+		// Log the internal session/database error
+		log.Printf("checkAuth: Error getting current user: %v", err)
 		http.Error(w, "Internal Server Error: Could not verify user session.", http.StatusInternalServerError)
 		return 0, false
 	}
-	return id, true
+
+	if user == nil {
+		// User is not logged in (no error occurred, just no user found in session)
+		http.Error(w, "Unauthorized: Please log in.", http.StatusUnauthorized)
+		return 0, false
+	}
+
+	// User is authenticated
+	return user.ID, true
 }

@@ -2,9 +2,11 @@ package routes
 
 import (
 	"front-runner/internal/login"
+	"front-runner/internal/oauth"
 	"front-runner/internal/prodtable"
 	"front-runner/internal/storefronttable"
 	"front-runner/internal/usertable"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -53,12 +55,31 @@ func InvalidAPI(w http.ResponseWriter, r *http.Request) {
 }
 
 // authMiddleware redirects to /login if the user is not authenticated.
+//
+//	func authMiddleware(next http.Handler) http.Handler {
+//		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+//			if !login.IsLoggedIn(r) {
+//				http.Redirect(w, r, "/login", http.StatusSeeOther)
+//				return
+//			}
+//			next.ServeHTTP(w, r)
+//		})
+//	}
 func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !login.IsLoggedIn(r) {
+		user, err := oauth.GetCurrentUser(r)
+
+		if err != nil {
+			log.Printf("Auth Middleware: Error checking current user: %v", err)
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
+
+		if user == nil {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }
