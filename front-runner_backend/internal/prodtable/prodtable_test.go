@@ -38,17 +38,95 @@ var (
 	testDB           *gorm.DB
 	testSessionStore *sessions.CookieStore
 	setupEnvOnce     sync.Once
-	uploadsTestDir   string // Will hold path from t.TempDir()
+	// uploadsTestDir   string // Will hold path from t.TempDir()
 )
 
 // setupTestEnvironment loads environment variables, initializes DB and session store for tests.
 // It also clears relevant tables before each test run.
+// func setupTestEnvironment(t *testing.T) {
+// 	t.Helper()
+// 	log.Println("--- Starting setupTestEnvironment ---") // Add this
+
+// 	setupEnvOnce.Do(func() {
+// 		log.Println("--- Running setupEnvOnce.Do ---") // Add this
+// 		// Find project root
+// 		re := regexp.MustCompile(`^(.*` + projectDirName + `)`)
+// 		cwd, _ := os.Getwd()
+// 		rootPath := re.Find([]byte(cwd))
+// 		if rootPath == nil {
+// 			t.Fatalf("Could not find project root directory '%s' from '%s'", projectDirName, cwd)
+// 		}
+
+// 		// Load .env file
+// 		envPath := string(rootPath) + `/.env`
+// 		err := godotenv.Load(envPath)
+// 		if err != nil && !os.IsNotExist(err) {
+// 			log.Printf("Warning: Problem loading .env file from %s: %v", envPath, err)
+// 		} else if err == nil {
+// 			log.Printf("Loaded environment variables from %s for tests", envPath)
+// 		}
+
+// 		log.Println("--- Initializing DB ---") // Add this
+// 		// Initialize DB connection
+// 		coredbutils.ResetDBStateForTests()
+// 		err = coredbutils.LoadEnv()
+// 		require.NoError(t, err, "Failed to load core DB environment")
+// 		var dbErr error
+// 		testDB, dbErr = coredbutils.GetDB()
+// 		require.NoError(t, dbErr, "Failed to get DB connection for tests")
+// 		log.Println("--- DB Initialized ---") // Add this
+
+// 		// Initialize Session Store for tests
+// 		authKey := []byte("test-auth-key-32-bytes-long-000")
+// 		encKey := []byte("test-enc-key-needs-to-be-32-byte") // 32 bytes
+// 		require.True(t, len(encKey) == 16 || len(encKey) == 32, "Test encryption key must be 16 or 32 bytes")
+// 		testSessionStore = sessions.NewCookieStore(authKey, encKey)
+// 		testSessionStore.Options = &sessions.Options{
+// 			Path:     "/",
+// 			MaxAge:   86400 * 1,
+// 			HttpOnly: true,
+// 			Secure:   false,
+// 			SameSite: http.SameSiteLaxMode,
+// 		}
+
+// 		// Setup dependent packages
+// 		usertable.Setup()                     // Uses coredbutils.GetDB()
+// 		oauth.Setup(testSessionStore)         // Uses session store
+// 		login.Setup(testDB, testSessionStore) // Uses DB and session store
+// 		Setup()                               // Setup prodtable package (uses coredbutils.GetDB())
+
+// 		// Run migrations once after setup
+// 		usertable.MigrateUserDB()
+// 		MigrateProdDB() // Migrates Product and Image tables
+// 	})
+
+// 	// Create a temporary directory for uploads for this test run
+// 	// This replaces the manual createUploadsDir and os.Remove("uploads")
+// 	uploadsTestDir = t.TempDir()
+// 	// Override the default "uploads" path used in the main code *if necessary*
+// 	// This is tricky. A better approach is to make the uploads path configurable.
+// 	// For now, we assume the handlers write to "uploads" relative to CWD,
+// 	// and we'll manage files within uploadsTestDir manually in tests.
+// 	// If handlers used an absolute path or configurable path, we'd set it here.
+
+// 	// Clear tables before each test function
+// 	require.NoError(t, usertable.ClearUserTable(testDB), "Failed to clear user table")
+// 	// ClearProdTable needs modification to handle potential errors better
+// 	// Let's clear manually for now for better control
+// 	require.NoError(t, testDB.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&Product{}).Error, "Failed to clear product table")
+// 	require.NoError(t, testDB.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&Image{}).Error, "Failed to clear image table")
+
+// }
 func setupTestEnvironment(t *testing.T) {
 	t.Helper()
-	log.Println("--- Starting setupTestEnvironment ---") // Add this
+	log.Println("--- Starting setupTestEnvironment for prodtable ---")
 
+	// --- setupEnvOnce.Do block remains the same ---
 	setupEnvOnce.Do(func() {
-		log.Println("--- Running setupEnvOnce.Do ---") // Add this
+		// ... (DB init, session store, package setups, migrations) ...
+		// Ensure migrations for ALL tables are run somewhere, ideally centrally.
+		// For now, assume they are run correctly by the respective test setups or main_test.
+		log.Println("--- Running setupEnvOnce.Do for prodtable ---")
 		// Find project root
 		re := regexp.MustCompile(`^(.*` + projectDirName + `)`)
 		cwd, _ := os.Getwd()
@@ -66,7 +144,7 @@ func setupTestEnvironment(t *testing.T) {
 			log.Printf("Loaded environment variables from %s for tests", envPath)
 		}
 
-		log.Println("--- Initializing DB ---") // Add this
+		log.Println("--- Initializing DB for prodtable tests ---")
 		// Initialize DB connection
 		coredbutils.ResetDBStateForTests()
 		err = coredbutils.LoadEnv()
@@ -74,7 +152,7 @@ func setupTestEnvironment(t *testing.T) {
 		var dbErr error
 		testDB, dbErr = coredbutils.GetDB()
 		require.NoError(t, dbErr, "Failed to get DB connection for tests")
-		log.Println("--- DB Initialized ---") // Add this
+		log.Println("--- DB Initialized for prodtable tests ---")
 
 		// Initialize Session Store for tests
 		authKey := []byte("test-auth-key-32-bytes-long-000")
@@ -94,28 +172,63 @@ func setupTestEnvironment(t *testing.T) {
 		oauth.Setup(testSessionStore)         // Uses session store
 		login.Setup(testDB, testSessionStore) // Uses DB and session store
 		Setup()                               // Setup prodtable package (uses coredbutils.GetDB())
+		// orderstable.Setup() // Setup orderstable without importing it directly here if possible, or ensure main does it.
 
 		// Run migrations once after setup
+		// IMPORTANT: Migrations for ALL related tables should ideally be run once
+		// centrally (e.g., in main_test.go or a test utility) to ensure FK constraints exist.
+		// If not run centrally, you might encounter FK errors later.
 		usertable.MigrateUserDB()
 		MigrateProdDB() // Migrates Product and Image tables
+		// Attempting to run order migration without import is tricky.
+		// Assume for now that migrations are handled centrally or by orderstable_test.go's setup.
+		// orderstable.MigrateOrdersDB() // <-- REMOVED to break cycle
+		log.Println("--- Finished setupEnvOnce.Do for prodtable ---")
+	})
+	// --- End setupEnvOnce.Do block ---
+
+	// --- Cleanup and Setup before EACH test function ---
+
+	// 1. Manage 'uploads' directory
+	uploadsDir := "uploads"
+	log.Printf("--- Ensuring '%s' directory exists and is empty ---", uploadsDir)
+	if err := os.RemoveAll(uploadsDir); err != nil && !os.IsNotExist(err) {
+		t.Fatalf("Failed to remove existing '%s' directory before test: %v", uploadsDir, err)
+	}
+	if err := os.MkdirAll(uploadsDir, 0755); err != nil {
+		t.Fatalf("Failed to create '%s' directory for test: %v", uploadsDir, err)
+	}
+	log.Printf("--- '%s' directory ready ---", uploadsDir)
+
+	// 2. Clear DB Tables (using Unscoped for hard delete)
+	// Order: Delete records that depend on others first.
+	log.Println("--- Clearing DB tables (prodtable test scope + order dependencies) ---")
+
+	// *** ADD RAW SQL DELETE FOR ORDER TABLES ***
+	// Delete OrderProd records first as they depend on Product and Order
+	// Use raw SQL to avoid importing orderstable. Use Unscoped behavior implicitly.
+	require.NoError(t, testDB.Exec("DELETE FROM order_prods").Error, "Failed to clear order_prods table via raw SQL")
+	// Delete OrderOwner records as they depend on User and Order
+	require.NoError(t, testDB.Exec("DELETE FROM order_owners").Error, "Failed to clear order_owners table via raw SQL")
+	// Delete Order records
+	require.NoError(t, testDB.Exec("DELETE FROM orders").Error, "Failed to clear orders table via raw SQL")
+	// *** END RAW SQL DELETE ***
+
+	// Now delete Product (which OrderProd depended on)
+	require.NoError(t, testDB.Unscoped().Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&Product{}).Error, "Failed to clear product table")
+	// Then Image (which Product depends on)
+	require.NoError(t, testDB.Unscoped().Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&Image{}).Error, "Failed to clear image table")
+	// Finally User (which Product and OrderOwner depended on)
+	require.NoError(t, usertable.ClearUserTable(testDB), "Failed to clear user table")
+	log.Println("--- DB tables cleared ---")
+
+	// Register cleanup for uploads directory
+	t.Cleanup(func() {
+		log.Printf("--- Cleaning up '%s' directory after test '%s' ---", uploadsDir, t.Name())
+		os.RemoveAll(uploadsDir)
 	})
 
-	// Create a temporary directory for uploads for this test run
-	// This replaces the manual createUploadsDir and os.Remove("uploads")
-	uploadsTestDir = t.TempDir()
-	// Override the default "uploads" path used in the main code *if necessary*
-	// This is tricky. A better approach is to make the uploads path configurable.
-	// For now, we assume the handlers write to "uploads" relative to CWD,
-	// and we'll manage files within uploadsTestDir manually in tests.
-	// If handlers used an absolute path or configurable path, we'd set it here.
-
-	// Clear tables before each test function
-	require.NoError(t, usertable.ClearUserTable(testDB), "Failed to clear user table")
-	// ClearProdTable needs modification to handle potential errors better
-	// Let's clear manually for now for better control
-	require.NoError(t, testDB.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&Product{}).Error, "Failed to clear product table")
-	require.NoError(t, testDB.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&Image{}).Error, "Failed to clear image table")
-
+	log.Println("--- Finished setupTestEnvironment for prodtable ---")
 }
 
 // Helper to create a test user directly in the DB
@@ -165,7 +278,7 @@ func createAuthenticatedRequest(t *testing.T, user *usertable.User, method, url 
 func createDummyFile(t *testing.T, filename string, content string) string {
 	t.Helper()
 	// Use the temporary uploads directory for this test
-	filePath := filepath.Join(uploadsTestDir, filename)
+	filePath := filepath.Join("uploads", filename)
 	err := os.WriteFile(filePath, []byte(content), 0644)
 	require.NoError(t, err, "Failed to create dummy file")
 	return filePath

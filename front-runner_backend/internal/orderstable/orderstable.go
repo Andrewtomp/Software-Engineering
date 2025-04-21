@@ -413,7 +413,8 @@ func GetOrders(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// --- Process Each Order ---
-	var orderReturns []OrderReturn
+	// var orderReturns []OrderReturn
+	orderReturns := make([]OrderReturn, 0)
 	if len(userOrderOwners) > 0 {
 		orderIDs := make([]uint, len(userOrderOwners))
 		orderMap := make(map[uint]Order) // Map order ID to preloaded Order details
