@@ -67,7 +67,7 @@ clean:
 	@echo "Cleaning up build artifacts and certificates..."
 	@rm -rf front-runner/build front-runner/node_modules
 	@# Adjust the certificate file patterns if your script generates different names
-	@rm -f front-runner_backend/*.crt front-runner_backend/*.key front-runner_backend/.storefrontkey
+	@rm -f front-runner_backend/*.crt front-runner_backend/*.key
 	@echo "Cleanup complete."
 
 # Optional: Target to only run the backend (assuming build and certs are done)
