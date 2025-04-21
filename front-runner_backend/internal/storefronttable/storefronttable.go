@@ -6,7 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"front-runner/internal/coredbutils" // Use coredbutils for DB access
-	"front-runner/internal/login"       // Use login for auth
+	"front-runner/internal/oauth"       // Import oauth
+
 	"log"
 	"net/http"
 	"strconv"
@@ -53,6 +54,7 @@ type StorefrontLinkReturn struct {
 	StoreURL  string `json:"storeUrl"`
 }
 
+// StorefrontLinkUpdatePayload defines the fields allowed for updating a storefront link.
 type StorefrontLinkUpdatePayload struct {
 	StoreName string `json:"storeName"` // User-defined nickname
 	StoreId   string `json:"storeId"`   // Platform-specific ID
@@ -82,8 +84,8 @@ func Setup() {
 
 		// Get DB connection from coredbutils
 		coredbutils.LoadEnv()
-		db = coredbutils.GetDB()
-		login.Setup()
+		db, _ = coredbutils.GetDB()
+		// login.Setup() // REMOVE: Login setup is now centralized
 		if db == nil {
 			log.Fatal("FATAL: Database connection is nil in storefronttable Setup.")
 		}
@@ -108,6 +110,7 @@ func MigrateStorefrontDB() {
 	log.Println("Storefront link database migration complete.")
 }
 
+// ClearStorefrontTable removes all records from the storefront_links table. USE WITH CAUTION.
 func ClearStorefrontTable(db *gorm.DB) error {
 	if db == nil {
 		return errors.New("storefront db is nil")
@@ -125,16 +128,15 @@ func ClearStorefrontTable(db *gorm.DB) error {
 // AddStorefront handles linking a new external storefront.
 // @Summary      Link a new storefront
 // @Description  Links a new external storefront (e.g., Amazon, Pinterest) to the user's account, storing credentials securely. Requires authentication.
-// @Tags         storefronts
+// @Tags         Storefronts
 // @Accept       json
-// @Produce      json
 // @Param        storefrontLink body StorefrontLinkAddPayload true "Storefront Link Details (including credentials like apiKey, apiSecret)"
 // @Success      201 {object} StorefrontLinkReturn "Successfully linked storefront (credentials omitted)"
 // @Failure      400 {string} string "Bad Request - Invalid input, missing fields, or JSON parsing error"
 // @Failure      401 {string} string "Unauthorized - User session invalid or expired"
 // @Failure      409 {string} string "Conflict - A link with this name/type already exists for the user"
 // @Failure      500 {string} string "Internal Server Error - E.g., failed to encrypt, database error"
-// @Security     ApiKeyAuth
+// @Security     ApiKeyAuth // Assuming ApiKeyAuth is defined for session/token auth
 // @Router       /api/add_storefront [post]
 func AddStorefront(w http.ResponseWriter, r *http.Request) {
 	userID, ok := checkAuth(w, r) // Check authentication first
@@ -251,8 +253,7 @@ func AddStorefront(w http.ResponseWriter, r *http.Request) {
 // GetStorefronts retrieves all linked storefronts for the logged-in user.
 // @Summary      Get linked storefronts
 // @Description  Retrieves a list of all external storefronts linked by the currently authenticated user. Credentials are *never* included. Requires authentication.
-// @Tags         storefronts
-// @Produce      json
+// @Tags         Storefronts
 // @Success      200 {array} StorefrontLinkReturn "List of linked storefronts (empty array if none)"
 // @Failure      401 {string} string "Unauthorized - User session invalid or expired"
 // @Failure      500 {string} string "Internal Server Error - Database query failed"
@@ -291,14 +292,11 @@ func GetStorefronts(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(returnData)
 }
 
-// Add this function within storefronttable.go
-
 // UpdateStorefront handles updating non-sensitive details of an existing storefront link.
 // @Summary      Update a storefront link
 // @Description  Updates the name, store ID, or store URL of an existing storefront link belonging to the authenticated user. Store type and credentials cannot be updated via this endpoint.
-// @Tags         storefronts
+// @Tags         Storefronts
 // @Accept       json
-// @Produce      json
 // @Param        id query integer true "ID of the Storefront Link to update" Format(uint) example(123)
 // @Param        storefrontUpdate body StorefrontLinkUpdatePayload true "Fields to update (storeName, storeId, storeUrl)"
 // @Success      200 {object} StorefrontLinkReturn "Successfully updated storefront link details"
@@ -399,11 +397,10 @@ func UpdateStorefront(w http.ResponseWriter, r *http.Request) {
 // DeleteStorefront removes a linked storefront for the logged-in user by its ID.
 // @Summary      Unlink a storefront
 // @Description  Removes the link to an external storefront specified by its unique ID. User must own the link. Requires authentication.
-// @Tags         storefronts
-// @Produce      plain
+// @Tags         Storefronts
 // @Param        id query integer true "ID of the Storefront Link to delete" Format(uint) example(123)
 // @Success      200 {string} string "Storefront unlinked successfully"
-// @Success      204 {string} string "Storefront unlinked successfully (No Content)"
+// @Success      204 {string} string "Storefront unlinked successfully (No Content)" // Added 204 as an alternative success
 // @Failure      400 {string} string "Bad Request - Invalid or missing 'id' query parameter"
 // @Failure      401 {string} string "Unauthorized - User session invalid or expired"
 // @Failure      403 {string} string "Forbidden - User does not own this storefront link"
@@ -485,20 +482,26 @@ func DeleteStorefront(w http.ResponseWriter, r *http.Request) {
 
 // --- Helper Functions ---
 
-// checkAuth is a helper to verify login status and retrieve UserID.
+// checkAuth is a helper to verify login status and retrieve UserID using the unified oauth package.
 // It writes appropriate HTTP errors (401, 500) directly to the response writer.
 // Returns the UserID and true if authenticated, otherwise 0 and false.
 func checkAuth(w http.ResponseWriter, r *http.Request) (userID uint, ok bool) {
-	if !login.IsLoggedIn(r) {
-		http.Error(w, "Unauthorized: Please log in.", http.StatusUnauthorized)
-		return 0, false
-	}
-	id, err := login.GetUserID(r)
+	// Use the unified GetCurrentUser function
+	user, err := oauth.GetCurrentUser(r)
+
 	if err != nil {
-		// Log the internal session error
-		log.Printf("Error retrieving UserID from session: %v", err)
+		// Log the internal session/database error
+		log.Printf("checkAuth: Error getting current user: %v", err)
 		http.Error(w, "Internal Server Error: Could not verify user session.", http.StatusInternalServerError)
 		return 0, false
 	}
-	return id, true
+
+	if user == nil {
+		// User is not logged in (no error occurred, just no user found in session)
+		http.Error(w, "Unauthorized: Please log in.", http.StatusUnauthorized)
+		return 0, false
+	}
+
+	// User is authenticated
+	return user.ID, true
 }

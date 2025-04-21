@@ -7,6 +7,10 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 const schema = {
   type: 'object',
   properties: {
+    name: { // <-- ADDED name property
+      type: 'string',
+      title: 'Full Name',
+    },
     email: {
       type: 'string',
       title: 'Email',
@@ -19,37 +23,78 @@ const schema = {
     },
     businessName: {
       type: 'string',
-      title: 'Business Name',
+      title: 'Business Name (Optional)',
     },
   },
-  required: ['email', 'password'], // Make email and password required
+  required: ['name', 'email', 'password'], // Make email and password required
 };
 
 // Define the UI Schema for the form fields (optional customization)
 const uiSchema = {
-  password: {
-    'ui:widget': 'password', // Automatically uses a password input
-    'ui:placeholder': 'Enter your password',
+  name: {
+    'ui:placeholder': 'Enter your full name',
   },
   email: {
     'ui:placeholder': 'Enter your email',
   },
+  password: {
+    'ui:widget': 'password', // Automatically uses a password input
+    'ui:placeholder': 'Enter your password (min 6 characters)',
+  },
   businessName: {
-    'ui:placeholder': 'Enter your business name',
+    'ui:placeholder': 'Enter your business name (Optional)',
   },
 };
 
+// Custom templates for Form to ensure proper accessibility and test compatibility
+// This template already handles marking required fields
+const CustomFieldTemplate = (props) => {
+  const { id, label, children, rawErrors, required, description, help } = props; // Added description and help
+
+  return (
+    <div className="form-group mb-3">
+      {/* Display label with asterisk if required */}
+      <label htmlFor={id}>{label}{required ? "*" : ""}</label>
+      {/* Display description/help text if provided */}
+      {description}
+      {help}
+      {children}
+      {/* Display errors */}
+      {rawErrors && rawErrors.length > 0 && (
+        <div className="text-danger mt-1" style={{ fontSize: '0.8rem' }}>{rawErrors.join(', ')}</div>
+      )}
+    </div>
+  );
+};
+
 // Custom field template to add proper role to submit button
+// const CustomButtonTemplate = (props) => {
+//   const { id, label, children, rawErrors, required, description, help} = props;
+  
+//   return (
+//     <div className="d-flex justify-content-center">
+//       <button 
+//         type="submit" 
+//         className="btn btn-primary"
+//         role="button"
+//       >
+//         Submit
+//       </button>
+//     </div>
+//   );
+// };
+
+// Custom submit button template to add proper role
 const CustomButtonTemplate = (props) => {
-  const { uiSchema, onSubmit } = props;
+  // const { uiSchema, onSubmit } = props; // onSubmit is not needed here
   return (
     <div className="d-flex justify-content-center">
-      <button 
-        type="submit" 
-        className="btn btn-primary"
+      <button
+        type="submit"
+        className="btn btn-primary" // Use the custom button style from Login.css
         role="button"
       >
-        Submit
+        Create Account
       </button>
     </div>
   );
@@ -57,7 +102,7 @@ const CustomButtonTemplate = (props) => {
 
 // RegistrationForm Component
 const RegistrationForm = () => {
-  const [validationError, setValidationError] = useState(null);
+  // const [validationError, setValidationError] = useState(null);
 
   // Define the form's onSubmit handler
   const onSubmit = async ({ formData }) => {
@@ -75,6 +120,7 @@ const RegistrationForm = () => {
       if (!regResponse.ok) {
         const regErrorText = await regResponse.text();
         console.error("Registration failed:", regErrorText);
+        alert(`Registration failed: ${regErrorText}`);
         return;
       }
       
@@ -105,16 +151,19 @@ const RegistrationForm = () => {
       } else {
         const loginErrorText = await loginResponse.text();
         console.error("Auto-login failed:", loginErrorText);
+        alert("Registration successful, but auto-login failed. Please try logging in manually.");
+        window.location.href = "/login"; // Redirect to login page
       }
       
     } catch (error) {
       console.error("Error during registration and auto-login:", error);
+      alert("An error occurred during the registration process. Please try again.");
     }
   };
 
   // Handle form validation errors
   const onError = (errors) => {
-    setValidationError("is a required property");
+    // setValidationError("is a required property");
     console.log("Form validation errors:", errors);
   };
 
@@ -128,12 +177,18 @@ const RegistrationForm = () => {
           validator={validator}
           onSubmit={onSubmit}
           onError={onError}
-          templates={{ ButtonTemplates: { SubmitButton: CustomButtonTemplate } }}
+          templates={{
+            FieldTemplate: CustomFieldTemplate,
+            ButtonTemplates: { SubmitButton: CustomButtonTemplate } 
+          }}
+          showErrorList={false} // Hide the default top-level error list if desired
         />
-        {validationError && <div className="error-message">{validationError}</div>}
-        <a href='/login'>
-          Already have an account? Login here.
-        </a>
+        {/* validationError && <div className="error-message">{validationError}</div> */}
+        <div className="text-center mt-3">
+          <a href='/login'>
+            Already have an account? Login here.
+          </a>
+        </div>
       </div>
     </div>
   );

@@ -1,7 +1,6 @@
 # Makefile for building the frontend, generating backend certs, and running the backend.
 
 # --- Variables ---
-
 # Detect OS for browser opening command
 # Default to xdg-open (Linux)
 OPEN_CMD = xdg-open
@@ -14,8 +13,9 @@ else
 	endif
 endif
 
-BROWSER_URL = https://localhost:8080/
 WAIT_SECONDS = 10
+
+BROWSER_URL := https://localhost:8080/
 
 # --- Targets ---
 
@@ -45,9 +45,19 @@ generate-certs:
 run: build-frontend generate-certs
 	@echo "Starting Go backend server (front-runner_backend/main.go) in FOREGROUND..."
 	@echo "The server will run here. Press Ctrl+C to stop it."
-	@ $(OPEN_CMD) $(BROWSER_URL)
 	@# Run the Go server in the foreground (removed the '&')
-	@cd front-runner_backend && go run .
+	@ cd front-runner_backend && go run .
+	@ sleep $(WAIT_SECONDS)
+	@ $(OPEN_CMD) $(BROWSER_URL)
+	@# --- The lines below will ONLY execute AFTER the Go server stops ---
+	@echo "Go backend server stopped."
+
+.PHONY: ngrok
+ngrok: build-frontend generate-certs
+	@echo "Starting Go backend server (front-runner_backend/main.go) in FOREGROUND..."
+	@echo "The server will run here. Press Ctrl+C to stop it."
+	@# Run the Go server in the foreground (removed the '&')
+	@ cd front-runner_backend && go run . --ngrok
 	@# --- The lines below will ONLY execute AFTER the Go server stops ---
 	@echo "Go backend server stopped."
 
@@ -57,7 +67,7 @@ clean:
 	@echo "Cleaning up build artifacts and certificates..."
 	@rm -rf front-runner/build front-runner/node_modules
 	@# Adjust the certificate file patterns if your script generates different names
-	@rm -f front-runner_backend/*.crt front-runner_backend/*.key front-runner_backend/.storefrontkey
+	@rm -f front-runner_backend/*.crt front-runner_backend/*.key
 	@echo "Cleanup complete."
 
 # Optional: Target to only run the backend (assuming build and certs are done)
@@ -72,3 +82,8 @@ run-backend-only:
 	echo "Opening $(BROWSER_URL) in your browser..."; \
 	$(OPEN_CMD) $(BROWSER_URL); \
 	echo "Makefile finished. Backend server is running in the background."
+
+.PHONY: backend-ngrok
+backend-ngrok:
+	@echo "Starting Go backend server (assuming prerequisites are met)..."
+	@(cd front-runner_backend && go run . --ngrok) & \

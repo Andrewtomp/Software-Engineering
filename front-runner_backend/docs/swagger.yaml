@@ -1,5 +1,21 @@
 basePath: /
 definitions:
+  prodtable.ProductReturn:
+    properties:
+      image:
+        description: Consider renaming to imageURL or similar
+        type: string
+      prodCount:
+        type: integer
+      prodDesc:
+        type: string
+      prodID:
+        type: integer
+      prodName:
+        type: string
+      prodPrice:
+        type: number
+      prodTags:
   orderstable.OrderCreatePayload:
     properties:
       customerEmail:
@@ -103,7 +119,7 @@ definitions:
         description: Storefront URL
         type: string
     type: object
-host: localhost:8080
+host: localhost:8080 // Update this if using ngrok static domain for Swagger docs
 info:
   contact:
     email: jonathan.bravo@ufl.edu
@@ -115,64 +131,6 @@ info:
   title: Front Runner API
   version: "1.0"
 paths:
-  /api/add_product:
-    post:
-      consumes:
-      - multipart/form-data
-      description: Creates a new product with details including name, description,
-        price, count, tags, and an associated image.
-      parameters:
-      - description: Product name
-        in: formData
-        name: productName
-        required: true
-        type: string
-      - description: Product description
-        in: formData
-        name: description
-        required: true
-        type: string
-      - description: Product price
-        in: formData
-        name: price
-        required: true
-        type: number
-      - description: Product stock count
-        in: formData
-        name: count
-        required: true
-        type: integer
-      - description: Product tags
-        in: formData
-        name: tags
-        type: string
-      - description: Product image file
-        in: formData
-        name: image
-        required: true
-        type: file
-      produces:
-      - text/plain
-      responses:
-        "201":
-          description: Product added successfully
-          schema:
-            type: string
-        "400":
-          description: Error parsing form or uploading image
-          schema:
-            type: string
-        "401":
-          description: User not authenticated
-          schema:
-            type: string
-        "500":
-          description: Internal server error
-          schema:
-            type: string
-      summary: Add a new product
-      tags:
-      - product
   /api/add_storefront:
     post:
       consumes:
@@ -186,8 +144,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/storefronttable.StorefrontLinkAddPayload'
-      produces:
-      - application/json
       responses:
         "201":
           description: Successfully linked storefront (credentials omitted)
@@ -212,10 +168,10 @@ paths:
           schema:
             type: string
       security:
-      - ApiKeyAuth: []
+      - ApiKeyAuth // Assuming ApiKeyAuth is defined for session/token auth: []
       summary: Link a new storefront
       tags:
-      - storefronts
+      - Storefronts
   /api/create_order:
     post:
       consumes:
@@ -291,15 +247,14 @@ paths:
         name: id
         required: true
         type: integer
-      produces:
-      - text/plain
       responses:
         "200":
           description: Storefront unlinked successfully
           schema:
             type: string
         "204":
-          description: Storefront unlinked successfully (No Content)
+          description: Storefront unlinked successfully (No Content)" // Added 204
+            as an alternative success
           schema:
             type: string
         "400":
@@ -326,7 +281,8 @@ paths:
       - ApiKeyAuth: []
       summary: Unlink a storefront
       tags:
-      - storefronts
+      - Storefronts
+  /api/get_storefronts:
   /api/get_order:
     get:
       description: Retreives an existing order and its associated metadata if the
@@ -391,93 +347,8 @@ paths:
       - order
   /api/get_product:
     get:
-      description: Retreives an existing product and its associated metadata if the
-        product belongs to the authenticated user.
-      parameters:
-      - description: Product ID
-        in: query
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: JSON representation of a product's information
-          schema:
-            type: string
-        "401":
-          description: User not authenticated or unauthorized
-          schema:
-            type: string
-        "403":
-          description: Permission denied
-          schema:
-            type: string
-        "404":
-          description: No Product with specified ID
-          schema:
-            type: string
-      summary: Retrieve a product
-      tags:
-      - product
-  /api/get_product_image:
-    get:
-      description: Retreives an existing product image if it exists and belongs to
-        the authenticated user.
-      parameters:
-      - description: Filepath of image
-        in: query
-        name: image
-        required: true
-        type: string
-      produces:
-      - image/*
-      responses:
-        "200":
-          description: Image's data
-          schema:
-            type: string
-        "401":
-          description: User not authenticated or unauthorized
-          schema:
-            type: string
-        "403":
-          description: Permission denied
-          schema:
-            type: string
-        "404":
-          description: Requested image does not exist
-          schema:
-            type: string
-      summary: Retrieve a product image
-      tags:
-      - product
-      - images
-  /api/get_products:
-    get:
-      description: Retreives existing products and their associated metadata for the
-        authenticated user.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: JSON representation of a user's product information
-          schema:
-            type: string
-        "401":
-          description: User not authenticated or unauthorized
-          schema:
-            type: string
-      summary: Retrieves all product information for authenticated user.
-      tags:
-      - product
-  /api/get_storefronts:
-    get:
       description: Retrieves a list of all external storefronts linked by the currently
         authenticated user. Credentials are *never* included. Requires authentication.
-      produces:
-      - application/json
       responses:
         "200":
           description: List of linked storefronts (empty array if none)
@@ -497,74 +368,366 @@ paths:
       - ApiKeyAuth: []
       summary: Get linked storefronts
       tags:
-      - storefronts
+      - Storefronts
   /api/login:
     post:
       consumes:
       - application/x-www-form-urlencoded
-      description: Authenticates a user and creates a session.
+      description: Authenticates a user using email and password. Creates a session
+        cookie upon successful authentication and redirects to the homepage.
       parameters:
-      - description: User email
+      - description: User's Email Address
         in: formData
         name: email
         required: true
         type: string
-      - description: User password
+      - description: User's Password
         in: formData
         name: password
         required: true
         type: string
-      produces:
-      - text/plain
       responses:
-        "200":
-          description: Logged in successfully.
+        "303":
+          description: Redirects to / on successful login
           schema:
             type: string
         "400":
-          description: Email and password are required
+          description: 'Bad Request: Email and password are required'
           schema:
             type: string
         "401":
-          description: Invalid credentials
+          description: 'Unauthorized: Invalid credentials'
           schema:
             type: string
-      summary: User login
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: User Login (Email/Password)
       tags:
-      - authentication
-  /api/logout:
-    post:
-      description: Logs out the current user by clearing the session.
+      - Authentication
+  /api/products:
+    delete:
+      description: Deletes a specific product owned by the authenticated user, identified
+        by its ID. Also deletes the associated image file and record.
+      parameters:
+      - description: ID of the product to delete
+        format: uint64
+        in: query
+        name: id
+        required: true
+        type: integer
       produces:
       - text/plain
       responses:
         "200":
-          description: Logged out successfully
+          description: Product deleted successfully
           schema:
             type: string
-      summary: User logout
+        "400":
+          description: 'Bad Request: Invalid Product ID'
+          schema:
+            type: string
+        "401":
+          description: 'Unauthorized: User not authenticated'
+          schema:
+            type: string
+        "403":
+          description: 'Forbidden: User does not own this product'
+          schema:
+            type: string
+        "404":
+          description: 'Not Found: Product not found'
+          schema:
+            type: string
+        "500":
+          description: 'Internal Server Error: Database or file system error during
+            deletion'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a product
       tags:
-      - authentication
+      - Products
+    get:
+      description: Retrieves a list of all products owned by the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved list of products
+          schema:
+            items:
+              $ref: '#/definitions/prodtable.ProductReturn'
+            type: array
+        "401":
+          description: 'Unauthorized: User not authenticated'
+          schema:
+            type: string
+        "500":
+          description: 'Internal Server Error: Database error'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Get all products for the user
+      tags:
+      - Products
+    post:
+      consumes:
+      - multipart/form-data
+      description: Creates a new product listing associated with the authenticated
+        user. Requires product details and an image upload.
+      parameters:
+      - description: Name of the product
+        in: formData
+        name: productName
+        required: true
+        type: string
+      - description: Description of the product
+        in: formData
+        name: description
+        required: true
+        type: string
+      - description: Price of the product (e.g., 19.99)
+        format: float
+        in: formData
+        name: price
+        required: true
+        type: number
+      - description: Available stock count
+        format: int32
+        in: formData
+        name: count
+        required: true
+        type: integer
+      - description: Comma-separated tags for the product
+        in: formData
+        name: tags
+        type: string
+      - description: Product image file
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - text/plain
+      responses:
+        "201":
+          description: Product added successfully
+          schema:
+            type: string
+        "400":
+          description: 'Bad Request: Missing required fields, invalid data format,
+            or image error'
+          schema:
+            type: string
+        "401":
+          description: 'Unauthorized: User not authenticated'
+          schema:
+            type: string
+        "500":
+          description: 'Internal Server Error: Database or file system error'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Add a new product
+      tags:
+      - Products
+    put:
+      consumes:
+      - multipart/form-data
+      description: Updates details (name, description, price, count, tags) and/or
+        the image for a specific product owned by the authenticated user. Fields not
+        provided are left unchanged.
+      parameters:
+      - description: ID of the product to update
+        format: uint64
+        in: query
+        name: id
+        required: true
+        type: integer
+      - description: New name for the product
+        in: formData
+        name: productName
+        type: string
+      - description: New description for the product
+        in: formData
+        name: description
+        type: string
+      - description: New price for the product (e.g., 29.99)
+        format: float
+        in: formData
+        name: price
+        type: number
+      - description: New available stock count
+        format: int32
+        in: formData
+        name: count
+        type: integer
+      - description: New comma-separated tags (replaces old tags)
+        in: formData
+        name: tags
+        type: string
+      - description: New product image file (replaces old image)
+        in: formData
+        name: image
+        type: file
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Product updated successfully
+          schema:
+            type: string
+        "400":
+          description: 'Bad Request: Invalid Product ID or data format'
+          schema:
+            type: string
+        "401":
+          description: 'Unauthorized: User not authenticated'
+          schema:
+            type: string
+        "403":
+          description: 'Forbidden: User does not own this product'
+          schema:
+            type: string
+        "404":
+          description: 'Not Found: Product not found'
+          schema:
+            type: string
+        "409":
+          description: 'Conflict: Product name already exists for this user" // If
+            name is updated'
+          schema:
+            type: string
+        "500":
+          description: 'Internal Server Error: Database or file system error during
+            update'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Update a product
+      tags:
+      - Products
+  /api/products/details:
+    get:
+      description: Retrieves details for a specific product owned by the authenticated
+        user, identified by its ID.
+      parameters:
+      - description: ID of the product to retrieve
+        format: uint64
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved product details
+          schema:
+            $ref: '#/definitions/prodtable.ProductReturn'
+        "400":
+          description: 'Bad Request: Invalid Product ID'
+          schema:
+            type: string
+        "401":
+          description: 'Unauthorized: User not authenticated'
+          schema:
+            type: string
+        "403":
+          description: 'Forbidden: User does not own this product'
+          schema:
+            type: string
+        "404":
+          description: 'Not Found: Product not found'
+          schema:
+            type: string
+        "500":
+          description: 'Internal Server Error: Database error'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Get a specific product
+      tags:
+      - Products
+  /api/products/image:
+    get:
+      description: Retrieves and serves the image file associated with a product,
+        identified by its filename. Requires the user to be authenticated and own
+        the product/image.
+      parameters:
+      - description: Filename of the image to retrieve (e.g., 'uuid.jpg')
+        in: query
+        name: image
+        required: true
+        type: string
+      produces:
+      - image/*
+      responses:
+        "200":
+          description: Product image file
+          schema:
+            type: file
+        "400":
+          description: 'Bad Request: Missing or invalid image filename'
+          schema:
+            type: string
+        "401":
+          description: 'Unauthorized: User not authenticated'
+          schema:
+            type: string
+        "403":
+          description: 'Forbidden: User does not own this image'
+          schema:
+            type: string
+        "404":
+          description: 'Not Found: Image metadata or file not found'
+          schema:
+            type: string
+        "500":
+          description: 'Internal Server Error: Database or file system error'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Get a product image
+      tags:
+      - Products
   /api/register:
     post:
       consumes:
       - application/x-www-form-urlencoded
-      description: Registers a new user using email, password, and an optional business
-        name.
+      description: Registers a new user account using email and password for local
+        authentication.
       parameters:
-      - description: User email
+      - description: User's Email Address
+        example: '"user@example.com"'
         in: formData
         name: email
         required: true
         type: string
-      - description: User password
+      - description: User's Password (min length recommended)
+        example: '"password123"'
         in: formData
         name: password
         required: true
         type: string
-      - description: Business name
+      - description: User's Full Name
+        example: '"John Doe"'
         in: formData
-        name: business_name
+        name: name
+        required: true
+        type: string
+      - description: User's Business Name (Optional)
+        example: '"JD Enterprises"'
+        in: formData
+        name: businessName
         type: string
       produces:
       - text/plain
@@ -574,58 +737,22 @@ paths:
           schema:
             type: string
         "400":
-          description: Email and password are required or invalid email format
+          description: 'Bad Request: Missing required fields (email, password, name),
+            or invalid email format'
           schema:
             type: string
         "409":
-          description: Email already in use or database error
+          description: 'Conflict: Email address is already registered'
           schema:
             type: string
-      summary: Register a new user
+        "500":
+          description: 'Internal Server Error: Failed to hash password or save user
+            to database'
+          schema:
+            type: string
+      summary: Register a new local user
       tags:
-      - authentication
-  /api/update_product:
-    put:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: Updates the details of an existing product (description, price,
-        stock count) that belongs to the authenticated user.
-      parameters:
-      - description: Product ID
-        in: query
-        name: id
-        required: true
-        type: string
-      - description: New product description
-        in: formData
-        name: product_description
-        type: string
-      - description: New product price
-        in: formData
-        name: item_price
-        type: number
-      - description: New product stock count
-        in: formData
-        name: stock_amount
-        type: integer
-      produces:
-      - text/plain
-      responses:
-        "200":
-          description: Product updated successfully
-          schema:
-            type: string
-        "401":
-          description: User not authenticated or unauthorized
-          schema:
-            type: string
-        "404":
-          description: Product not found
-          schema:
-            type: string
-      summary: Update a product
-      tags:
-      - product
+      - Authentication
   /api/update_storefront:
     put:
       consumes:
@@ -647,8 +774,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/storefronttable.StorefrontLinkUpdatePayload'
-      produces:
-      - application/json
       responses:
         "200":
           description: Successfully updated storefront link details
@@ -683,5 +808,58 @@ paths:
       - ApiKeyAuth: []
       summary: Update a storefront link
       tags:
-      - storefronts
+      - Storefronts
+  /auth/google:
+    get:
+      description: Redirects the user to Google for authentication as part of the
+        OAuth2 flow.
+      responses:
+        "307":
+          description: Redirects to Google's authentication endpoint
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error (if Goth setup fails)
+          schema:
+            type: string
+      summary: Initiate Google Login
+      tags:
+      - Authentication (OAuth)
+  /auth/google/callback:
+    get:
+      description: Handles the callback from Google after authentication. Creates
+        a user session upon successful authentication and redirects to the homepage.
+      responses:
+        "307":
+          description: Redirects to / on successful login
+          schema:
+            type: string
+        "400":
+          description: Bad Request (e.g., state mismatch)" // Goth might handle this
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error (session, database, or Goth issue)
+          schema:
+            type: string
+      summary: Google Login Callback
+      tags:
+      - Authentication (OAuth)
+  /logout:
+    get:
+      description: Logs out the current user by clearing the session cookie and redirects
+        to the homepage.
+      responses:
+        "307":
+          description: Redirects to / after logout
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error (if saving cleared session fails)
+          schema:
+            type: string
+      summary: User Logout
+      tags:
+      - Authentication (OAuth)
+      - Authentication
 swagger: "2.0"

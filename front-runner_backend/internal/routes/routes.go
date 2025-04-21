@@ -2,10 +2,12 @@ package routes
 
 import (
 	"front-runner/internal/login"
+	"front-runner/internal/oauth"
 	"front-runner/internal/orderstable"
 	"front-runner/internal/prodtable"
 	"front-runner/internal/storefronttable"
 	"front-runner/internal/usertable"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -15,64 +17,84 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-// var (
-// 	sessionStore *sessions.CookieStore
-// )
-
-// spaHandler serves the static ReactJS site. It always serves the index.html
-// file to allow React Router to handle client-side routing.
+// spaHandler serves the static ReactJS site. It ensures that requests
+// for paths not corresponding to existing static files are served the
+// index.html file, allowing React Router to handle client-side routing.
 type spaHandler struct {
 	staticPath string
 	indexPath  string
 }
 
 // ServeHTTP implements the http.Handler interface for spaHandler.
-// It checks if the requested file exists. If not, it falls back to serving index.html.
+// It checks if the requested file exists within the staticPath.
+// If the file exists and is not a directory, it serves the file.
+// Otherwise (file not found or is a directory), it serves the indexPath file.
 func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// Join internally call path.Clean to prevent directory traversal
+	// Join internally calls path.Clean to prevent directory traversal
 	path := filepath.Join(h.staticPath, r.URL.Path)
 
 	// check whether a file exists or is a directory at the given path
 	fi, err := os.Stat(path)
-	if os.IsNotExist(err) || fi.IsDir() {
-		// file does not exist or path is a directory, serve index.html
-		http.ServeFile(w, r, filepath.Join(h.staticPath, h.indexPath))
+
+	// If path doesn't exist or IS a directory, serve index.html
+	if os.IsNotExist(err) || (err == nil && fi.IsDir()) {
+		indexPath := filepath.Join(h.staticPath, h.indexPath)
+		http.ServeFile(w, r, indexPath) // ServeFile is fine for index fallback
 		return
 	}
 
+	// If there was an error stating the file (and it wasn't NotExist)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// otherwise, use http.FileServer to serve the static file
-	http.FileServer(http.Dir(h.staticPath)).ServeHTTP(w, r)
+	// Path exists and is a file, serve it using ServeContent
+	f, err := os.Open(path)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer f.Close()
+
+	// ServeContent needs modtime and reader. fi was obtained from os.Stat above.
+	// Use the original request path's base name for the 'name' parameter in ServeContent
+	// to avoid potential issues with ServeContent trying to redirect based on the full fsPath.
+	http.ServeContent(w, r, filepath.Base(r.URL.Path), fi.ModTime(), f)
 }
 
+// InvalidAPI handles requests to API paths that are not explicitly defined.
+// It returns a 404 Not Found error.
 func InvalidAPI(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Invalid API Endpoint", http.StatusNotFound)
 }
 
-// authMiddleware redirects to /login if the user is not authenticated.
+// authMiddleware checks if a user is authenticated by verifying the session.
+// If the user is not authenticated or an error occurs checking the session,
+// it redirects the client to the /login path. Otherwise, it calls the next handler.
 func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !login.IsLoggedIn(r) {
+		user, err := oauth.GetCurrentUser(r)
+
+		if err != nil {
+			log.Printf("Auth Middleware: Error checking current user: %v", err)
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
+
+		if user == nil {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }
 
-// RegisterRoutes configures all application routes.
-//
-// This function registers API endpoints for:
-//   - User management: registration (/api/register), login (/api/login), and logout (/api/logout).
-//   - Product operations: adding (/api/add_product), deleting (/api/delete_product), updating (/api/update_product), and retrieving (/get_product, /get_products, /get_product_image) products.
-//
-// It also sets up:
-//   - The Swagger documentation UI, accessible under /swagger/.
-//   - Static file serving for the ReactJS frontend, including protected routes that require authentication.
+// RegisterRoutes sets up the main router, API sub-router, Swagger documentation,
+// authentication middleware, and static file serving for the SPA.
+// It wires up URL paths to their corresponding handler functions from various packages.
+// If logging is enabled, it wraps the router with a logging handler.
 func RegisterRoutes(router *mux.Router, logging bool) http.Handler {
 	// Subrouters
 	api := router.PathPrefix("/api").Subrouter()

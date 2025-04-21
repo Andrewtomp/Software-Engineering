@@ -3,427 +3,445 @@ package storefronttable
 
 import (
 	"bytes"
-	// "context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
-	"os"     // <-- Import filepath again
-	"regexp" // <-- Import regexp again
-	"strings"
+	"os"
+	"regexp"
+	"sync"
 	"testing"
-	"time"
 
+	// Needed for unique email generation
 	"front-runner/internal/coredbutils"
-	"front-runner/internal/login"
+	"front-runner/internal/login" // Needed for session constants/setup
+	"front-runner/internal/oauth" // Needed for oauth.Setup
 	"front-runner/internal/usertable"
 
-	"github.com/joho/godotenv" // <-- Import godotenv again
-	asrt "github.com/stretchr/testify/assert"
-	req "github.com/stretchr/testify/require"
+	"github.com/gorilla/sessions"
+	"github.com/joho/godotenv"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 const projectDirName = "front-runner_backend"
 
-func init() {
-	re := regexp.MustCompile(`^(.*` + projectDirName + `)`)
-	cwd, _ := os.Getwd()
-	rootPath := re.Find([]byte(cwd))
+// Global test variables
+var (
+	testDB           *gorm.DB
+	testSessionStore *sessions.CookieStore
+	setupEnvOnce     sync.Once
+)
 
-	err := godotenv.Load(string(rootPath) + `/.env`)
-	if err != nil {
-		log.Fatalf("Problem loading .env file. cwd:%s; cause: %s", cwd, err)
-	}
-	coredbutils.LoadEnv()
-	usertable.Setup()
-	login.Setup()
-	Setup()
-}
+// setupTestEnvironment loads environment variables, initializes DB and session store for tests.
+// It also clears relevant tables before each test run.
+func setupTestEnvironment(t *testing.T) {
+	t.Helper()
 
-// --- Constants ---
-// Adjust this if your project root identifier is different
-// const projectDirName = "front-runner_backend" // Or "front-runner_backend"
-
-// --- Test Utility Functions ---
-// (registerAndLoginTestUser function remains the same)
-// ... registerAndLoginTestUser definition ...
-func registerAndLoginTestUser(t *testing.T, email, password, businessName string) (uint, *http.Cookie, error) {
-	// 1. Register User
-	regForm := url.Values{}
-	regForm.Add("email", email)
-	regForm.Add("password", password)
-	regForm.Add("business_name", businessName)
-
-	regReq := httptest.NewRequest(http.MethodPost, "/api/register", strings.NewReader(regForm.Encode()))
-	regReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	regRec := httptest.NewRecorder()
-
-	usertable.RegisterUser(regRec, regReq) // Call actual handler
-
-	if regRec.Code != http.StatusOK {
-		return 0, nil, fmt.Errorf("failed to register test user '%s', status %d, body: %s", email, regRec.Code, regRec.Body.String())
-	}
-	t.Logf("Successfully registered test user: %s", email)
-
-	// Retrieve UserID after registration (essential for linking storefronts)
-	var registeredUser usertable.User
-	// Use the main 'db' connection initialized in TestMain
-	err := db.Where("email = ?", email).First(&registeredUser).Error
-	if err != nil {
-		return 0, nil, fmt.Errorf("failed to retrieve registered user '%s' from DB: %w", email, err)
-	}
-	if registeredUser.ID == 0 {
-		return 0, nil, fmt.Errorf("retrieved user '%s' has ID 0", email)
-	}
-	userID := registeredUser.ID
-	t.Logf("Retrieved UserID %d for %s", userID, email)
-
-	// 2. Login User
-	loginForm := url.Values{}
-	loginForm.Add("email", email)
-	loginForm.Add("password", password) // Use the same password
-
-	loginReq := httptest.NewRequest(http.MethodPost, "/api/login", strings.NewReader(loginForm.Encode()))
-	loginReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	loginRec := httptest.NewRecorder()
-
-	login.LoginUser(loginRec, loginReq) // Call actual handler
-
-	// Login might redirect (303) or return OK (200) depending on implementation
-	if loginRec.Code != http.StatusSeeOther && loginRec.Code != http.StatusOK {
-		return 0, nil, fmt.Errorf("failed to log in test user '%s', expected 303 or 200, got status %d, body: %s", email, loginRec.Code, loginRec.Body.String())
-	}
-
-	// 3. Extract Session Cookie
-	cookies := loginRec.Result().Cookies()
-	var sessionCookie *http.Cookie
-	for _, c := range cookies {
-		// Adjust cookie name if different
-		if c.Name == "auth" {
-			sessionCookie = c
-			break
+	setupEnvOnce.Do(func() {
+		// Find project root
+		re := regexp.MustCompile(`^(.*` + projectDirName + `)`)
+		cwd, _ := os.Getwd()
+		rootPath := re.Find([]byte(cwd))
+		if rootPath == nil {
+			t.Fatalf("Could not find project root directory '%s' from '%s'", projectDirName, cwd)
 		}
-	}
 
-	if sessionCookie == nil {
-		return 0, nil, fmt.Errorf("session cookie 'auth' not found after login for user '%s'", email)
-	}
-	t.Logf("Successfully logged in test user %s and obtained session cookie", email)
+		// Load .env file
+		envPath := string(rootPath) + `/.env`
+		err := godotenv.Load(envPath)
+		if err != nil && !os.IsNotExist(err) {
+			log.Printf("Warning: Problem loading .env file from %s: %v", envPath, err)
+		} else if err == nil {
+			log.Printf("Loaded environment variables from %s for tests", envPath)
+		}
 
-	return userID, sessionCookie, nil
+		// Initialize DB connection
+		coredbutils.ResetDBStateForTests()
+		err = coredbutils.LoadEnv()
+		require.NoError(t, err, "Failed to load core DB environment")
+		var dbErr error
+		testDB, dbErr = coredbutils.GetDB()
+		require.NoError(t, dbErr, "Failed to get DB connection for tests")
+
+		// Initialize Session Store for tests
+		authKey := []byte("test-auth-key-32-bytes-long-000")
+		encKey := []byte("test-enc-key-needs-to-be-32-byte") // 32 bytes
+		require.True(t, len(encKey) == 16 || len(encKey) == 32, "Test encryption key must be 16 or 32 bytes")
+		testSessionStore = sessions.NewCookieStore(authKey, encKey)
+		testSessionStore.Options = &sessions.Options{
+			Path:     "/",
+			MaxAge:   86400 * 1,
+			HttpOnly: true,
+			Secure:   false,
+			SameSite: http.SameSiteLaxMode,
+		}
+
+		// Setup dependent packages
+		usertable.Setup()                     // Uses coredbutils.GetDB()
+		oauth.Setup(testSessionStore)         // Uses session store
+		login.Setup(testDB, testSessionStore) // Uses DB and session store
+		Setup()                               // Setup storefronttable package (uses coredbutils.GetDB() and loads key)
+
+		// Run migrations once after setup
+		usertable.MigrateUserDB()
+		MigrateStorefrontDB() // Migrates StorefrontLink table
+	})
+
+	// Clear tables before each test function
+	require.NoError(t, usertable.ClearUserTable(testDB), "Failed to clear user table")
+	require.NoError(t, ClearStorefrontTable(testDB), "Failed to clear storefront table") // Use the package's Clear function
 }
 
-func makeTestUser(t *testing.T, password string) (uint, *http.Cookie, error) {
-	require := req.New(t)
-	uniqueEmail := fmt.Sprintf("addsf_%d@example.com", time.Now().UnixNano())
+// Helper to create a test user directly in the DB
+func createTestUser(t *testing.T, email, password string) *usertable.User {
+	t.Helper()
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		t.Fatalf("error hashing test password: %v", err)
-	}
-	userID, sessionCookie, err := registerAndLoginTestUser(t, uniqueEmail, string(hashedPassword), "Add SF Test Biz")
-	require.NoError(err, "Setup failed: Could not register and login test user")
-	require.NotNil(sessionCookie, "Setup failed: Session cookie is nil")
-	require.NotZero(userID, "Setup failed: UserID is zero")
+	require.NoError(t, err, "Failed to hash password for test user")
 
-	return userID, sessionCookie, nil
+	user := &usertable.User{
+		Email:        email,
+		PasswordHash: string(hashedPassword),
+		Name:         "Test User " + email,
+		Provider:     "local",
+	}
+	err = usertable.CreateUser(user)
+	require.NoError(t, err, "Failed to create test user using usertable.CreateUser")
+	createdUser, err := usertable.GetUserByEmail(email)
+	require.NoError(t, err, "Failed to fetch created test user by email")
+	require.NotNil(t, createdUser, "Fetched created test user should not be nil")
+	return createdUser
 }
 
-// --- TestMain for Simplified Setup/Teardown (No Mocking Version) ---
+// Helper to create an authenticated request
+func createAuthenticatedRequest(t *testing.T, user *usertable.User, method, url string, body io.Reader) *http.Request {
+	t.Helper()
+	req := httptest.NewRequest(method, url, body)
 
-func TestMain(m *testing.M) {
-	log.Println("--- TestMain Start (No Mocking) ---")
+	// Use literal strings as constants are not exported from login pkg
+	const sessionName = "front-runner-session"
+	const userSessionKey = "userID"
 
-	// --- Verify DB Connection and Key Loading ---
-	if db == nil {
-		log.Fatal("FATAL: Database connection (db) is nil after Setup(). Check DB config in .env and DB service.")
-	}
-	if len(encryptionKey) == 0 {
-		log.Fatal("FATAL: Encryption key was not loaded after Setup(). Ensure 'STOREFRONT_KEY' ennviroment vairiable is set.")
-	}
-	sqlDB, err := db.DB()
-	if err != nil {
-		log.Fatalf("FATAL: Failed to get underlying SQL DB interface: %v", err)
-	}
-	if err = sqlDB.Ping(); err != nil {
-		log.Fatalf("FATAL: Failed to ping local database after Setup(): %v. Check connection details in .env.", err)
-	}
-	log.Println("TEST: Successfully connected to database and loaded encryption key.")
+	// Create and save session to get cookie header
+	session, err := testSessionStore.New(req, sessionName)
+	require.NoError(t, err, "Failed to create new session for auth request")
+	session.Values[userSessionKey] = user.ID
+	rrCookieSetter := httptest.NewRecorder()
+	err = testSessionStore.Save(req, rrCookieSetter, session)
+	require.NoError(t, err, "Failed to save session to get cookie header")
+	cookieHeader := rrCookieSetter.Header().Get("Set-Cookie")
+	require.NotEmpty(t, cookieHeader, "Set-Cookie header should not be empty after saving session")
 
-	// --- Run Migrations ---
-	log.Println("TEST: Running database migrations...")
-	usertable.MigrateUserDB()
-	MigrateStorefrontDB()
-	log.Println("TEST: Database migrations complete.")
-
-	// --- Clear Tables Before Running Tests ---
-	log.Println("TEST: Clearing tables before running tests...")
-	// Use require inside TestMain - don't pass 't' (nil here)
-	if err := usertable.ClearUserTable(db); err != nil {
-		log.Fatalf("FATAL: Failed to clear users table before tests: %v", err)
-	}
-	if err := ClearStorefrontTable(db); err != nil {
-		log.Fatalf("FATAL: Failed to clear storefront table before tests: %v", err)
-	}
-
-	// --- Run Tests ---
-	log.Println("TEST: Starting test execution...")
-	exitCode := m.Run()
-	log.Println("TEST: Finished test execution.")
-
-	// --- Clear Tables After Tests ---
-	log.Println("TEST: Clearing tables after running tests...")
-	if err := usertable.ClearUserTable(db); err != nil {
-		log.Printf("ERROR: Failed to clear users table after tests: %v", err)
-	}
-	if err := ClearStorefrontTable(db); err != nil {
-		log.Printf("ERROR: Failed to clear storefront table after tests: %v", err)
-	}
-
-	log.Println("--- TestMain End (No Mocking) ---")
-	os.Exit(exitCode)
+	// Add cookie to the actual request
+	req.Header.Set("Cookie", cookieHeader)
+	return req
 }
 
-// --- Test Functions ---
-// (Test functions remain the same as the previous "No Mocking" version)
-// ... TestAddStorefront_RealLogin definition ...
-func TestAddStorefront_RealLogin(t *testing.T) {
-	// assert := asrt.New(t)
-	// require := req.New(t)
-	// TestMain clears tables
+// TestAddStorefront tests adding a storefront link.
+func TestAddStorefront(t *testing.T) {
+	setupTestEnvironment(t)
+	user := createTestUser(t, "addsf@example.com", "password123")
 
-	// --- Setup: Register and Login User ---
-	password := "testpassword123"
-	userID, sessionCookie, _ := makeTestUser(t, password)
-
-	// --- Test Case 1: Success ---
 	t.Run("Success", func(t *testing.T) {
-		assert := asrt.New(t) // Use subtest 't'
-		require := req.New(t) // Use subtest 't'
-
 		payload := StorefrontLinkAddPayload{
-			StoreType: "amazon_real_login",
-			StoreName: "My Amazon Store (Real Login)",
-			ApiKey:    "real_key_456",
-			ApiSecret: "real_secret_abc",
-			StoreId:   "real_store789",
-			StoreUrl:  "http://amazon.com/real_store789",
+			StoreType: "amazon_test",
+			StoreName: "My Test Amazon Store",
+			ApiKey:    "key123",
+			ApiSecret: "secretABC",
+			StoreId:   "storeXYZ",
+			StoreUrl:  "http://amazon.test/storeXYZ",
 		}
-		body, _ := json.Marshal(payload)
+		bodyBytes, err := json.Marshal(payload)
+		require.NoError(t, err)
 
-		// Create request and ADD THE COOKIE
-		req := httptest.NewRequest(http.MethodPost, "/api/add_storefront", bytes.NewReader(body))
+		req := createAuthenticatedRequest(t, user, "POST", "/api/add_storefront", bytes.NewReader(bodyBytes))
 		req.Header.Set("Content-Type", "application/json")
-		req.AddCookie(sessionCookie) // Add the obtained session cookie
-
 		rr := httptest.NewRecorder()
+
 		AddStorefront(rr, req) // Call the handler
 
-		assert.Equal(http.StatusCreated, rr.Code, "Expected status 201 Created")
+		require.Equal(t, http.StatusCreated, rr.Code, "Expected status 201 Created, body: %s", rr.Body.String())
 
-		// ... (rest of assertions for success case, verifying response and DB) ...
 		var responseData StorefrontLinkReturn
-		err := json.Unmarshal(rr.Body.Bytes(), &responseData)
-		require.NoError(err, "Failed to unmarshal response") // No 't' needed
-		assert.Equal(payload.StoreType, responseData.StoreType)
-		assert.Equal(payload.StoreName, responseData.StoreName)
-		assert.NotEmpty(responseData.ID)
+		err = json.Unmarshal(rr.Body.Bytes(), &responseData)
+		require.NoError(t, err, "Failed to unmarshal response")
+		assert.Equal(t, payload.StoreType, responseData.StoreType)
+		assert.Equal(t, payload.StoreName, responseData.StoreName)
+		assert.Equal(t, payload.StoreId, responseData.StoreID)
+		assert.Equal(t, payload.StoreUrl, responseData.StoreURL)
+		assert.NotEmpty(t, responseData.ID)
 
 		// Verify in DB
 		var savedLink StorefrontLink
-		dbResult := db.First(&savedLink, responseData.ID)
-		require.NoError(dbResult.Error)        // No 't' needed
-		assert.Equal(userID, savedLink.UserID) // IMPORTANT: Check against the real UserID
-		assert.Equal(payload.StoreType, savedLink.StoreType)
-		// ... (verify credentials via decryption as before)
+		dbResult := testDB.First(&savedLink, responseData.ID)
+		require.NoError(t, dbResult.Error)
+		assert.Equal(t, user.ID, savedLink.UserID)
+		assert.Equal(t, payload.StoreType, savedLink.StoreType)
+		assert.Equal(t, payload.StoreName, savedLink.StoreName)
+		assert.Equal(t, payload.StoreId, savedLink.StoreID)
+		assert.Equal(t, payload.StoreUrl, savedLink.StoreURL)
+
+		// Verify credentials encryption
+		require.NotEmpty(t, savedLink.Credentials)
 		decryptedCreds, decryptErr := decryptCredentials(savedLink.Credentials)
-		require.NoError(decryptErr) // No 't' needed
+		require.NoError(t, decryptErr)
 		expectedCredsMap := map[string]string{"apiKey": payload.ApiKey, "apiSecret": payload.ApiSecret}
 		expectedCredsJSON, _ := json.Marshal(expectedCredsMap)
-		assert.JSONEq(string(expectedCredsJSON), decryptedCreds)
+		assert.JSONEq(t, string(expectedCredsJSON), decryptedCreds)
 	})
 
-	// --- Test Case 2: Unauthorized (No Cookie) ---
 	t.Run("Unauthorized", func(t *testing.T) {
-		assert := asrt.New(t) // Use subtest 't'
+		payload := StorefrontLinkAddPayload{StoreType: "unauth_test"}
+		bodyBytes, _ := json.Marshal(payload)
 
-		payload := StorefrontLinkAddPayload{StoreType: "test_unauth_real"}
-		body, _ := json.Marshal(payload)
-
-		// Create request WITHOUT the cookie
-		req := httptest.NewRequest(http.MethodPost, "/api/add_storefront", bytes.NewReader(body))
+		// Create request WITHOUT authentication
+		req := httptest.NewRequest("POST", "/api/add_storefront", bytes.NewReader(bodyBytes))
 		req.Header.Set("Content-Type", "application/json")
-		// NO req.AddCookie(sessionCookie)
-
 		rr := httptest.NewRecorder()
+
 		AddStorefront(rr, req)
 
-		assert.Equal(http.StatusUnauthorized, rr.Code)
-		// You might want to check the specific error message from your checkAuth helper
-		assert.Contains(rr.Body.String(), "Unauthorized")
+		assert.Equal(t, http.StatusUnauthorized, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Unauthorized")
+	})
+
+	t.Run("MissingStoreType", func(t *testing.T) {
+		payload := StorefrontLinkAddPayload{StoreName: "No Type Store"} // Missing StoreType
+		bodyBytes, _ := json.Marshal(payload)
+
+		req := createAuthenticatedRequest(t, user, "POST", "/api/add_storefront", bytes.NewReader(bodyBytes))
+		req.Header.Set("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+
+		AddStorefront(rr, req)
+
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Missing required field: storeType")
+	})
+
+	t.Run("DuplicateStoreNameAndType", func(t *testing.T) {
+		// Add first link
+		payload1 := StorefrontLinkAddPayload{StoreType: "duplicate_test", StoreName: "My Duplicate Store"}
+		body1, _ := json.Marshal(payload1)
+		req1 := createAuthenticatedRequest(t, user, "POST", "/api/add_storefront", bytes.NewReader(body1))
+		req1.Header.Set("Content-Type", "application/json")
+		rr1 := httptest.NewRecorder()
+		AddStorefront(rr1, req1)
+		require.Equal(t, http.StatusCreated, rr1.Code)
+
+		// Attempt to add second link with same type and name
+		payload2 := StorefrontLinkAddPayload{StoreType: "duplicate_test", StoreName: "My Duplicate Store"}
+		body2, _ := json.Marshal(payload2)
+		req2 := createAuthenticatedRequest(t, user, "POST", "/api/add_storefront", bytes.NewReader(body2))
+		req2.Header.Set("Content-Type", "application/json")
+		rr2 := httptest.NewRecorder()
+		AddStorefront(rr2, req2)
+
+		assert.Equal(t, http.StatusConflict, rr2.Code)
+		assert.Contains(t, rr2.Body.String(), "already exists")
 	})
 }
 
-// ... TestGetUpdateDeleteFlow_RealLogin definition ...
-func TestGetUpdateDeleteFlow_RealLogin(t *testing.T) {
-	assert := asrt.New(t)
-	require := req.New(t)
-	// TestMain clears tables
-
-	// --- Setup: Register and Login User ---
-	// uniqueEmail := fmt.Sprintf("flow_%d@example.com", time.Now().UnixNano())
-	password := "flowpassword"
-	_, sessionCookie, err := makeTestUser(t, password)
-	// userID, sessionCookie, err := registerAndLoginTestUser(t, uniqueEmail, password, "Flow Test Biz")
-	// require.NoError(err, "Setup failed: Could not register and login test user")
-	// require.NotNil(sessionCookie, "Setup failed: Session cookie is nil")
-	// require.NotZero(userID, "Setup failed: UserID is zero")
+// TestGetUpdateDeleteFlow tests the full lifecycle: Get, Update, Delete.
+func TestGetUpdateDeleteFlow(t *testing.T) {
+	setupTestEnvironment(t)
+	user := createTestUser(t, "flow@example.com", "flowpassword")
 
 	// 1. Add a link to work with
-	addPayload := StorefrontLinkAddPayload{StoreType: "demo_flow_real", StoreName: "Real Flow Store", ApiKey: "flow_key_real", StoreId: "flow_real", StoreUrl: "http://example.com/flow_real"}
-	addBody, _ := json.Marshal(addPayload)
-	addReq := httptest.NewRequest(http.MethodPost, "/api/add_storefront", bytes.NewReader(addBody))
+	addPayload := StorefrontLinkAddPayload{
+		StoreType: "flow_test",
+		StoreName: "Flow Store Original",
+		ApiKey:    "flow_key",
+		StoreId:   "flow_id_1",
+		StoreUrl:  "http://flow.test/1",
+	}
+	addBodyBytes, _ := json.Marshal(addPayload)
+	addReq := createAuthenticatedRequest(t, user, "POST", "/api/add_storefront", bytes.NewReader(addBodyBytes))
 	addReq.Header.Set("Content-Type", "application/json")
-	addReq.AddCookie(sessionCookie) // Authenticate
 	addRR := httptest.NewRecorder()
 	AddStorefront(addRR, addReq)
-	require.Equal(http.StatusCreated, addRR.Code, "Flow Setup: Failed to add initial link")
+	require.Equal(t, http.StatusCreated, addRR.Code, "Flow Setup: Failed to add initial link")
 	var addedLinkResp StorefrontLinkReturn
-	require.NoError(json.Unmarshal(addRR.Body.Bytes(), &addedLinkResp), "Flow Setup: Failed to parse add response") // No 't'
+	require.NoError(t, json.Unmarshal(addRR.Body.Bytes(), &addedLinkResp), "Flow Setup: Failed to parse add response")
 	linkID := addedLinkResp.ID
+	require.NotZero(t, linkID, "Added link ID should not be zero")
 
-	// 2. Get Storefronts
-	getReq := httptest.NewRequest(http.MethodGet, "/api/get_storefronts", nil)
-	getReq.AddCookie(sessionCookie) // Authenticate
-	getRR := httptest.NewRecorder()
-	GetStorefronts(getRR, getReq)
-	require.Equal(http.StatusOK, getRR.Code, "Flow Get: Failed status")
-	var links []StorefrontLinkReturn
-	require.NoError(json.Unmarshal(getRR.Body.Bytes(), &links), "Flow Get: Failed to parse list") // No 't'
-	// ... (Verify link presence as before) ...
-	found := false
-	for _, link := range links {
-		if link.ID == linkID {
-			assert.Equal(addPayload.StoreName, link.StoreName)
-			found = true
-			break
-		}
-	}
-	assert.True(found, "Flow Get: Newly added link not found")
+	// 2. Get Storefronts and verify the added link
+	t.Run("GetAfterAdd", func(t *testing.T) {
+		getReq := createAuthenticatedRequest(t, user, "GET", "/api/get_storefronts", nil)
+		getRR := httptest.NewRecorder()
+		GetStorefronts(getRR, getReq)
+		require.Equal(t, http.StatusOK, getRR.Code, "Flow Get: Failed status")
+
+		var links []StorefrontLinkReturn
+		require.NoError(t, json.Unmarshal(getRR.Body.Bytes(), &links), "Flow Get: Failed to parse list")
+		require.Len(t, links, 1, "Expected 1 link after adding")
+		assert.Equal(t, linkID, links[0].ID)
+		assert.Equal(t, addPayload.StoreName, links[0].StoreName)
+		assert.Equal(t, addPayload.StoreType, links[0].StoreType)
+		assert.Equal(t, addPayload.StoreId, links[0].StoreID)
+		assert.Equal(t, addPayload.StoreUrl, links[0].StoreURL)
+	})
 
 	// 3. Update the link
-	updatePayload := StorefrontLinkUpdatePayload{StoreName: "Real Flow Store UPDATED", StoreId: "flow_real_upd", StoreUrl: "http://example.com/flow_real_upd"}
-	updateBody, _ := json.Marshal(updatePayload)
-	updateURL := fmt.Sprintf("/api/update_storefront?id=%d", linkID)
-	updateReq := httptest.NewRequest(http.MethodPut, updateURL, bytes.NewReader(updateBody))
-	updateReq.Header.Set("Content-Type", "application/json")
-	updateReq.AddCookie(sessionCookie) // Authenticate
-	updateRR := httptest.NewRecorder()
-	UpdateStorefront(updateRR, updateReq)
-	require.Equal(http.StatusOK, updateRR.Code, "Flow Update: Failed status")
-	var updatedLinkResp StorefrontLinkReturn                                                                          // Need this if checking response
-	require.NoError(json.Unmarshal(updateRR.Body.Bytes(), &updatedLinkResp), "Flow Update: Failed to parse response") // No 't'
+	t.Run("UpdateLink", func(t *testing.T) {
+		updatePayload := StorefrontLinkUpdatePayload{
+			StoreName: "Flow Store UPDATED",
+			StoreId:   "flow_id_2",
+			StoreUrl:  "http://flow.test/2",
+		}
+		updateBodyBytes, _ := json.Marshal(updatePayload)
+		updateURL := fmt.Sprintf("/api/update_storefront?id=%d", linkID)
+		updateReq := createAuthenticatedRequest(t, user, "PUT", updateURL, bytes.NewReader(updateBodyBytes))
+		updateReq.Header.Set("Content-Type", "application/json")
+		updateRR := httptest.NewRecorder()
+		UpdateStorefront(updateRR, updateReq)
+		require.Equal(t, http.StatusOK, updateRR.Code, "Flow Update: Failed status, body: %s", updateRR.Body.String())
 
-	// Verify update in DB
-	var updatedLinkDB StorefrontLink
-	dbResult := db.First(&updatedLinkDB, linkID)
-	require.NoError(dbResult.Error) // No 't'
-	assert.Equal(updatePayload.StoreName, updatedLinkDB.StoreName)
-	// ... (Check credentials didn't change)
-	decryptedCreds, decryptErr := decryptCredentials(updatedLinkDB.Credentials)
-	require.NoError(decryptErr)                                    // No 't'
-	origCredsMap := map[string]string{"apiKey": addPayload.ApiKey} // Reconstruct original creds map
-	origCredsJSON, _ := json.Marshal(origCredsMap)
-	assert.JSONEq(string(origCredsJSON), decryptedCreds)
+		var updatedLinkResp StorefrontLinkReturn
+		require.NoError(t, json.Unmarshal(updateRR.Body.Bytes(), &updatedLinkResp), "Flow Update: Failed to parse response")
+		assert.Equal(t, linkID, updatedLinkResp.ID)
+		assert.Equal(t, updatePayload.StoreName, updatedLinkResp.StoreName)
+		assert.Equal(t, updatePayload.StoreId, updatedLinkResp.StoreID)
+		assert.Equal(t, updatePayload.StoreUrl, updatedLinkResp.StoreURL)
+		assert.Equal(t, addPayload.StoreType, updatedLinkResp.StoreType) // Type should not change
+
+		// Verify update in DB
+		var updatedLinkDB StorefrontLink
+		dbResult := testDB.First(&updatedLinkDB, linkID)
+		require.NoError(t, dbResult.Error)
+		assert.Equal(t, updatePayload.StoreName, updatedLinkDB.StoreName)
+		assert.Equal(t, updatePayload.StoreId, updatedLinkDB.StoreID)
+		assert.Equal(t, updatePayload.StoreUrl, updatedLinkDB.StoreURL)
+		assert.Equal(t, addPayload.StoreType, updatedLinkDB.StoreType) // Type should not change
+
+		// Verify credentials didn't change
+		decryptedCreds, decryptErr := decryptCredentials(updatedLinkDB.Credentials)
+		require.NoError(t, decryptErr)
+		origCredsMap := map[string]string{"apiKey": addPayload.ApiKey} // Reconstruct original creds map
+		origCredsJSON, _ := json.Marshal(origCredsMap)
+		assert.JSONEq(t, string(origCredsJSON), decryptedCreds)
+	})
 
 	// 4. Delete the link
-	deleteURL := fmt.Sprintf("/api/delete_storefront?id=%d", linkID)
-	deleteReq := httptest.NewRequest(http.MethodDelete, deleteURL, nil)
-	deleteReq.AddCookie(sessionCookie) // Authenticate
-	deleteRR := httptest.NewRecorder()
-	DeleteStorefront(deleteRR, deleteReq)
-	assert.Contains([]int{http.StatusOK, http.StatusNoContent}, deleteRR.Code, "Flow Delete: Failed status")
-	// ... (Verify deletion in DB as before) ...
-	var deletedLink StorefrontLink
-	err = db.First(&deletedLink, linkID).Error
-	assert.Error(err) // No 't' needed
-	assert.True(errors.Is(err, gorm.ErrRecordNotFound))
+	t.Run("DeleteLink", func(t *testing.T) {
+		deleteURL := fmt.Sprintf("/api/delete_storefront?id=%d", linkID)
+		deleteReq := createAuthenticatedRequest(t, user, "DELETE", deleteURL, nil)
+		deleteRR := httptest.NewRecorder()
+		DeleteStorefront(deleteRR, deleteReq)
+		// Allow 200 or 204 for successful deletion
+		assert.Contains(t, []int{http.StatusOK, http.StatusNoContent}, deleteRR.Code, "Flow Delete: Failed status")
+
+		// Verify deletion in DB
+		var deletedLink StorefrontLink
+		err := testDB.First(&deletedLink, linkID).Error
+		require.Error(t, err, "Expected error when fetching deleted link")
+		assert.True(t, errors.Is(err, gorm.ErrRecordNotFound), "Expected Gorm ErrRecordNotFound")
+	})
+
+	// 5. Get Storefronts again and verify it's empty
+	t.Run("GetAfterDelete", func(t *testing.T) {
+		getReq := createAuthenticatedRequest(t, user, "GET", "/api/get_storefronts", nil)
+		getRR := httptest.NewRecorder()
+		GetStorefronts(getRR, getReq)
+		require.Equal(t, http.StatusOK, getRR.Code, "Flow Get After Delete: Failed status")
+
+		var links []StorefrontLinkReturn
+		require.NoError(t, json.Unmarshal(getRR.Body.Bytes(), &links), "Flow Get After Delete: Failed to parse list")
+		assert.Len(t, links, 0, "Expected 0 links after deleting")
+	})
 }
 
-// ... TestSpecificErrors_RealLogin definition ...
-func TestSpecificErrors_RealLogin(t *testing.T) {
-	// assert := asrt.New(t)
-	require := req.New(t)
-
-	// Define Helper struct at the beginning of the function scope
-	type CheckLink struct {
-		ID uint `gorm:"primaryKey"`
-	}
-
-	// --- Setup users ---
-	password := "password123"
-	_, sessionCookie1, _ := makeTestUser(t, password)
-	_, sessionCookie2, _ := makeTestUser(t, password)
+// TestSpecificErrors tests various error conditions like forbidden, not found.
+func TestSpecificErrors(t *testing.T) {
+	setupTestEnvironment(t)
+	user1 := createTestUser(t, "user1_errors@example.com", "password")
+	user2 := createTestUser(t, "user2_errors@example.com", "password")
 
 	// Add a link belonging to User 1
-	addPayload := StorefrontLinkAddPayload{StoreType: "errors_real", StoreName: "Link For User 1", ApiKey: "key"}
-	addBody, _ := json.Marshal(addPayload)
-	addReq := httptest.NewRequest(http.MethodPost, "/api/add_storefront", bytes.NewReader(addBody))
+	addPayload := StorefrontLinkAddPayload{StoreType: "errors_test", StoreName: "Link For User 1", ApiKey: "key"}
+	addBodyBytes, _ := json.Marshal(addPayload)
+	addReq := createAuthenticatedRequest(t, user1, "POST", "/api/add_storefront", bytes.NewReader(addBodyBytes))
 	addReq.Header.Set("Content-Type", "application/json")
-	addReq.AddCookie(sessionCookie1) // Use User 1's cookie
 	addRR := httptest.NewRecorder()
 	AddStorefront(addRR, addReq)
-	require.Equal(http.StatusCreated, addRR.Code)
+	require.Equal(t, http.StatusCreated, addRR.Code)
 	var addedResp StorefrontLinkReturn
-	require.NoError(json.Unmarshal(addRR.Body.Bytes(), &addedResp))
-	linkIDUser1 := addedResp.ID // ID of the link owned by User 1
+	require.NoError(t, json.Unmarshal(addRR.Body.Bytes(), &addedResp))
+	linkIDUser1 := addedResp.ID
 
 	t.Run("UpdateForbidden", func(t *testing.T) {
-		assert := asrt.New(t) // Use subtest 't'
-
 		updatePayload := StorefrontLinkUpdatePayload{StoreName: "Attempt Update by User 2"}
-		body, _ := json.Marshal(updatePayload)
-		url := fmt.Sprintf("/api/update_storefront?id=%d", linkIDUser1) // Target User 1's link
-		req := httptest.NewRequest(http.MethodPut, url, bytes.NewReader(body))
+		bodyBytes, _ := json.Marshal(updatePayload)
+		url := fmt.Sprintf("/api/update_storefront?id=%d", linkIDUser1)                     // Target User 1's link
+		req := createAuthenticatedRequest(t, user2, "PUT", url, bytes.NewReader(bodyBytes)) // Logged in as User 2
 		req.Header.Set("Content-Type", "application/json")
-		req.AddCookie(sessionCookie2) // Logged in as User 2
 		rr := httptest.NewRecorder()
 		UpdateStorefront(rr, req)
-		assert.Equal(http.StatusForbidden, rr.Code)
+		assert.Equal(t, http.StatusForbidden, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Forbidden")
 	})
 
 	t.Run("DeleteForbidden", func(t *testing.T) {
-		assert := asrt.New(t) // Use subtest 't'
-
 		url := fmt.Sprintf("/api/delete_storefront?id=%d", linkIDUser1) // Target User 1's link
-		req := httptest.NewRequest(http.MethodDelete, url, nil)
-		req.AddCookie(sessionCookie2) // Logged in as User 2
+		req := createAuthenticatedRequest(t, user2, "DELETE", url, nil) // Logged in as User 2
 		rr := httptest.NewRecorder()
 		DeleteStorefront(rr, req)
-		assert.Equal(http.StatusForbidden, rr.Code)
+		assert.Equal(t, http.StatusForbidden, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Forbidden")
 
 		// Verify User 1's link still exists
-		var link CheckLink
-		err := db.Model(&StorefrontLink{}).Select("id").First(&link, linkIDUser1).Error
-		assert.NoError(err, "Link owned by User 1 should not have been deleted") // No 't' needed
+		var link StorefrontLink
+		err := testDB.First(&link, linkIDUser1).Error
+		assert.NoError(t, err, "Link owned by User 1 should not have been deleted")
 	})
 
 	t.Run("UpdateNotFound", func(t *testing.T) {
-		assert := asrt.New(t) // Use subtest 't'
-
 		nonExistentID := uint(999999)
 		updatePayload := StorefrontLinkUpdatePayload{StoreName: "Update Non Existent"}
-		body, _ := json.Marshal(updatePayload)
+		bodyBytes, _ := json.Marshal(updatePayload)
 		url := fmt.Sprintf("/api/update_storefront?id=%d", nonExistentID)
-		req := httptest.NewRequest(http.MethodPut, url, bytes.NewReader(body))
+		req := createAuthenticatedRequest(t, user1, "PUT", url, bytes.NewReader(bodyBytes)) // Logged in as User 1
 		req.Header.Set("Content-Type", "application/json")
-		req.AddCookie(sessionCookie1) // Logged in as User 1 (doesn't matter for not found)
 		rr := httptest.NewRecorder()
 		UpdateStorefront(rr, req)
-		assert.Equal(http.StatusNotFound, rr.Code)
+		assert.Equal(t, http.StatusNotFound, rr.Code)
+		assert.Contains(t, rr.Body.String(), "not found")
+	})
+
+	t.Run("DeleteNotFound", func(t *testing.T) {
+		nonExistentID := uint(999998)
+		url := fmt.Sprintf("/api/delete_storefront?id=%d", nonExistentID)
+		req := createAuthenticatedRequest(t, user1, "DELETE", url, nil) // Logged in as User 1
+		rr := httptest.NewRecorder()
+		DeleteStorefront(rr, req)
+		assert.Equal(t, http.StatusNotFound, rr.Code)
+		assert.Contains(t, rr.Body.String(), "not found")
+	})
+
+	t.Run("UpdateMissingID", func(t *testing.T) {
+		updatePayload := StorefrontLinkUpdatePayload{StoreName: "Update Missing ID"}
+		bodyBytes, _ := json.Marshal(updatePayload)
+		url := "/api/update_storefront" // Missing ?id=...
+		req := createAuthenticatedRequest(t, user1, "PUT", url, bytes.NewReader(bodyBytes))
+		req.Header.Set("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+		UpdateStorefront(rr, req)
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Missing required query parameter: id")
+	})
+
+	t.Run("DeleteMissingID", func(t *testing.T) {
+		url := "/api/delete_storefront" // Missing ?id=...
+		req := createAuthenticatedRequest(t, user1, "DELETE", url, nil)
+		rr := httptest.NewRecorder()
+		DeleteStorefront(rr, req)
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Missing required query parameter: id")
 	})
 }
