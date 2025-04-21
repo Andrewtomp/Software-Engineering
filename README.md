@@ -9,6 +9,19 @@ Software-Engineering project repo: FrontRunner
 - Sean Cheema
 - Andrew Tompkins
 
+## How To Run:
+### Clone The Repository
+`git clone <repository-url>`
+
+### Compile Static Front End
+1. `cd front-runner`
+2. `npm install`
+3. `npm run build`
+
+### Run Back end
+1. `cd front-runner_backend`
+2. 
+
 ## Project Description:
 ## Project Idea:
 An inventory and order management software designed for small artists that create limited prints or apparel.
