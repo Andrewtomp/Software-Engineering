@@ -47,7 +47,19 @@
 
 ### Run Back End
 1. `cd front-runner_backend`
-2. 
+2. `run go .` OR `run go . --ngrok`
+
+### RUN ALL
+
+Alternatively you can use the `makefile` to build the front end and start the backend automatically
+
+```bash
+cd Software-Engineering
+
+make #for running locally
+
+make ngrok #for running through ngrok and using oauth
+```
 
 ## Project Description:
 ## Project Idea:
