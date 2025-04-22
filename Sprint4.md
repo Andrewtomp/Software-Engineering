@@ -15,45 +15,30 @@ Video: [Sprint 4 VIDEO]()
 - Created Cypress and Unit Tests for this sprint's functionality
 
 ### Back end
-- Merged all Sprint 2 content to main branch
-- Created `storefronttable` package
-  - `AddStorefront()`
-  - `GetStorefronts()`
-  - `UpdateStorefront()`
-  - `DeleteStorefront()`
-- Added unit tests for `storefronttable`
-- Added separate `encryption` module for `storfronttable`
-- Created the `generateCert.sh` script that generates the tls certificate required to access the site and generates the `.storefrontkey` for encrypted API info storage
-- Updated the routing to add api calls to `storefronttable`
-- Added very basic front end for Store Fronts
-- Added pop-up form for adding a Store Front
-- Made it so that clicking on a Store Front allows a user to edit it
-- Made it so that only the logged in user's store fronts appear
-- Updated `routes` to include calls to `storefronttable`
-- Updated `main` to correct initalize the `storefronttable` db
-- Updated `Product` struct so that `UserID` and `ProdName` have to be a unique combination
-- Updated how products are updated in the `prodtable` to account for new restriction
-- Implemented back end product filter so only products added by a specific user appear when that user is authorized (logged in)
-- Connected the ability to edit values for each item to the front end
-- Connected the ability to delete an item to the front end
-- Swagger docs have been updated
-- Added makefile for automatic deployment
+- Merged all Sprint 3 content to main branch
+- Updated the `generateCerts.sh` script to work on linux and mac
+- Added option to host the page through ngrok
+- Added oauth through google (only works through ngrok)
+- Added additional option in the make file for running with ngrok
+- Updated the `.env_template` to include the required variable for Ngrok and Google Auth
+- Added backend functionality to retrieve order information
+- Added backend functionality to create orders
+- Updated backend to work locally and through oauth
+- Updated user id retrieval to use oauth
+- Updated all unit tests
+- Updated Documentation to be more consistent
 
-## Incomplete Work
-### Front end
-- N/A
+### Ngrok Traffic
 
-### Back end
-- Need to implement OAuth 2.0 for truely connecting to external stores
-  - The site needs to be hosted somewhere
-  - We need to create developer accounts for all supported storefronts
-  - We need to register our site in our developer accounts
-  - We need to set up the token management for the OAuth (many steps here)
-- Need to implement order tracking
-- Need to implement ag-grid updates for front end
-- Need to refine `routes` unit tests to account for added routes
-- improve makefile
+![Ngrok_Traffic](https://github.com/user-attachments/assets/719168f6-7a31-4d8d-882c-7a3bd4e1ac50)
 
+
+## Incomplete Work (For Both)
+- Hook in order retrieval to front end
+- Add order updater to front end
+- Hook in with store front APIs to either retieve orders or automatically get sent orders
+
+NOTE: Could not connect to other businesses because we are not a business entity
 
 ## Testing
 ### Front end
@@ -124,456 +109,1154 @@ go test ./internal/login # replace login with the desired internal package
 
 Alternatively, the tests can be automatically run with an extension in vscode.
 
-![backend_tests_sprint3](https://github.com/user-attachments/assets/3db2cb0b-94cb-4f82-9e74-562a3d23dd85)
+![backend_tests_sprint4](https://github.com/user-attachments/assets/a30916f3-e07d-4831-9524-7bb5b804034b)
+
 
 _Unit Tests List_
 
 | Unit Test | Test Description |
-| --- | --- |
-| `TestGetDB` | Tests the GetDB function for initializing a database connection and verifies that the connection can be pinged successfully. |
-| `TestLoginUser` | Checks that logging in with valid credentials works. |
-| `TestLoginUSerInvalid` | Checks that an invalid login attempt returns an error. |
-| `TestLogoutUser` | Verifies that logging out clears the session. |
-| `TestAddProduct` | Tests the AddProduct endpoint by simulating a multipart/form-data POST request that includes product details and an image file. It uses a valid session cookie from the fake user. It verifies that the product and associated image are stored in the database. |
-| `TestDeleteProduct` | Tests the DeleteProduct endpoint by inserting a dummy product (with an associated image file) for the fake user, then simulating a deletion request with a valid session cookie. It verifies that the product is removed from the database and the image file is deleted. |
-| `TestUpdateProduct` | Tests the UpdateProduct endpoint by creating a dummy product for the fake user, then simulating an update request with new description, price, and stock count. It verifies that the product is updated in the database. |
-| `TestGetProduct` | Verifies the `/api/get_product` endpoint successfully retrieves the correct product details when queried by its ID after creating a test product. |
-| `TestGetProductImage` | Checks if the `/api/get_product_image` endpoint returns a success status when attempting to retrieve a product's image file using its filename. |
-| `TestGetProducts` | Tests if the `/api/get_products` endpoint correctly retrieves a list containing the user's product(s) after creating a test product. |
-| `TestRegisterRoutes_AllRoutes` | Verifies that the router correctly matches the expected routes and HTTP methods. |
-| `TestRegisterRoutes_WithDummyStaticFile` | Verifies that the static file server returns the dummy index file. |
-| `TestDirectUserEntry` | Tests direct insertion of user records into the database. |
-| `TestRegisterUser` | Tests the RegisterUser HTTP handler for successful user registration. |
-| `TestRegisterUserEmptyFields` | Verifies that the registration endpoint returns an error when required fields are missing. |
-| `TestValidEmail` | Verifies that a properly formatted email address is considered valid. |
-| `TestInvalidEmail`| Verifies that improperly formatted email addresses are considered invalid. |
-| `TestAddStorefront_RealLogin` | Verifies the `/api/add_storefront` endpoint correctly creates links for authenticated users (via real login) and denies unauthorized requests. |
-| `TestGetUpdateDeleteFlow_RealLogin` | Simulates an authenticated user successfully adding, viewing, updating, and deleting a storefront link through the relevant API endpoints. |
-| `TestSpecificErrors_RealLogin` | Checks that the update and delete endpoints correctly return errors like 'Forbidden' (when accessing another user's link) and 'Not Found' (when targeting a non-existent link). |
+| :--- | :--- |
+| `TestIsLocalHost` | Tests the `isLocalHost` helper function in `coredbutils`. |
+| `TestLoadEnv` | Tests the `LoadEnv` function in `coredbutils` under various environment variable conditions (success, failure, runs once). |
+| `TestGetDB_Integration` | Integration test for `GetDB` in `coredbutils`, checking connection to a live database based on `.env`. |
+| `TestGetDB_Singleton` | Verifies `GetDB` in `coredbutils` returns the same instance on multiple calls. |
+| `TestGetDB_Errors` | Tests error conditions for `GetDB` in `coredbutils` (LoadEnv failure, connection failure). |
+| `TestLoginUser` | Tests successful login via the `LoginUser` handler in the `login` package. |
+| `TestLoginUserInvalid` | Tests the `LoginUser` handler with an incorrect password. |
+| `TestLoginUserNotFound` | Tests the `LoginUser` handler with a non-existent email. |
+| `TestLoginUserMissingFields` | Tests the `LoginUser` handler with missing email or password form fields. |
+| `TestLoginUserAlreadyLoggedIn` | Tests attempting to log in via `LoginUser` when already logged in. |
+| `TestLogoutUser` | Tests successful logout via the `LogoutUser` handler when logged in. |
+| `TestLogoutUserNotLoggedIn` | Tests the `LogoutUser` handler when not logged in (should still redirect). |
+| `TestHandleGoogleLogin` | Tests the initiation of the Google OAuth flow via `HandleGoogleLogin` in the `oauth` package. |
+| `TestHandleGoogleCallback` | Tests the `HandleGoogleCallback` handler for new user registration, existing user login, and error scenarios. |
+| `TestHandleLogout` | Tests the OAuth logout handler `HandleLogout` in the `oauth` package. |
+| `TestGetCurrentUser` | Tests the `GetCurrentUser` helper function in `oauth` for retrieving user data from a session under various conditions. |
+| `TestCreateOrder` | Tests the `CreateOrder` handler in `orderstable` for successful order creation, stock updates, and error handling (insufficient stock, etc.). |
+| `TestGetOrder` | Tests the `GetOrder` handler in `orderstable` for retrieving a specific order, ensuring correct filtering based on the authenticated seller. |
+| `TestGetOrders` | Tests the `GetOrders` handler in `orderstable` for retrieving all orders relevant to the authenticated seller. |
+| `TestAddProduct` | Tests the `AddProduct` handler in `prodtable` for creating a new product with an image upload. |
+| `TestDeleteProduct` | Tests the `DeleteProduct` handler in `prodtable`, including deletion of the associated image file and record. |
+| `TestUpdateProduct` | Tests the `UpdateProduct` handler in `prodtable` for updating product details and optionally replacing the image. |
+| `TestGetProduct` | Tests the `GetProduct` handler in `prodtable` for retrieving details of a specific product owned by the user. |
+| `TestGetProducts` | Tests the `GetProducts` handler in `prodtable` for retrieving all products owned by the user. |
+| `TestGetProductImage` | Tests the `GetProductImage` handler in `prodtable` for serving a product's image file. |
+| `TestGetProductImage_NotFound` | Tests `GetProductImage` scenarios where the image record or file is not found. |
+| `TestProduct_Auth` | Tests authentication and authorization failures across various product endpoints (unauthenticated, wrong user). |
+| `TestRouteExistenceAndBasicHandling` | Checks if routes defined in the `routes` package are registered and return expected basic status codes (including redirects for auth). |
+| `TestSPAHandler` | Tests the `spaHandler` logic directly for serving static files and the index fallback. |
+| `TestAuthMiddleware` | Tests the `authMiddleware` logic directly for allowing/blocking requests based on session state. |
+| `TestInvalidAPI` | Tests the `InvalidAPI` handler for undefined API routes. |
+| `TestAddStorefront` | Tests the `AddStorefront` handler in `storefronttable` for linking storefronts (success, unauthorized, missing fields, duplicates). |
+| `TestGetUpdateDeleteFlow` | Tests the full lifecycle (add, get, update, delete) for storefront links via their respective handlers in `storefronttable`. |
+| `TestSpecificErrors` | Tests error scenarios (forbidden, not found, missing ID) for storefront update and delete handlers in `storefronttable`. |
+| `TestCreateAndGetUser` | Tests the `CreateUser` and `GetUserByEmail` functions directly in the `usertable` package. |
+| `TestRegisterUserHandler` | Tests the `RegisterUser` HTTP handler, including success, missing fields, invalid email, and duplicate email scenarios. |
+| `TestCreateUserFunction` | Tests the `CreateUser` function directly with various valid and invalid inputs. |
+| `TestGetUserByID` | Tests the `GetUserByID` function for retrieving users by their primary key. |
+| `TestGetUserByProviderID` | Tests the `GetUserByProviderID` function for retrieving users by OAuth provider details. |
+| `TestUpdateUser` | Tests the `UpdateUser` function for updating existing user records and handling errors (no ID, non-existent user). |
+| `TestValidEmail` | Tests the `Valid` function in the `validemail` package with a correctly formatted email address. |
+| `TestInvalidEmail` | Tests the `Valid` function in the `validemail` package with various improperly formatted email addresses. |
 
 ## Front Runner API Documentation
 
 API documentation for the Front Runner application.
 
-## Version: 1.0
+### Version
+1.0
 
-**Contact information:**  
-API Support  
-jonathan.bravo@ufl.edu  
+### License
 
-**License:** [MIT](http://www.apache.org/licenses/LICENSE-2.0.html)
+[MIT](http://www.apache.org/licenses/LICENSE-2.0.html)
 
----
-### /api/add_product
+### Contact
 
-#### POST
-##### Summary
+API Support jonathan.bravo@ufl.edu 
 
-Add a new product
+### URI Schemes
+  * http
 
-##### Description
+### Consumes
+  * application/json
+  * multipart/form-data
+  * application/x-www-form-urlencoded
 
-Creates a new product with details including name, description, price, count, tags, and an associated image.
+### Produces
+  * image/*
+  * application/json
+  * text/plain
 
-##### Parameters
+## All endpoints
 
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ------ |
-| productName | formData | Product name | Yes | string |
-| description | formData | Product description | Yes | string |
-| price | formData | Product price | Yes | number |
-| count | formData | Product stock count | Yes | integer |
-| tags | formData | Product tags | No | string |
-| image | formData | Product image file | Yes | file |
+###  authentication
 
-##### Responses
+| Method  | URI     | Name   | Summary |
+|---------|---------|--------|---------|
+| POST | /api/login | [post API login](#post-api-login) | User Login (Email/Password) |
+| POST | /api/register | [post API register](#post-api-register) | Register a new local user |
 
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 201 | Product added successfully | string |
-| 400 | Error parsing form or uploading image | string |
-| 401 | User not authenticated | string |
-| 500 | Internal server error | string |
+###  authentication_o_auth
 
-### /api/delete_product
+| Method  | URI     | Name   | Summary |
+|---------|---------|--------|---------|
+| GET | /auth/google | [get auth google](#get-auth-google) | Initiate Google Login |
+| GET | /auth/google/callback | [get auth google callback](#get-auth-google-callback) | Google Login Callback |
+| GET | /logout | [get logout](#get-logout) | User Logout |
 
-#### DELETE
-##### Summary
+###  order
 
-Delete a product
+| Method  | URI     | Name   | Summary |
+|---------|---------|--------|---------|
+| GET | /api/get_order | [get API get order](#get-api-get-order) | Retrieve an order (filtered for seller) |
+| GET | /api/get_orders | [get API get orders](#get-api-get-orders) | Retrieve user's sales orders |
+| POST | /api/create_order | [post API create order](#post-api-create-order) | Creates an order |
 
-##### Description
+###  products
 
-Deletes an existing product and its associated image if the product belongs to the authenticated user.
+| Method  | URI     | Name   | Summary |
+|---------|---------|--------|---------|
+| DELETE | /api/products | [delete API products](#delete-api-products) | Delete a product |
+| GET | /api/products | [get API products](#get-api-products) | Get all products for the user |
+| GET | /api/products/details | [get API products details](#get-api-products-details) | Get a specific product |
+| GET | /api/products/image | [get API products image](#get-api-products-image) | Get a product image |
+| POST | /api/products | [post API products](#post-api-products) | Add a new product |
+| PUT | /api/products | [put API products](#put-api-products) | Update a product |
 
-##### Parameters
+###  storefronts
 
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ------ |
-| id | query | Product ID | Yes | string |
+| Method  | URI     | Name   | Summary |
+|---------|---------|--------|---------|
+| DELETE | /api/delete_storefront | [delete API delete storefront](#delete-api-delete-storefront) | Unlink a storefront |
+| GET | /api/get_storefronts | [get API get storefronts](#get-api-get-storefronts) | Get linked storefronts |
+| POST | /api/add_storefront | [post API add storefront](#post-api-add-storefront) | Link a new storefront |
+| PUT | /api/update_storefront | [put API update storefront](#put-api-update-storefront) | Update a storefront link |
 
-##### Responses
+## Paths
 
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | Product deleted successfully | string |
-| 401 | User not authenticated or unauthorized | string |
-| 404 | Product not found | string |
+### <span id="delete-api-delete-storefront"></span> Unlink a storefront (*DeleteAPIDeleteStorefront*)
 
-### /api/get_product
-
-#### GET
-##### Summary
-
-Retrieve a product
-
-##### Description
-
-Retreives an existing product and its associated metadata if the product belongs to the authenticated user.
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ------ |
-| id | query | Product ID | Yes | integer |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | JSON representation of a product's information | string |
-| 401 | User not authenticated or unauthorized | string |
-| 403 | Permission denied | string |
-| 404 | No Product with specified ID | string |
-
-### /api/get_product_image
-
-#### GET
-##### Summary
-
-Retrieve a product image
-
-##### Description
-
-Retreives an existing product image if it exists and belongs to the authenticated user.
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ------ |
-| image | query | Filepath of image | Yes | string |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | Image's data | string |
-| 401 | User not authenticated or unauthorized | string |
-| 403 | Permission denied | string |
-| 404 | Requested image does not exist | string |
-
-### /api/get_products
-
-#### GET
-##### Summary
-
-Retrieves all product information for authenticated user.
-
-##### Description
-
-Retreives existing products and their associated metadata for the authenticated user.
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | JSON representation of a user's product information | string |
-| 401 | User not authenticated or unauthorized | string |
-
-### /api/update_product
-
-#### PUT
-##### Summary
-
-Update a product
-
-##### Description
-
-Updates the details of an existing product (description, price, stock count) that belongs to the authenticated user.
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ------ |
-| id | query | Product ID | Yes | string |
-| product_description | formData | New product description | No | string |
-| item_price | formData | New product price | No | number |
-| stock_amount | formData | New product stock count | No | integer |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | Product updated successfully | string |
-| 401 | User not authenticated or unauthorized | string |
-| 404 | Product not found | string |
-
----
-### /api/add_storefront
-
-#### POST
-##### Summary
-
-Link a new storefront
-
-##### Description
-
-Links a new external storefront (e.g., Amazon, Pinterest) to the user's account, storing credentials securely. Requires authentication.
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ------ |
-| storefrontLink | body | Storefront Link Details (including credentials like apiKey, apiSecret) | Yes | [storefronttable.StorefrontLinkAddPayload](#storefronttablestorefrontlinkaddpayload) |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 201 | Successfully linked storefront (credentials omitted) | [storefronttable.StorefrontLinkReturn](#storefronttablestorefrontlinkreturn) |
-| 400 | Bad Request - Invalid input, missing fields, or JSON parsing error | string |
-| 401 | Unauthorized - User session invalid or expired | string |
-| 409 | Conflict - A link with this name/type already exists for the user | string |
-| 500 | Internal Server Error - E.g., failed to encrypt, database error | string |
-
-##### Security
-
-| Security Schema | Scopes |
-| --------------- | ------ |
-| ApiKeyAuth |  |
-
-### /api/delete_storefront
-
-#### DELETE
-##### Summary
-
-Unlink a storefront
-
-##### Description
+```
+DELETE /api/delete_storefront
+```
 
 Removes the link to an external storefront specified by its unique ID. User must own the link. Requires authentication.
 
-##### Parameters
+#### Security Requirements
+  * ApiKeyAuth
 
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ------ |
-| id | query | ID of the Storefront Link to delete | Yes | integer (uint) |
+#### Parameters
 
-##### Responses
+| Name | Source | Type | Go type | Separator | Required | Default | Description |
+|------|--------|------|---------|-----------| :------: |---------|-------------|
+| id | `query` | uint (formatted integer) | `uint64` |  | ✓ |  | ID of the Storefront Link to delete |
 
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | Storefront unlinked successfully | string |
-| 204 | Storefront unlinked successfully (No Content) | string |
-| 400 | Bad Request - Invalid or missing 'id' query parameter | string |
-| 401 | Unauthorized - User session invalid or expired | string |
-| 403 | Forbidden - User does not own this storefront link | string |
-| 404 | Not Found - Storefront link with the specified ID not found | string |
-| 500 | Internal Server Error - Database deletion failed | string |
+#### All responses
+| Code | Status | Description | Has headers | Schema |
+|------|--------|-------------|:-----------:|--------|
+| [200](#delete-api-delete-storefront-200) | OK | Storefront unlinked successfully |  | [schema](#delete-api-delete-storefront-200-schema) |
+| [204](#delete-api-delete-storefront-204) | No Content | Storefront unlinked successfully (No Content)" // Added 204 as an alternative success |  | [schema](#delete-api-delete-storefront-204-schema) |
+| [400](#delete-api-delete-storefront-400) | Bad Request | Bad Request - Invalid or missing 'id' query parameter |  | [schema](#delete-api-delete-storefront-400-schema) |
+| [401](#delete-api-delete-storefront-401) | Unauthorized | Unauthorized - User session invalid or expired |  | [schema](#delete-api-delete-storefront-401-schema) |
+| [403](#delete-api-delete-storefront-403) | Forbidden | Forbidden - User does not own this storefront link |  | [schema](#delete-api-delete-storefront-403-schema) |
+| [404](#delete-api-delete-storefront-404) | Not Found | Not Found - Storefront link with the specified ID not found |  | [schema](#delete-api-delete-storefront-404-schema) |
+| [500](#delete-api-delete-storefront-500) | Internal Server Error | Internal Server Error - Database deletion failed |  | [schema](#delete-api-delete-storefront-500-schema) |
 
-##### Security
+#### Responses
 
-| Security Schema | Scopes |
-| --------------- | ------ |
-| ApiKeyAuth |  |
+##### <span id="delete-api-delete-storefront-200"></span> 200 - Storefront unlinked successfully
+Status: OK
 
-### /api/get_storefronts
+###### <span id="delete-api-delete-storefront-200-schema"></span> Schema
+   
+##### <span id="delete-api-delete-storefront-204"></span> 204 - Storefront unlinked successfully (No Content)" // Added 204 as an alternative success
+Status: No Content
 
-#### GET
-##### Summary
+###### <span id="delete-api-delete-storefront-204-schema"></span> Schema
+   
+##### <span id="delete-api-delete-storefront-400"></span> 400 - Bad Request - Invalid or missing 'id' query parameter
+Status: Bad Request
 
-Get linked storefronts
+###### <span id="delete-api-delete-storefront-400-schema"></span> Schema
+   
 
-##### Description
+##### <span id="delete-api-delete-storefront-401"></span> 401 - Unauthorized - User session invalid or expired
+Status: Unauthorized
+
+###### <span id="delete-api-delete-storefront-401-schema"></span> Schema
+
+##### <span id="delete-api-delete-storefront-403"></span> 403 - Forbidden - User does not own this storefront link
+Status: Forbidden
+
+###### <span id="delete-api-delete-storefront-403-schema"></span> Schema
+   
+##### <span id="delete-api-delete-storefront-404"></span> 404 - Not Found - Storefront link with the specified ID not found
+Status: Not Found
+
+###### <span id="delete-api-delete-storefront-404-schema"></span> Schema
+   
+##### <span id="delete-api-delete-storefront-500"></span> 500 - Internal Server Error - Database deletion failed
+Status: Internal Server Error
+
+###### <span id="delete-api-delete-storefront-500-schema"></span> Schema
+   
+### <span id="delete-api-products"></span> Delete a product (*DeleteAPIProducts*)
+
+```
+DELETE /api/products
+```
+
+Deletes a specific product owned by the authenticated user, identified by its ID. Also deletes the associated image file and record.
+
+#### Produces
+  * text/plain
+
+#### Security Requirements
+  * ApiKeyAuth
+
+#### Parameters
+
+| Name | Source | Type | Go type | Separator | Required | Default | Description |
+|------|--------|------|---------|-----------| :------: |---------|-------------|
+| id | `query` | uint64 (formatted integer) | `uint64` |  | ✓ |  | ID of the product to delete |
+
+#### All responses
+| Code | Status | Description | Has headers | Schema |
+|------|--------|-------------|:-----------:|--------|
+| [200](#delete-api-products-200) | OK | Product deleted successfully |  | [schema](#delete-api-products-200-schema) |
+| [400](#delete-api-products-400) | Bad Request | Bad Request: Invalid Product ID |  | [schema](#delete-api-products-400-schema) |
+| [401](#delete-api-products-401) | Unauthorized | Unauthorized: User not authenticated |  | [schema](#delete-api-products-401-schema) |
+| [403](#delete-api-products-403) | Forbidden | Forbidden: User does not own this product |  | [schema](#delete-api-products-403-schema) |
+| [404](#delete-api-products-404) | Not Found | Not Found: Product not found |  | [schema](#delete-api-products-404-schema) |
+| [500](#delete-api-products-500) | Internal Server Error | Internal Server Error: Database or file system error during deletion |  | [schema](#delete-api-products-500-schema) |
+
+#### Responses
+
+##### <span id="delete-api-products-200"></span> 200 - Product deleted successfully
+Status: OK
+
+###### <span id="delete-api-products-200-schema"></span> Schema
+   
+##### <span id="delete-api-products-400"></span> 400 - Bad Request: Invalid Product ID
+Status: Bad Request
+
+###### <span id="delete-api-products-400-schema"></span> Schema
+   
+##### <span id="delete-api-products-401"></span> 401 - Unauthorized: User not authenticated
+Status: Unauthorized
+
+###### <span id="delete-api-products-401-schema"></span> Schema
+   
+##### <span id="delete-api-products-403"></span> 403 - Forbidden: User does not own this product
+Status: Forbidden
+
+###### <span id="delete-api-products-403-schema"></span> Schema
+   
+##### <span id="delete-api-products-404"></span> 404 - Not Found: Product not found
+Status: Not Found
+
+###### <span id="delete-api-products-404-schema"></span> Schema
+   
+##### <span id="delete-api-products-500"></span> 500 - Internal Server Error: Database or file system error during deletion
+Status: Internal Server Error
+
+###### <span id="delete-api-products-500-schema"></span> Schema
+   
+### <span id="get-api-get-order"></span> Retrieve an order (filtered for seller) (*GetAPIGetOrder*)
+
+```
+GET /api/get_order
+```
+
+Retrieves an existing order and its associated products *owned by the authenticated user (seller)*.
+
+#### Security Requirements
+  * ApiKeyAuth
+
+#### Parameters
+
+| Name | Source | Type | Go type | Separator | Required | Default | Description |
+|------|--------|------|---------|-----------| :------: |---------|-------------|
+| id | `query` | integer | `int64` |  | ✓ |  | Order ID |
+
+#### All responses
+| Code | Status | Description | Has headers | Schema |
+|------|--------|-------------|:-----------:|--------|
+| [200](#get-api-get-order-200) | OK | JSON representation of the order's information relevant to the user (empty object if user has no items in this order) |  | [schema](#get-api-get-order-200-schema) |
+| [400](#get-api-get-order-400) | Bad Request | Invalid Order ID format |  | [schema](#get-api-get-order-400-schema) |
+| [401](#get-api-get-order-401) | Unauthorized | User not authenticated |  | [schema](#get-api-get-order-401-schema) |
+| [403](#get-api-get-order-403) | Forbidden | Permission denied (user is not a seller for any product in this order) |  | [schema](#get-api-get-order-403-schema) |
+| [404](#get-api-get-order-404) | Not Found | Order not found |  | [schema](#get-api-get-order-404-schema) |
+| [500](#get-api-get-order-500) | Internal Server Error | Internal server error |  | [schema](#get-api-get-order-500-schema) |
+
+#### Responses
+
+
+##### <span id="get-api-get-order-200"></span> 200 - JSON representation of the order's information relevant to the user (empty object if user has no items in this order)
+Status: OK
+
+###### <span id="get-api-get-order-200-schema"></span> Schema
+   
+[OrderstableOrderReturn](#orderstable-order-return)
+
+##### <span id="get-api-get-order-400"></span> 400 - Invalid Order ID format
+Status: Bad Request
+
+###### <span id="get-api-get-order-400-schema"></span> Schema
+   
+##### <span id="get-api-get-order-401"></span> 401 - User not authenticated
+Status: Unauthorized
+
+###### <span id="get-api-get-order-401-schema"></span> Schema
+   
+##### <span id="get-api-get-order-403"></span> 403 - Permission denied (user is not a seller for any product in this order)
+Status: Forbidden
+
+###### <span id="get-api-get-order-403-schema"></span> Schema
+   
+##### <span id="get-api-get-order-404"></span> 404 - Order not found
+Status: Not Found
+
+###### <span id="get-api-get-order-404-schema"></span> Schema
+   
+##### <span id="get-api-get-order-500"></span> 500 - Internal server error
+Status: Internal Server Error
+
+###### <span id="get-api-get-order-500-schema"></span> Schema
+   
+### <span id="get-api-get-orders"></span> Retrieve user's sales orders (*GetAPIGetOrders*)
+
+```
+GET /api/get_orders
+```
+
+Retrieves orders containing products sold by the authenticated user, along with the relevant product details for each order.
+
+#### Security Requirements
+  * ApiKeyAuth
+
+#### All responses
+| Code | Status | Description | Has headers | Schema |
+|------|--------|-------------|:-----------:|--------|
+| [200](#get-api-get-orders-200) | OK | JSON array of orders relevant to the user (empty array if none) |  | [schema](#get-api-get-orders-200-schema) |
+| [401](#get-api-get-orders-401) | Unauthorized | User not authenticated |  | [schema](#get-api-get-orders-401-schema) |
+| [500](#get-api-get-orders-500) | Internal Server Error | Internal server error |  | [schema](#get-api-get-orders-500-schema) |
+
+#### Responses
+
+##### <span id="get-api-get-orders-200"></span> 200 - JSON array of orders relevant to the user (empty array if none)
+Status: OK
+
+###### <span id="get-api-get-orders-200-schema"></span> Schema
+   
+[][OrderstableOrderReturn](#orderstable-order-return)
+
+##### <span id="get-api-get-orders-401"></span> 401 - User not authenticated
+Status: Unauthorized
+
+###### <span id="get-api-get-orders-401-schema"></span> Schema
+   
+##### <span id="get-api-get-orders-500"></span> 500 - Internal server error
+Status: Internal Server Error
+
+###### <span id="get-api-get-orders-500-schema"></span> Schema
+   
+### <span id="get-api-get-storefronts"></span> Get linked storefronts (*GetAPIGetStorefronts*)
+
+```
+GET /api/get_storefronts
+```
 
 Retrieves a list of all external storefronts linked by the currently authenticated user. Credentials are *never* included. Requires authentication.
 
-##### Responses
+#### Security Requirements
+  * ApiKeyAuth
 
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | List of linked storefronts (empty array if none) | [ [storefronttable.StorefrontLinkReturn](#storefronttablestorefrontlinkreturn) ] |
-| 401 | Unauthorized - User session invalid or expired | string |
-| 500 | Internal Server Error - Database query failed | string |
+#### All responses
+| Code | Status | Description | Has headers | Schema |
+|------|--------|-------------|:-----------:|--------|
+| [200](#get-api-get-storefronts-200) | OK | List of linked storefronts (empty array if none) |  | [schema](#get-api-get-storefronts-200-schema) |
+| [401](#get-api-get-storefronts-401) | Unauthorized | Unauthorized - User session invalid or expired |  | [schema](#get-api-get-storefronts-401-schema) |
+| [500](#get-api-get-storefronts-500) | Internal Server Error | Internal Server Error - Database query failed |  | [schema](#get-api-get-storefronts-500-schema) |
 
-##### Security
+#### Responses
 
-| Security Schema | Scopes |
-| --------------- | ------ |
-| ApiKeyAuth |  |
+##### <span id="get-api-get-storefronts-200"></span> 200 - List of linked storefronts (empty array if none)
+Status: OK
 
-### /api/update_storefront
+###### <span id="get-api-get-storefronts-200-schema"></span> Schema
+   
+[][StorefronttableStorefrontLinkReturn](#storefronttable-storefront-link-return)
 
-#### PUT
-##### Summary
+##### <span id="get-api-get-storefronts-401"></span> 401 - Unauthorized - User session invalid or expired
+Status: Unauthorized
 
-Update a storefront link
+###### <span id="get-api-get-storefronts-401-schema"></span> Schema
+   
+##### <span id="get-api-get-storefronts-500"></span> 500 - Internal Server Error - Database query failed
+Status: Internal Server Error
 
-##### Description
+###### <span id="get-api-get-storefronts-500-schema"></span> Schema
+
+### <span id="get-api-products"></span> Get all products for the user (*GetAPIProducts*)
+
+```
+GET /api/products
+```
+
+Retrieves a list of all products owned by the authenticated user.
+
+#### Produces
+  * application/json
+
+#### Security Requirements
+  * ApiKeyAuth
+
+#### All responses
+| Code | Status | Description | Has headers | Schema |
+|------|--------|-------------|:-----------:|--------|
+| [200](#get-api-products-200) | OK | Successfully retrieved list of products |  | [schema](#get-api-products-200-schema) |
+| [401](#get-api-products-401) | Unauthorized | Unauthorized: User not authenticated |  | [schema](#get-api-products-401-schema) |
+| [500](#get-api-products-500) | Internal Server Error | Internal Server Error: Database error |  | [schema](#get-api-products-500-schema) |
+
+#### Responses
+
+
+##### <span id="get-api-products-200"></span> 200 - Successfully retrieved list of products
+Status: OK
+
+###### <span id="get-api-products-200-schema"></span> Schema
+  
+[][ProdtableProductReturn](#prodtable-product-return)
+
+##### <span id="get-api-products-401"></span> 401 - Unauthorized: User not authenticated
+Status: Unauthorized
+
+###### <span id="get-api-products-401-schema"></span> Schema
+   
+##### <span id="get-api-products-500"></span> 500 - Internal Server Error: Database error
+Status: Internal Server Error
+
+###### <span id="get-api-products-500-schema"></span> Schema
+   
+### <span id="get-api-products-details"></span> Get a specific product (*GetAPIProductsDetails*)
+
+```
+GET /api/products/details
+```
+
+Retrieves details for a specific product owned by the authenticated user, identified by its ID.
+
+#### Produces
+  * application/json
+
+#### Security Requirements
+  * ApiKeyAuth
+
+#### Parameters
+
+| Name | Source | Type | Go type | Separator | Required | Default | Description |
+|------|--------|------|---------|-----------| :------: |---------|-------------|
+| id | `query` | uint64 (formatted integer) | `uint64` |  | ✓ |  | ID of the product to retrieve |
+
+#### All responses
+| Code | Status | Description | Has headers | Schema |
+|------|--------|-------------|:-----------:|--------|
+| [200](#get-api-products-details-200) | OK | Successfully retrieved product details |  | [schema](#get-api-products-details-200-schema) |
+| [400](#get-api-products-details-400) | Bad Request | Bad Request: Invalid Product ID |  | [schema](#get-api-products-details-400-schema) |
+| [401](#get-api-products-details-401) | Unauthorized | Unauthorized: User not authenticated |  | [schema](#get-api-products-details-401-schema) |
+| [403](#get-api-products-details-403) | Forbidden | Forbidden: User does not own this product |  | [schema](#get-api-products-details-403-schema) |
+| [404](#get-api-products-details-404) | Not Found | Not Found: Product not found |  | [schema](#get-api-products-details-404-schema) |
+| [500](#get-api-products-details-500) | Internal Server Error | Internal Server Error: Database error |  | [schema](#get-api-products-details-500-schema) |
+
+#### Responses
+
+
+##### <span id="get-api-products-details-200"></span> 200 - Successfully retrieved product details
+Status: OK
+
+###### <span id="get-api-products-details-200-schema"></span> Schema
+   
+[ProdtableProductReturn](#prodtable-product-return)
+
+##### <span id="get-api-products-details-400"></span> 400 - Bad Request: Invalid Product ID
+Status: Bad Request
+
+###### <span id="get-api-products-details-400-schema"></span> Schema
+   
+##### <span id="get-api-products-details-401"></span> 401 - Unauthorized: User not authenticated
+Status: Unauthorized
+
+###### <span id="get-api-products-details-401-schema"></span> Schema
+   
+##### <span id="get-api-products-details-403"></span> 403 - Forbidden: User does not own this product
+Status: Forbidden
+
+###### <span id="get-api-products-details-403-schema"></span> Schema
+
+##### <span id="get-api-products-details-404"></span> 404 - Not Found: Product not found
+Status: Not Found
+
+###### <span id="get-api-products-details-404-schema"></span> Schema
+   
+##### <span id="get-api-products-details-500"></span> 500 - Internal Server Error: Database error
+Status: Internal Server Error
+
+###### <span id="get-api-products-details-500-schema"></span> Schema
+   
+### <span id="get-api-products-image"></span> Get a product image (*GetAPIProductsImage*)
+
+```
+GET /api/products/image
+```
+
+Retrieves and serves the image file associated with a product, identified by its filename. Requires the user to be authenticated and own the product/image.
+
+#### Produces
+  * image/*
+
+#### Security Requirements
+  * ApiKeyAuth
+
+#### Parameters
+
+| Name | Source | Type | Go type | Separator | Required | Default | Description |
+|------|--------|------|---------|-----------| :------: |---------|-------------|
+| image | `query` | string | `string` |  | ✓ |  | Filename of the image to retrieve (e.g., 'uuid.jpg') |
+
+#### All responses
+| Code | Status | Description | Has headers | Schema |
+|------|--------|-------------|:-----------:|--------|
+| [200](#get-api-products-image-200) | OK | Product image file |  | [schema](#get-api-products-image-200-schema) |
+| [400](#get-api-products-image-400) | Bad Request | Bad Request: Missing or invalid image filename |  | [schema](#get-api-products-image-400-schema) |
+| [401](#get-api-products-image-401) | Unauthorized | Unauthorized: User not authenticated |  | [schema](#get-api-products-image-401-schema) |
+| [403](#get-api-products-image-403) | Forbidden | Forbidden: User does not own this image |  | [schema](#get-api-products-image-403-schema) |
+| [404](#get-api-products-image-404) | Not Found | Not Found: Image metadata or file not found |  | [schema](#get-api-products-image-404-schema) |
+| [500](#get-api-products-image-500) | Internal Server Error | Internal Server Error: Database or file system error |  | [schema](#get-api-products-image-500-schema) |
+
+#### Responses
+
+##### <span id="get-api-products-image-200"></span> 200 - Product image file
+Status: OK
+
+###### <span id="get-api-products-image-200-schema"></span> Schema
+   
+##### <span id="get-api-products-image-400"></span> 400 - Bad Request: Missing or invalid image filename
+Status: Bad Request
+
+###### <span id="get-api-products-image-400-schema"></span> Schema
+   
+##### <span id="get-api-products-image-401"></span> 401 - Unauthorized: User not authenticated
+Status: Unauthorized
+
+###### <span id="get-api-products-image-401-schema"></span> Schema
+   
+##### <span id="get-api-products-image-403"></span> 403 - Forbidden: User does not own this image
+Status: Forbidden
+
+###### <span id="get-api-products-image-403-schema"></span> Schema
+
+##### <span id="get-api-products-image-404"></span> 404 - Not Found: Image metadata or file not found
+Status: Not Found
+
+###### <span id="get-api-products-image-404-schema"></span> Schema
+   
+##### <span id="get-api-products-image-500"></span> 500 - Internal Server Error: Database or file system error
+Status: Internal Server Error
+
+###### <span id="get-api-products-image-500-schema"></span> Schema
+   
+### <span id="get-auth-google"></span> Initiate Google Login (*GetAuthGoogle*)
+
+```
+GET /auth/google
+```
+
+Redirects the user to Google for authentication as part of the OAuth2 flow.
+
+#### All responses
+| Code | Status | Description | Has headers | Schema |
+|------|--------|-------------|:-----------:|--------|
+| [307](#get-auth-google-307) | Temporary Redirect | Redirects to Google's authentication endpoint |  | [schema](#get-auth-google-307-schema) |
+| [500](#get-auth-google-500) | Internal Server Error | Internal Server Error (if Goth setup fails) |  | [schema](#get-auth-google-500-schema) |
+
+#### Responses
+
+##### <span id="get-auth-google-307"></span> 307 - Redirects to Google's authentication endpoint
+Status: Temporary Redirect
+
+###### <span id="get-auth-google-307-schema"></span> Schema
+   
+##### <span id="get-auth-google-500"></span> 500 - Internal Server Error (if Goth setup fails)
+Status: Internal Server Error
+
+###### <span id="get-auth-google-500-schema"></span> Schema
+   
+### <span id="get-auth-google-callback"></span> Google Login Callback (*GetAuthGoogleCallback*)
+
+```
+GET /auth/google/callback
+```
+
+Handles the callback from Google after authentication. Creates a user session upon successful authentication and redirects to the homepage.
+
+#### All responses
+| Code | Status | Description | Has headers | Schema |
+|------|--------|-------------|:-----------:|--------|
+| [307](#get-auth-google-callback-307) | Temporary Redirect | Redirects to / on successful login |  | [schema](#get-auth-google-callback-307-schema) |
+| [400](#get-auth-google-callback-400) | Bad Request | Bad Request (e.g., state mismatch)" // Goth might handle this |  | [schema](#get-auth-google-callback-400-schema) |
+| [500](#get-auth-google-callback-500) | Internal Server Error | Internal Server Error (session, database, or Goth issue) |  | [schema](#get-auth-google-callback-500-schema) |
+
+#### Responses
+
+
+##### <span id="get-auth-google-callback-307"></span> 307 - Redirects to / on successful login
+Status: Temporary Redirect
+
+###### <span id="get-auth-google-callback-307-schema"></span> Schema
+
+##### <span id="get-auth-google-callback-400"></span> 400 - Bad Request (e.g., state mismatch)" // Goth might handle this
+Status: Bad Request
+
+###### <span id="get-auth-google-callback-400-schema"></span> Schema
+
+##### <span id="get-auth-google-callback-500"></span> 500 - Internal Server Error (session, database, or Goth issue)
+Status: Internal Server Error
+
+###### <span id="get-auth-google-callback-500-schema"></span> Schema
+
+### <span id="get-logout"></span> User Logout (*GetLogout*)
+
+```
+GET /logout
+```
+
+Logs out the current user by clearing the session cookie and redirects to the homepage.
+
+#### All responses
+| Code | Status | Description | Has headers | Schema |
+|------|--------|-------------|:-----------:|--------|
+| [307](#get-logout-307) | Temporary Redirect | Redirects to / after logout |  | [schema](#get-logout-307-schema) |
+| [500](#get-logout-500) | Internal Server Error | Internal Server Error (if saving cleared session fails) |  | [schema](#get-logout-500-schema) |
+
+#### Responses
+
+##### <span id="get-logout-307"></span> 307 - Redirects to / after logout
+Status: Temporary Redirect
+
+###### <span id="get-logout-307-schema"></span> Schema
+
+##### <span id="get-logout-500"></span> 500 - Internal Server Error (if saving cleared session fails)
+Status: Internal Server Error
+
+###### <span id="get-logout-500-schema"></span> Schema
+
+### <span id="post-api-add-storefront"></span> Link a new storefront (*PostAPIAddStorefront*)
+
+```
+POST /api/add_storefront
+```
+
+Links a new external storefront (e.g., Amazon, Pinterest) to the user's account, storing credentials securely. Requires authentication.
+
+#### Consumes
+  * application/json
+
+#### Security Requirements
+  * ApiKeyAuth // Assuming ApiKeyAuth is defined for session/token auth
+
+#### Parameters
+
+| Name | Source | Type | Go type | Separator | Required | Default | Description |
+|------|--------|------|---------|-----------| :------: |---------|-------------|
+| storefrontLink | `body` | [StorefronttableStorefrontLinkAddPayload](#storefronttable-storefront-link-add-payload) | `models.StorefronttableStorefrontLinkAddPayload` | | ✓ | | Storefront Link Details (including credentials like apiKey, apiSecret) |
+
+#### All responses
+| Code | Status | Description | Has headers | Schema |
+|------|--------|-------------|:-----------:|--------|
+| [201](#post-api-add-storefront-201) | Created | Successfully linked storefront (credentials omitted) |  | [schema](#post-api-add-storefront-201-schema) |
+| [400](#post-api-add-storefront-400) | Bad Request | Bad Request - Invalid input, missing fields, or JSON parsing error |  | [schema](#post-api-add-storefront-400-schema) |
+| [401](#post-api-add-storefront-401) | Unauthorized | Unauthorized - User session invalid or expired |  | [schema](#post-api-add-storefront-401-schema) |
+| [409](#post-api-add-storefront-409) | Conflict | Conflict - A link with this name/type already exists for the user |  | [schema](#post-api-add-storefront-409-schema) |
+| [500](#post-api-add-storefront-500) | Internal Server Error | Internal Server Error - E.g., failed to encrypt, database error |  | [schema](#post-api-add-storefront-500-schema) |
+
+#### Responses
+
+##### <span id="post-api-add-storefront-201"></span> 201 - Successfully linked storefront (credentials omitted)
+Status: Created
+
+###### <span id="post-api-add-storefront-201-schema"></span> Schema
+
+[StorefronttableStorefrontLinkReturn](#storefronttable-storefront-link-return)
+
+##### <span id="post-api-add-storefront-400"></span> 400 - Bad Request - Invalid input, missing fields, or JSON parsing error
+Status: Bad Request
+
+###### <span id="post-api-add-storefront-400-schema"></span> Schema
+   
+##### <span id="post-api-add-storefront-401"></span> 401 - Unauthorized - User session invalid or expired
+Status: Unauthorized
+
+###### <span id="post-api-add-storefront-401-schema"></span> Schema
+
+##### <span id="post-api-add-storefront-409"></span> 409 - Conflict - A link with this name/type already exists for the user
+Status: Conflict
+
+###### <span id="post-api-add-storefront-409-schema"></span> Schema
+
+##### <span id="post-api-add-storefront-500"></span> 500 - Internal Server Error - E.g., failed to encrypt, database error
+Status: Internal Server Error
+
+###### <span id="post-api-add-storefront-500-schema"></span> Schema
+
+### <span id="post-api-create-order"></span> Creates an order (*PostAPICreateOrder*)
+
+```
+POST /api/create_order
+```
+
+Creates a new order entry with customer details and products. Updates product stock and links sellers.
+
+#### Consumes
+  * application/json
+
+#### Parameters
+
+| Name | Source | Type | Go type | Separator | Required | Default | Description |
+|------|--------|------|---------|-----------| :------: |---------|-------------|
+| orderInfo | `body` | [OrderstableOrderCreatePayload](#orderstable-order-create-payload) | `models.OrderstableOrderCreatePayload` | | ✓ | | Order Details |
+
+#### All responses
+| Code | Status | Description | Has headers | Schema |
+|------|--------|-------------|:-----------:|--------|
+| [201](#post-api-create-order-201) | Created | Order created successfully, returns order ID" // Example success response |  | [schema](#post-api-create-order-201-schema) |
+| [400](#post-api-create-order-400) | Bad Request | Invalid request body, missing fields, or invalid product data |  | [schema](#post-api-create-order-400-schema) |
+| [404](#post-api-create-order-404) | Not Found | Product not found or insufficient stock |  | [schema](#post-api-create-order-404-schema) |
+| [500](#post-api-create-order-500) | Internal Server Error | Internal server error during order processing |  | [schema](#post-api-create-order-500-schema) |
+
+#### Responses
+
+##### <span id="post-api-create-order-201"></span> 201 - Order created successfully, returns order ID" // Example success response
+Status: Created
+
+###### <span id="post-api-create-order-201-schema"></span> Schema
+   
+map of integer
+
+##### <span id="post-api-create-order-400"></span> 400 - Invalid request body, missing fields, or invalid product data
+Status: Bad Request
+
+###### <span id="post-api-create-order-400-schema"></span> Schema
+
+##### <span id="post-api-create-order-404"></span> 404 - Product not found or insufficient stock
+Status: Not Found
+
+###### <span id="post-api-create-order-404-schema"></span> Schema
+
+##### <span id="post-api-create-order-500"></span> 500 - Internal server error during order processing
+Status: Internal Server Error
+
+###### <span id="post-api-create-order-500-schema"></span> Schema
+
+### <span id="post-api-login"></span> User Login (Email/Password) (*PostAPILogin*)
+
+```
+POST /api/login
+```
+
+Authenticates a user using email and password. Creates a session cookie upon successful authentication and redirects to the homepage.
+
+#### Consumes
+  * application/x-www-form-urlencoded
+
+#### Parameters
+
+| Name | Source | Type | Go type | Separator | Required | Default | Description |
+|------|--------|------|---------|-----------| :------: |---------|-------------|
+| email | `formData` | string | `string` |  | ✓ |  | User's Email Address |
+| password | `formData` | string | `string` |  | ✓ |  | User's Password |
+
+#### All responses
+| Code | Status | Description | Has headers | Schema |
+|------|--------|-------------|:-----------:|--------|
+| [303](#post-api-login-303) | See Other | Redirects to / on successful login |  | [schema](#post-api-login-303-schema) |
+| [400](#post-api-login-400) | Bad Request | Bad Request: Email and password are required |  | [schema](#post-api-login-400-schema) |
+| [401](#post-api-login-401) | Unauthorized | Unauthorized: Invalid credentials |  | [schema](#post-api-login-401-schema) |
+| [500](#post-api-login-500) | Internal Server Error | Internal Server Error |  | [schema](#post-api-login-500-schema) |
+
+#### Responses
+
+##### <span id="post-api-login-303"></span> 303 - Redirects to / on successful login
+Status: See Other
+
+###### <span id="post-api-login-303-schema"></span> Schema
+
+##### <span id="post-api-login-400"></span> 400 - Bad Request: Email and password are required
+Status: Bad Request
+
+###### <span id="post-api-login-400-schema"></span> Schema
+
+##### <span id="post-api-login-401"></span> 401 - Unauthorized: Invalid credentials
+Status: Unauthorized
+
+###### <span id="post-api-login-401-schema"></span> Schema
+
+##### <span id="post-api-login-500"></span> 500 - Internal Server Error
+Status: Internal Server Error
+
+###### <span id="post-api-login-500-schema"></span> Schema
+
+### <span id="post-api-products"></span> Add a new product (*PostAPIProducts*)
+
+```
+POST /api/products
+```
+
+Creates a new product listing associated with the authenticated user. Requires product details and an image upload.
+
+#### Consumes
+  * multipart/form-data
+
+#### Produces
+  * text/plain
+
+#### Security Requirements
+  * ApiKeyAuth
+
+#### Parameters
+
+| Name | Source | Type | Go type | Separator | Required | Default | Description |
+|------|--------|------|---------|-----------| :------: |---------|-------------|
+| count | `formData` | int32 (formatted integer) | `int32` |  | ✓ |  | Available stock count |
+| description | `formData` | string | `string` |  | ✓ |  | Description of the product |
+| image | `formData` | file | `io.ReadCloser` |  | ✓ |  | Product image file |
+| price | `formData` | float (formatted number) | `float32` |  | ✓ |  | Price of the product (e.g., 19.99) |
+| productName | `formData` | string | `string` |  | ✓ |  | Name of the product |
+| tags | `formData` | string | `string` |  |  |  | Comma-separated tags for the product |
+
+#### All responses
+| Code | Status | Description | Has headers | Schema |
+|------|--------|-------------|:-----------:|--------|
+| [201](#post-api-products-201) | Created | Product added successfully |  | [schema](#post-api-products-201-schema) |
+| [400](#post-api-products-400) | Bad Request | Bad Request: Missing required fields, invalid data format, or image error |  | [schema](#post-api-products-400-schema) |
+| [401](#post-api-products-401) | Unauthorized | Unauthorized: User not authenticated |  | [schema](#post-api-products-401-schema) |
+| [500](#post-api-products-500) | Internal Server Error | Internal Server Error: Database or file system error |  | [schema](#post-api-products-500-schema) |
+
+#### Responses
+
+##### <span id="post-api-products-201"></span> 201 - Product added successfully
+Status: Created
+
+###### <span id="post-api-products-201-schema"></span> Schema
+
+##### <span id="post-api-products-400"></span> 400 - Bad Request: Missing required fields, invalid data format, or image error
+Status: Bad Request
+
+###### <span id="post-api-products-400-schema"></span> Schema
+
+##### <span id="post-api-products-401"></span> 401 - Unauthorized: User not authenticated
+Status: Unauthorized
+
+###### <span id="post-api-products-401-schema"></span> Schema
+
+##### <span id="post-api-products-500"></span> 500 - Internal Server Error: Database or file system error
+Status: Internal Server Error
+
+###### <span id="post-api-products-500-schema"></span> Schema
+
+### <span id="post-api-register"></span> Register a new local user (*PostAPIRegister*)
+
+```
+POST /api/register
+```
+
+Registers a new user account using email and password for local authentication.
+
+#### Consumes
+  * application/x-www-form-urlencoded
+
+#### Produces
+  * text/plain
+
+#### Parameters
+
+| Name | Source | Type | Go type | Separator | Required | Default | Description |
+|------|--------|------|---------|-----------| :------: |---------|-------------|
+| businessName | `formData` | string | `string` |  |  |  | User's Business Name (Optional) |
+| email | `formData` | string | `string` |  | ✓ |  | User's Email Address |
+| name | `formData` | string | `string` |  | ✓ |  | User's Full Name |
+| password | `formData` | string | `string` |  | ✓ |  | User's Password (min length recommended) |
+
+#### All responses
+| Code | Status | Description | Has headers | Schema |
+|------|--------|-------------|:-----------:|--------|
+| [200](#post-api-register-200) | OK | User registered successfully |  | [schema](#post-api-register-200-schema) |
+| [400](#post-api-register-400) | Bad Request | Bad Request: Missing required fields (email, password, name), or invalid email format |  | [schema](#post-api-register-400-schema) |
+| [409](#post-api-register-409) | Conflict | Conflict: Email address is already registered |  | [schema](#post-api-register-409-schema) |
+| [500](#post-api-register-500) | Internal Server Error | Internal Server Error: Failed to hash password or save user to database |  | [schema](#post-api-register-500-schema) |
+
+#### Responses
+
+##### <span id="post-api-register-200"></span> 200 - User registered successfully
+Status: OK
+
+###### <span id="post-api-register-200-schema"></span> Schema
+
+##### <span id="post-api-register-400"></span> 400 - Bad Request: Missing required fields (email, password, name), or invalid email format
+Status: Bad Request
+
+###### <span id="post-api-register-400-schema"></span> Schema
+
+##### <span id="post-api-register-409"></span> 409 - Conflict: Email address is already registered
+Status: Conflict
+
+###### <span id="post-api-register-409-schema"></span> Schema
+
+##### <span id="post-api-register-500"></span> 500 - Internal Server Error: Failed to hash password or save user to database
+Status: Internal Server Error
+
+###### <span id="post-api-register-500-schema"></span> Schema
+
+### <span id="put-api-products"></span> Update a product (*PutAPIProducts*)
+
+```
+PUT /api/products
+```
+
+Updates details (name, description, price, count, tags) and/or the image for a specific product owned by the authenticated user. Fields not provided are left unchanged.
+
+#### Consumes
+  * multipart/form-data
+
+#### Produces
+  * text/plain
+
+#### Security Requirements
+  * ApiKeyAuth
+
+#### Parameters
+
+| Name | Source | Type | Go type | Separator | Required | Default | Description |
+|------|--------|------|---------|-----------| :------: |---------|-------------|
+| id | `query` | uint64 (formatted integer) | `uint64` |  | ✓ |  | ID of the product to update |
+| count | `formData` | int32 (formatted integer) | `int32` |  |  |  | New available stock count |
+| description | `formData` | string | `string` |  |  |  | New description for the product |
+| image | `formData` | file | `io.ReadCloser` |  |  |  | New product image file (replaces old image) |
+| price | `formData` | float (formatted number) | `float32` |  |  |  | New price for the product (e.g., 29.99) |
+| productName | `formData` | string | `string` |  |  |  | New name for the product |
+| tags | `formData` | string | `string` |  |  |  | New comma-separated tags (replaces old tags) |
+
+#### All responses
+| Code | Status | Description | Has headers | Schema |
+|------|--------|-------------|:-----------:|--------|
+| [200](#put-api-products-200) | OK | Product updated successfully |  | [schema](#put-api-products-200-schema) |
+| [400](#put-api-products-400) | Bad Request | Bad Request: Invalid Product ID or data format |  | [schema](#put-api-products-400-schema) |
+| [401](#put-api-products-401) | Unauthorized | Unauthorized: User not authenticated |  | [schema](#put-api-products-401-schema) |
+| [403](#put-api-products-403) | Forbidden | Forbidden: User does not own this product |  | [schema](#put-api-products-403-schema) |
+| [404](#put-api-products-404) | Not Found | Not Found: Product not found |  | [schema](#put-api-products-404-schema) |
+| [409](#put-api-products-409) | Conflict | Conflict: Product name already exists for this user" // If name is updated |  | [schema](#put-api-products-409-schema) |
+| [500](#put-api-products-500) | Internal Server Error | Internal Server Error: Database or file system error during update |  | [schema](#put-api-products-500-schema) |
+
+#### Responses
+
+##### <span id="put-api-products-200"></span> 200 - Product updated successfully
+Status: OK
+
+###### <span id="put-api-products-200-schema"></span> Schema
+
+##### <span id="put-api-products-400"></span> 400 - Bad Request: Invalid Product ID or data format
+Status: Bad Request
+
+###### <span id="put-api-products-400-schema"></span> Schema
+
+##### <span id="put-api-products-401"></span> 401 - Unauthorized: User not authenticated
+Status: Unauthorized
+
+###### <span id="put-api-products-401-schema"></span> Schema
+
+##### <span id="put-api-products-403"></span> 403 - Forbidden: User does not own this product
+Status: Forbidden
+
+###### <span id="put-api-products-403-schema"></span> Schema
+
+##### <span id="put-api-products-404"></span> 404 - Not Found: Product not found
+Status: Not Found
+
+###### <span id="put-api-products-404-schema"></span> Schema
+
+##### <span id="put-api-products-409"></span> 409 - Conflict: Product name already exists for this user" // If name is updated
+Status: Conflict
+
+###### <span id="put-api-products-409-schema"></span> Schema
+
+##### <span id="put-api-products-500"></span> 500 - Internal Server Error: Database or file system error during update
+Status: Internal Server Error
+
+###### <span id="put-api-products-500-schema"></span> Schema
+
+### <span id="put-api-update-storefront"></span> Update a storefront link (*PutAPIUpdateStorefront*)
+
+```
+PUT /api/update_storefront
+```
 
 Updates the name, store ID, or store URL of an existing storefront link belonging to the authenticated user. Store type and credentials cannot be updated via this endpoint.
 
-##### Parameters
+#### Consumes
+  * application/json
 
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ------ |
-| id | query | ID of the Storefront Link to update | Yes | integer (uint) |
-| storefrontUpdate | body | Fields to update (storeName, storeId, storeUrl) | Yes | [storefronttable.StorefrontLinkUpdatePayload](#storefronttablestorefrontlinkupdatepayload) |
+#### Security Requirements
+  * ApiKeyAuth
 
-##### Responses
+#### Parameters
 
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | Successfully updated storefront link details | [storefronttable.StorefrontLinkReturn](#storefronttablestorefrontlinkreturn) |
-| 400 | Bad Request - Invalid input, missing ID, or JSON parsing error | string |
-| 401 | Unauthorized - User session invalid or expired | string |
-| 403 | Forbidden - User does not own this storefront link | string |
-| 404 | Not Found - Storefront link with the specified ID not found | string |
-| 409 | Conflict - Update would violate a unique constraint (e.g., duplicate name) | string |
-| 500 | Internal Server Error - Database update failed | string |
+| Name | Source | Type | Go type | Separator | Required | Default | Description |
+|------|--------|------|---------|-----------| :------: |---------|-------------|
+| id | `query` | uint (formatted integer) | `uint64` |  | ✓ |  | ID of the Storefront Link to update |
+| storefrontUpdate | `body` | [StorefronttableStorefrontLinkUpdatePayload](#storefronttable-storefront-link-update-payload) | `models.StorefronttableStorefrontLinkUpdatePayload` | | ✓ | | Fields to update (storeName, storeId, storeUrl) |
 
-##### Security
+#### All responses
+| Code | Status | Description | Has headers | Schema |
+|------|--------|-------------|:-----------:|--------|
+| [200](#put-api-update-storefront-200) | OK | Successfully updated storefront link details |  | [schema](#put-api-update-storefront-200-schema) |
+| [400](#put-api-update-storefront-400) | Bad Request | Bad Request - Invalid input, missing ID, or JSON parsing error |  | [schema](#put-api-update-storefront-400-schema) |
+| [401](#put-api-update-storefront-401) | Unauthorized | Unauthorized - User session invalid or expired |  | [schema](#put-api-update-storefront-401-schema) |
+| [403](#put-api-update-storefront-403) | Forbidden | Forbidden - User does not own this storefront link |  | [schema](#put-api-update-storefront-403-schema) |
+| [404](#put-api-update-storefront-404) | Not Found | Not Found - Storefront link with the specified ID not found |  | [schema](#put-api-update-storefront-404-schema) |
+| [409](#put-api-update-storefront-409) | Conflict | Conflict - Update would violate a unique constraint (e.g., duplicate name) |  | [schema](#put-api-update-storefront-409-schema) |
+| [500](#put-api-update-storefront-500) | Internal Server Error | Internal Server Error - Database update failed |  | [schema](#put-api-update-storefront-500-schema) |
 
-| Security Schema | Scopes |
-| --------------- | ------ |
-| ApiKeyAuth |  |
+#### Responses
 
----
-### /api/get_product_image
+##### <span id="put-api-update-storefront-200"></span> 200 - Successfully updated storefront link details
+Status: OK
 
-#### GET
-##### Summary
+###### <span id="put-api-update-storefront-200-schema"></span> Schema
 
-Retrieve a product image
+[StorefronttableStorefrontLinkReturn](#storefronttable-storefront-link-return)
 
-##### Description
+##### <span id="put-api-update-storefront-400"></span> 400 - Bad Request - Invalid input, missing ID, or JSON parsing error
+Status: Bad Request
 
-Retreives an existing product image if it exists and belongs to the authenticated user.
+###### <span id="put-api-update-storefront-400-schema"></span> Schema
 
-##### Parameters
+##### <span id="put-api-update-storefront-401"></span> 401 - Unauthorized - User session invalid or expired
+Status: Unauthorized
 
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ------ |
-| image | query | Filepath of image | Yes | string |
+###### <span id="put-api-update-storefront-401-schema"></span> Schema
 
-##### Responses
+##### <span id="put-api-update-storefront-403"></span> 403 - Forbidden - User does not own this storefront link
+Status: Forbidden
 
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | Image's data | string |
-| 401 | User not authenticated or unauthorized | string |
-| 403 | Permission denied | string |
-| 404 | Requested image does not exist | string |
+###### <span id="put-api-update-storefront-403-schema"></span> Schema
 
----
-### /api/login
+##### <span id="put-api-update-storefront-404"></span> 404 - Not Found - Storefront link with the specified ID not found
+Status: Not Found
 
-#### POST
-##### Summary
+###### <span id="put-api-update-storefront-404-schema"></span> Schema
 
-User login
+##### <span id="put-api-update-storefront-409"></span> 409 - Conflict - Update would violate a unique constraint (e.g., duplicate name)
+Status: Conflict
 
-##### Description
+###### <span id="put-api-update-storefront-409-schema"></span> Schema
 
-Authenticates a user and creates a session.
+##### <span id="put-api-update-storefront-500"></span> 500 - Internal Server Error - Database update failed
+Status: Internal Server Error
 
-##### Parameters
+###### <span id="put-api-update-storefront-500-schema"></span> Schema
 
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ------ |
-| email | formData | User email | Yes | string |
-| password | formData | User password | Yes | string |
+## Models
 
-##### Responses
+### <span id="orderstable-order-create-payload"></span> orderstable.OrderCreatePayload
 
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | Logged in successfully. | string |
-| 400 | Email and password are required | string |
-| 401 | Invalid credentials | string |
+**Properties**
 
-### /api/logout
+| Name | Type | Go type | Required | Default | Description | Example |
+|------|------|---------|:--------:| ------- |-------------|---------|
+| customerEmail | string| `string` |  | | Email of the customer placing the order |  |
+| customerName | string| `string` |  | | Name of the customer placing the order |  |
+| orderedProducts | [][OrderstableOrderProductPayload](#orderstable-order-product-payload)| `[]*OrderstableOrderProductPayload` |  | | List of ordered products |  |
 
-#### POST
-##### Summary
+### <span id="orderstable-order-product-payload"></span> orderstable.OrderProductPayload
 
-User logout
+**Properties**
 
-##### Description
+| Name | Type | Go type | Required | Default | Description | Example |
+|------|------|---------|:--------:| ------- |-------------|---------|
+| count | integer| `int64` |  | |  |  |
+| productID | integer| `int64` |  | |  |  |
 
-Logs out the current user by clearing the session.
+### <span id="orderstable-order-product-return"></span> orderstable.OrderProductReturn
 
-##### Responses
+**Properties**
 
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | Logged out successfully | string |
+| Name | Type | Go type | Required | Default | Description | Example |
+|------|------|---------|:--------:| ------- |-------------|---------|
+| count | integer| `int64` |  | |  |  |
+| price | number| `float64` |  | | Price per item at the time of order |  |
+| productID | integer| `int64` |  | |  |  |
+| productName | string| `string` |  | |  |  |
 
-### /api/register
+### <span id="orderstable-order-return"></span> orderstable.OrderReturn
 
-#### POST
-##### Summary
+**Properties**
 
-Register a new user
+| Name | Type | Go type | Required | Default | Description | Example |
+|------|------|---------|:--------:| ------- |-------------|---------|
+| customerEmail | string| `string` |  | | Email of the customer that placed the order |  |
+| customerName | string| `string` |  | | Name of the customer that placed the order |  |
+| orderDate | string| `string` |  | | Formatted date string |  |
+| orderID | integer| `int64` |  | | ID of the order requested |  |
+| orderedProducts | [][OrderstableOrderProductReturn](#orderstable-order-product-return)| `[]*OrderstableOrderProductReturn` |  | | List of ordered products *owned by the requesting user* |  |
+| status | string| `string` |  | |  |  |
+| total | number| `float64` |  | | Total cost *for the items owned by the requesting user* in this order |  |
+| trackingNumber | string| `string` |  | |  |  |
 
-##### Description
+### <span id="prodtable-product-return"></span> prodtable.ProductReturn
 
-Registers a new user using email, password, and an optional business name.
+**Properties**
 
-##### Parameters
+| Name | Type | Go type | Required | Default | Description | Example |
+|------|------|---------|:--------:| ------- |-------------|---------|
+| image | string| `string` |  | | Consider renaming to imageURL or similar |  |
+| prodCount | integer| `int64` |  | |  |  |
+| prodDesc | string| `string` |  | |  |  |
+| prodID | integer| `int64` |  | |  |  |
+| prodName | string| `string` |  | |  |  |
+| prodPrice | number| `float64` |  | |  |  |
+| prodTags | string| `string` |  | |  |  |
 
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ------ |
-| email | formData | User email | Yes | string |
-| password | formData | User password | Yes | string |
-| business_name | formData | Business name | No | string |
+### <span id="storefronttable-storefront-link-add-payload"></span> storefronttable.StorefrontLinkAddPayload
 
-##### Responses
+**Properties**
 
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | User registered successfully | string |
-| 400 | Email and password are required or invalid email format | string |
-| 409 | Email already in use or database error | string |
+| Name | Type | Go type | Required | Default | Description | Example |
+|------|------|---------|:--------:| ------- |-------------|---------|
+| apiKey | string| `string` |  | | Example credential field |  |
+| apiSecret | string| `string` |  | | Example credential field |  |
+| storeId | string| `string` |  | | Platform-specific ID |  |
+| storeName | string| `string` |  | | User-defined nickname |  |
+| storeType | string| `string` |  | |  |  |
+| storeUrl | string| `string` |  | | Storefront URL |  |
 
----
-### Models
+### <span id="storefronttable-storefront-link-return"></span> storefronttable.StorefrontLinkReturn
 
-#### storefronttable.StorefrontLinkAddPayload
+**Properties**
 
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| apiKey | string | Example credential field | No |
-| apiSecret | string | Example credential field | No |
-| storeId | string | Platform-specific ID | No |
-| storeName | string | User-defined nickname | No |
-| storeType | string |  | No |
-| storeUrl | string | Storefront URL | No |
+| Name | Type | Go type | Required | Default | Description | Example |
+|------|------|---------|:--------:| ------- |-------------|---------|
+| id | integer| `int64` |  | |  |  |
+| storeId | string| `string` |  | | Match frontend JSON keys |  |
+| storeName | string| `string` |  | |  |  |
+| storeType | string| `string` |  | |  |  |
+| storeUrl | string| `string` |  | |  |  |
 
-#### storefronttable.StorefrontLinkReturn
+### <span id="storefronttable-storefront-link-update-payload"></span> storefronttable.StorefrontLinkUpdatePayload
 
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| id | integer |  | No |
-| storeId | string | Match frontend JSON keys | No |
-| storeName | string |  | No |
-| storeType | string |  | No |
-| storeUrl | string |  | No |
+**Properties**
 
-#### storefronttable.StorefrontLinkUpdatePayload
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| storeId | string | Platform-specific ID | No |
-| storeName | string | User-defined nickname | No |
-| storeUrl | string | Storefront URL | No |
+| Name | Type | Go type | Required | Default | Description | Example |
+|------|------|---------|:--------:| ------- |-------------|---------|
+| storeId | string| `string` |  | | Platform-specific ID |  |
+| storeName | string| `string` |  | | User-defined nickname |  |
+| storeUrl | string| `string` |  | | Storefront URL |  |
